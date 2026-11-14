@@ -7,6 +7,7 @@ import { Detail } from './render/Detail.js';
 import { Sky } from './sky/Sky.js';
 import { Planet } from './world/Planet.js';
 import { Hud } from './ui/Hud.js';
+import { StartScreen } from './ui/StartScreen.js';
 import { Sfx } from './ui/Sfx.js';
 import { Achievements } from './ui/Achievements.js';
 import { CameraRig } from './camera/CameraRig.js';
@@ -108,6 +109,9 @@ export class App {
     this.detail = new Detail();
     this.onRendered = null; // one-shot callback with the canvas right after a frame is drawn (photo mode)
 
+    this.start = new StartScreen(this);
+    if (StartScreen.wanted(this)) this.start.show();
+
     addEventListener('resize', () => this.resize());
     this.clock = new THREE.Clock();
     this.newPlanet(this.params.seed, true);
@@ -134,7 +138,7 @@ export class App {
       this.params.theme = theme ?? (this.worldMode === 'random' ? pickTheme(seed) : this.worldMode);
       this.params.world = world;
     }
-    this.hud.setLoading(true);
+    if (!(initial && this.start?.open)) this.hud.setLoading(true);
     await new Promise((res) => setTimeout(res, 30)); // let the overlay paint first
     try {
       this.swapIn(await this.buildPlanet(this.params), initial);
@@ -145,6 +149,7 @@ export class App {
     this.hud.setLoading(false);
     this.quality.pauseFor(3);
     this.building = false;
+    if (initial && this.planet) this.start?.ready();
     if (initial && this.settings.playerName) this.hud.toast(`👋 Welcome back, ${this.settings.playerName}!`);
     if (initial) SaveBox.welcome(this.hud);
     if (initial && this.roomLink) { // opened from an invite: into the room (and a name first, if there isn't one)

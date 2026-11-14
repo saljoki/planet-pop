@@ -9,6 +9,11 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await open(`${PLANET}&debug`);
     await frames(4);
   });
+  await scene('mobile-start', 'Phone: PLAY within a thumb’s reach, over the planet', async () => {
+    await page.evaluate(() => app.start.show());
+    await frames(2);
+  });
+  await page.evaluate(() => app.start.dismiss());
   await scene('mobile-home', 'Phone: next-up and all six Home cards without scrolling', async () => {
     await page.evaluate(() => app.game.openHome());
     await frames(2);
@@ -85,6 +90,16 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true });
     await frames(5);
   });
+  await scene('landscape-start', 'Phone on its side: the start screen and reachable PLAY', async () => {
+    await page.evaluate(() => { app.game.stop(); app.start.show(); });
+    await frames(2);
+  });
+  await page.evaluate(() => app.start.dismiss());
+  await scene('landscape-home', 'Phone on its side: next-up and all six Home cards', async () => {
+    await page.evaluate(() => { app.game.stop(); app.game.openHome(); });
+    await frames(2);
+  });
+  await page.evaluate(() => app.game.home.hide());
   await scene('landscape-panel', 'Phone on its side: the controls come in from the right', async () => {
     await page.evaluate(() => { app.game.stop(); document.getElementById('panel').classList.remove('hidden'); });
     await until(() => app.rig.mode === 'orbit');

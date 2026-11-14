@@ -37,7 +37,7 @@ export class ControlPanel extends Widget {
           ${app.haptics?.supported ? '<label class="check"><input id="buzz" type="checkbox" checked> Vibration</label>' : ''}
         </div>
         <label>Ambience <b id="ambienceVal"></b><input id="ambience" type="range" min="0" max="100" step="5" value="${Math.round((app.ambience?.volume ?? 0.5) * 100)}"></label>
-        <button id="playBtn" class="big">✈️ Play Sky Courier</button>
+        <button id="playBtn" class="big">▶ Play</button>
         <div id="trophies">🏆 0 trophies</div>
         <button id="aboutBtn" class="about" title="About Planet Pop, and your name">ℹ️ About · v${VERSION}</button>
       ` });
@@ -65,7 +65,7 @@ export class ControlPanel extends Widget {
       this.on('buzz', 'change', (e) => app.haptics.setEnabled(e.target.checked));
     }
     this.slider('ambience', (v) => (v ? `${v}%` : 'off'), (v) => app.ambience?.setVolume(v / 100), true);
-    this.on('playBtn', 'click', () => app.game.openHome());
+    this.on('playBtn', 'click', () => app.game.play());
     this.on('trophies', 'click', () => app.hud.showTrophies(app.achievements.list()));
     this.on('aboutBtn', 'click', () => app.hud.about.show());
   }

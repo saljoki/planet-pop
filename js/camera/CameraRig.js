@@ -244,7 +244,7 @@ export class CameraRig {
         if (this.chase.player) this.chase.update(dt);
         else this.release(true);
         break;
-      default: this.orbit.update(dt, this.idle > 6 && still); // gentle auto-rotate when left alone
+      default: this.orbit.update(dt, (this.app.start?.open || this.idle > 6) && still); // the title planet turns straight away
     }
     // low behind a car or a boat (or watching our rocket on a trip), trees and buildings next to the camera step aside
     const low = (this.mode === 'game' && this.chase.player && this.chase.player.kind !== 'plane') || (this.app.trip?.active && this.entity?.kind === 'rocket');

@@ -90,3 +90,24 @@
   .home-foot { display: flex; margin-top: 10px; gap: 8px; }
   .home-foot button { min-height: 36px; font-size: 16px; }
 }
+
+/* PLAY sits above the planet-view hint, clear of the home indicator. */
+@media (max-width: 700px), (pointer: coarse) {
+  #homeBtn { position: fixed; left: 50%; bottom: calc(82px + var(--sb)); transform: translateX(-50%); min-width: 132px !important;
+    min-height: 52px; padding: 8px 22px 5px; font-size: 24px; }
+  #homeBtn:active { transform: translate(calc(-50% + 2px), 2px); }
+}
+@media (max-width: 700px) {
+  #stTitle { margin-top: 8vh; font-size: 72px; }
+  #stHello { font-size: 23px; }
+  .start-actions { bottom: calc(10vh + var(--sb)); width: 320px; }
+  #stPlay { min-height: 86px; font-size: 42px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  #stTitle { margin-top: 0; font-size: 64px; }
+  #stHello { margin-top: 4px; font-size: 21px; }
+  .start-actions { bottom: calc(24px + var(--sb)); width: 320px; gap: 8px; }
+  #stPlay { min-height: 64px; padding: 6px 12px 4px; font-size: 36px; }
+  #stExplore { min-height: 38px; font-size: 18px; }
+  #homeBtn { bottom: calc(16px + var(--sb)); min-height: 48px; }
+}

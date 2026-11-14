@@ -6,6 +6,11 @@ export default async function courier({ page, frames, until, scene }) {
     await page.evaluate(() => { app.rig.release(true); app.game.progress.addCoins(400); app.game.openHangar(); });
     await frames(3);
   });
+  await scene('start', 'Start screen over the turning planet, ready to Play or Explore', async () => {
+    await page.evaluate(() => { app.game.hangar.hide(); app.start.show(); });
+    await frames(3);
+  });
+  await page.evaluate(() => app.start.dismiss());
   await scene('home', 'Home: next-up, six ways to play and the hangar for upgrades', async () => {
     await page.evaluate(() => { app.game.hangar.hide(); app.game.openHome(); });
     await frames(2);

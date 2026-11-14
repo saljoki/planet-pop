@@ -105,6 +105,9 @@ export class CourierGame {
     this.home.show();
   }
 
+  /** The main Play button, from the title screen or Explore. */
+  play() { this.openHome(); }
+
   /** Take over a car or boat from the planet (its info card's Drive button) and drive it about. */
   driveThis(e) {
     if (this.active || this.app.building) return;
