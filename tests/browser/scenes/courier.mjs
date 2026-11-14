@@ -318,6 +318,9 @@ export async function stageToday(page, ready = false) {
     const g = app.game;
     g.stop(); g.home.hide(); g.pilot.hide(); g.hangar.hide();
     const day = g.career.today();
+    const yesterday = new Date(Date.parse(day.date) - 86400000).toISOString().slice(0, 10);
+    g.career.data.streak = { days: 3, last: yesterday, forgiven: null };
+    g.career.data.gift = null;
     Object.assign(day, { ids: ['fragile', 'score', 'mission'], tier: 2, counts: {}, done: [], crate: false });
     g.career.counts({ fragile: 4, ...(ready ? { score: 4000, mission: 2 } : {}) });
     g.career.news(); g.today.show();

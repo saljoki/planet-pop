@@ -79,3 +79,8 @@
 .contract strong { font-size: 20px; }
 .today-rewards { display: grid; gap: 14px; margin-top: 18px; }
 .today-rewards button { min-height: 44px; }
+.streak-dots { display: flex; justify-content: center; gap: 9px; }
+.streak-dots span { width: 14px; height: 14px; border: 2px solid var(--ink); border-radius: 50%; background: #fff; }
+.streak-dots .flown { background: #ff8c42; }
+#tdStreak p { margin: 7px 0 0; font: 15px/1.4 system-ui, sans-serif; letter-spacing: 0; }
+#tdGift { background: #fff1bc; }

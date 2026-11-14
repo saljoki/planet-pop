@@ -44,7 +44,7 @@ export class HomeScreen extends Overlay {
     const career = this.game.career, next = career.toNext;
     d.pilotText.textContent = `🎖️ ${career.rank} · ${career.rankName}${this.app.settings.playerName ? ` · ${this.app.settings.playerName}` : ''}`;
     d.xp.style.width = `${next ? next.have / next.need * 100 : 100}%`;
-    d.today.textContent = `📋 ${career.today().done.length} / 3${career.crateReady ? ' · 🎁 Crate!' : ''}`;
+    d.today.textContent = `📋 ${career.today().done.length} / 3${career.crateReady ? ' · 🎁 Crate!' : ''}${career.streakDays ? ` · 🔥 ${career.streakDays}` : ''}${career.giftReady ? ' · 🎁 Gift!' : ''}`;
     d.next.innerHTML = `<span class="next-title">${offer.icon} ${offer.title}</span><small>${offer.text}</small>`;
     d.cards.innerHTML = HOME_CARDS.map((c) => `<button data-card="${c.id}"><span class="card-icon" aria-hidden="true">${c.icon}</span>
       <span class="card-name">${c.name}</span><small>${cardStat(c.id, p, career) || c.desc}</small></button>`).join('');

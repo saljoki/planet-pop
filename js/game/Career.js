@@ -1,9 +1,14 @@
 import { loadJson, saveJson, forget } from '../core/Store.js';
 import { RANKS, MAX_RANK, XP, TROPHY_COINS, xpForRank, rankFor, rankReward } from './Ranks.js';
 import { REX, REX_LIVERIES } from './Rival.js';
-import { todayKey } from './Daily.js';
+import { todayKey, dailySeed } from './Daily.js';
+import { mulberry32 } from '../core/Noise.js';
+import { DailyRun } from './runs/DailyRun.js';
 import { CONTRACTS, tierFor, pickContracts, runCounts, crateCoins } from './Contracts.js';
 
+export const STREAK_COINS = [20, 25, 30, 35, 40, 50, 150];
+export const giftCoins = (date) => [20, 30, 40, 60][Math.floor(mulberry32(dailySeed(date) ^ 0x61F7)() * 4)];
+const daysBetween = (a, b) => (Date.parse(a) - Date.parse(b)) / 86400000;
 const KEY = 'planetpop.career';
 const fresh = () => ({ xp: 0, paid: [], rex: { you: 0, rex: 0 },
   day: { date: null, tier: 0, ids: [], counts: {}, done: [], crate: false },
@@ -79,13 +84,15 @@ export class Career {
     if (!run || run.careerEnded) return;
     run.careerEnded = true;
     this.counts(runCounts(run));
+    if (run instanceof DailyRun && run.tally.deliveries > 0) this.dailyFlown(run.date);
     const gained = this.xp - this.marked;
     if (gained > 0) this.lines.push(`🎖️ +${gained.toLocaleString('en-GB')} XP`);
   }
 
   today() {
-    if (this.data.day.date !== this.date()) {
-      this.data.day = { date: this.date(), tier: tierFor(this.rank), ids: [], counts: {}, done: [], crate: false };
+    const date = this.date();
+    if (this.data.day.date !== date) {
+      this.data.day = { date, tier: tierFor(this.rank), ids: [], counts: {}, done: [], crate: false };
     }
     const day = this.data.day;
     if (day.ids.length !== 3) {
@@ -133,6 +140,37 @@ export class Career {
     this.save();
     this.progress.addCoins(coins, false);
     this.addXp(XP.crate);
+    return coins;
+  }
+
+  canForgive(date) { return !this.data.streak.forgiven || daysBetween(date, this.data.streak.forgiven) >= 7; }
+  dailyFlown(date) {
+    const s = this.data.streak;
+    if (s.last && date <= s.last) return 0;
+    const gap = daysBetween(date, s.last), forgiven = gap === 2 && this.canForgive(date);
+    s.days = gap === 1 || forgiven ? s.days + 1 : 1;
+    s.last = date;
+    if (forgiven) s.forgiven = date;
+    this.save();
+    const week = (s.days - 1) % 7, coins = STREAK_COINS[week];
+    this.progress.addCoins(coins, false);
+    this.addXp(week === 6 ? XP.streakWeek : XP.streak);
+    this.lines.push(`🔥 Day ${s.days} in a row${forgiven ? ' (one missed day forgiven)' : ''}: +${coins} 🪙`);
+    return coins;
+  }
+
+  get streakDays() {
+    const s = this.data.streak, gap = daysBetween(this.date(), s.last);
+    return !s.last || gap > 2 || (gap === 2 && !this.canForgive(this.date())) ? 0 : s.days;
+  }
+  get streakNext() { return STREAK_COINS[this.streakDays % 7]; }
+  get giftReady() { return this.data.gift !== this.date(); }
+  openGift() {
+    if (!this.giftReady) return 0;
+    const date = this.date(), coins = giftCoins(date);
+    this.data.gift = date;
+    this.save();
+    this.progress.addCoins(coins, false);
     return coins;
   }
 
