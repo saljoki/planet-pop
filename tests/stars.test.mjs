@@ -111,8 +111,9 @@ describe('saved stars and chapters', () => {
     assert.ok(p.chapterOpen('jupiter'), 'the completed storm mission keeps its chapter open');
     assert.ok(!p.chapterOpen('mars'));
     p.save();
-    const { stars, ...saved } = JSON.parse(localStorage.getItem('planetpop.courier'));
+    const { stars, lesson, ...saved } = JSON.parse(localStorage.getItem('planetpop.courier'));
     assert.deepEqual(stars, {});
+    assert.equal(lesson, false); // Phase A's optional flag: saved alongside, nothing else added
     assert.deepEqual(saved, legacy);
     assert.equal(p.recordStars('storm', 3), true);
     assert.equal(new Progress().totalStars, 6);

@@ -9,6 +9,16 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await open(`${PLANET}&debug`);
     await frames(4);
   });
+  await scene('mobile-start', 'Phone: PLAY within a thumb’s reach, over the planet', async () => {
+    await page.evaluate(() => app.start.show());
+    await frames(2);
+  });
+  await page.evaluate(() => app.start.dismiss());
+  await scene('mobile-home', 'Phone: next-up and all six Home cards without scrolling', async () => {
+    await page.evaluate(() => app.game.openHome());
+    await frames(2);
+  });
+  await page.evaluate(() => app.game.home.hide());
   await scene('mobile-sheet', 'Phone: the controls slide up from the bottom as a sheet', async () => {
     await page.evaluate(() => document.getElementById('panelToggle').click());
     await frames(2);
@@ -31,6 +41,19 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await frames(3);
   });
   await page.evaluate(() => app.tour.stop());
+  await scene('mobile-lesson', 'Phone: the flying coach clears a thumb on the stick and BOOST', async () => {
+    await page.evaluate(() => app.game.start({ lesson: true }));
+    await until(() => app.rig.mode === 'game');
+    await page.touchscreen.touchStart(110, 640);
+    await page.touchscreen.touchMove(150, 600);
+    await frames(4);
+  });
+  await page.touchscreen.touchEnd().catch(() => {});
+  await scene('mobile-lesson-deliver', 'Phone: the delivery prompt, arrow and buttons stay clear of each other', async () => {
+    await page.evaluate(() => { app.game.run.enter(4); app.game.hud.update(); });
+    await frames(2);
+  });
+  await page.evaluate(() => app.game.stop());
   await scene('mobile-courier', 'Daily challenge on a phone, a thumb on the stick', async () => {
     await page.evaluate(() => { app.game.start({ daily: true }); app.game.run.deliver(); });
     await until(() => app.rig.mode === 'game');
@@ -39,7 +62,47 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await frames(6);
   });
   await page.touchscreen.touchEnd().catch(() => {}); // (nothing to lift if that scene was filtered out)
-  await scene('mobile-briefing', 'The briefing on a phone, with touch controls', async () => {
+  for (const [width, height] of [[390, 844], [360, 780]]) {
+    await scene(`mobile-courier-badges-${width}`, `Phone (${width} × ${height}): a long mission badge, five-digit score and four-digit coins fit`, async () => {
+      await page.setViewport({ width, height, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+      await page.evaluate(async () => {
+        const { MISSIONS } = await import('./js/game/Missions.js');
+        app.game.stop();
+        app.game.start({ mission: MISSIONS.find((m) => m.id === 'rings') });
+        app.paused = true; // Keep the staged badge values while the browser renders.
+        app.game.hud.update();
+        const d = app.game.hud.dom;
+        d.mission.textContent = '🎯 0 / 3 through the ring · ⭐ 20s';
+        d.score.textContent = '⭐ 99999';
+        d.time.textContent = '⏱ 120';
+        d.combo.textContent = '🔥 x5';
+        d.coins.textContent = '🪙 9999';
+        d.arrow.style.transform = 'rotate(45deg)'; // Its largest bounds must still clear the badge row.
+      });
+      await until(() => app.rig.mode === 'game');
+      await frames(2);
+      await page.evaluate(() => {
+        const badges = [...document.querySelectorAll('#gStats .badge:not(.hidden)')];
+        const controls = ['gArrow', 'gGoal', 'gMapBtn', 'gPauseBtn'].map((id) => document.getElementById(id));
+        for (const badge of badges) {
+          const r = badge.getBoundingClientRect();
+          // Include the badge's 4 px shadow in the visible bounds and clearance checks.
+          if (r.left < 0 || r.right + 4 > innerWidth || r.top < 0 || r.bottom + 4 > innerHeight)
+            throw new Error(`${badge.id} is clipped at ${innerWidth} px`);
+          if (badge.scrollWidth > badge.clientWidth) throw new Error(`${badge.id} text overflows at ${innerWidth} px`);
+          for (const control of controls) {
+            if (getComputedStyle(control).display === 'none') continue;
+            const c = control.getBoundingClientRect();
+            if (r.left < c.right && r.right + 4 > c.left && r.top < c.bottom && r.bottom + 4 > c.top)
+              throw new Error(`${badge.id} overlaps ${control.id} at ${innerWidth} px`);
+          }
+        }
+      });
+    });
+  }
+  await page.evaluate(() => { app.paused = false; });
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  await scene('mobile-briefing', 'Phone: short briefing with Start visible and How to play closed', async () => {
     await page.evaluate(async () => {
       const { MISSIONS } = await import('./js/game/Missions.js'); // (the page was reloaded at phone size)
       app.game.stop();
@@ -80,6 +143,45 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true });
     await frames(5);
   });
+  await scene('landscape-briefing', 'Phone on its side: the longest mission goal, with Start visible', async () => {
+    await page.evaluate(async () => {
+      const { MISSIONS } = await import('./js/game/Missions.js');
+      const longest = MISSIONS.reduce((a, b) => a.brief.length > b.brief.length ? a : b);
+      app.game.stop();
+      app.game.launch({ mission: longest });
+    });
+    await until(() => app.game.briefing.open);
+    const visible = await page.$eval('#bStart', (el) => {
+      const r = el.getBoundingClientRect();
+      return r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth;
+    });
+    if (!visible) throw new Error('Start is outside the landscape viewport');
+    await frames(2);
+  });
+  await page.evaluate(() => app.game.briefing.hide());
+  await scene('landscape-lesson', 'Phone on its side: the coach clears the map, arrow, buttons and thumb', async () => {
+    await page.evaluate(() => { app.game.stop(); app.game.start({ lesson: true }); app.game.run.enter(4); app.game.hud.update(); });
+    await until(() => app.rig.mode === 'game');
+    await page.touchscreen.touchStart(110, 270);
+    await page.touchscreen.touchMove(145, 250);
+    await frames(3);
+  });
+  await page.touchscreen.touchEnd().catch(() => {});
+  await page.evaluate(() => app.game.stop());
+  await scene('landscape-start', 'Phone on its side: the start screen and reachable PLAY', async () => {
+    await page.evaluate(() => { app.game.stop(); app.start.show(); });
+    await frames(2);
+  });
+  await page.evaluate(() => app.start.dismiss());
+  await scene('landscape-home', 'Phone on its side: next-up and all six Home cards', async () => {
+    await page.evaluate(() => { app.game.stop(); app.game.openHome(); });
+    await frames(2);
+    const gap = await page.evaluate(() => document.getElementById('hoNext').getBoundingClientRect().top
+      - document.getElementById('hoName').getBoundingClientRect().bottom);
+    // The name button casts a 3 px shadow: leave at least 4 px clear below it.
+    if (gap < 7) throw new Error(`Home's name button needs a clear 4 px gap; measured ${gap - 3} px`);
+  });
+  await page.evaluate(() => app.game.home.hide());
   await scene('landscape-panel', 'Phone on its side: the controls come in from the right', async () => {
     await page.evaluate(() => { app.game.stop(); document.getElementById('panel').classList.remove('hidden'); });
     await until(() => app.rig.mode === 'orbit');

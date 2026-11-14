@@ -12,7 +12,7 @@ export class ResultsScreen extends Overlay {
         <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <button id="gNext" class="big hidden">▶ Next mission</button><button id="gAgain" class="big">✈️ Fly again</button>
           <button id="gShare" class="hidden">🔗 Share result</button><button id="gBoard" class="hidden">🎯 Missions</button>
-          <button id="gHangar">🛠️ Hangar</button><button id="gExit">🌍 Back to planet</button>
+          <button id="gHome">🏠 Home</button><button id="gExit">🌍 Back to planet</button>
         </div>
       ` });
     this.game = game;
@@ -30,9 +30,11 @@ export class ResultsScreen extends Overlay {
     this.on('gNext', 'click', () => { const next = this.nextMission; game.stop(); game.startMission(next); });
     this.on('gBoard', 'click', () => { game.stop(); game.board.show(); });
     this.on('gShare', 'click', () => game.run?.share());
-    this.on('gHangar', 'click', () => { game.stop(); game.openHangar(); });
+    this.on('gHome', 'click', () => this.home());
     this.on('gExit', 'click', () => game.stop());
   }
+
+  home() { this.game.stop(); this.game.openHome(); }
 
   /**
    * title, html: what to say · again: the Fly again button's label, bigAgain: whether it's the main button ·

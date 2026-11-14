@@ -7,12 +7,14 @@ import { Detail } from './render/Detail.js';
 import { Sky } from './sky/Sky.js';
 import { Planet } from './world/Planet.js';
 import { Hud } from './ui/Hud.js';
+import { StartScreen } from './ui/StartScreen.js';
 import { Sfx } from './ui/Sfx.js';
 import { Achievements } from './ui/Achievements.js';
 import { CameraRig } from './camera/CameraRig.js';
 import { CourierGame } from './game/CourierGame.js';
 import { DebugStats } from './ui/DebugStats.js';
 import { Ambience } from './ui/Ambience.js';
+import { Music } from './ui/Music.js';
 import { PhotoMode } from './ui/PhotoMode.js';
 import { Gamepad } from './game/input/Gamepad.js';
 import { Haptics } from './ui/Haptics.js';
@@ -90,6 +92,7 @@ export class App {
     this.postfx = new PostFX(r);
     this.sky = new Sky(this.scene);
     this.sfx = new Sfx(this);
+    this.music = new Music(this);
     this.achievements = new Achievements(this.hud);
     this.trophies = new TrophyWatch(this);
     this.rig = new CameraRig(this);
@@ -107,6 +110,9 @@ export class App {
     this.friendsMenu = new FriendsMenu(this);
     this.detail = new Detail();
     this.onRendered = null; // one-shot callback with the canvas right after a frame is drawn (photo mode)
+
+    this.start = new StartScreen(this);
+    if (StartScreen.wanted(this)) this.start.show();
 
     addEventListener('resize', () => this.resize());
     this.clock = new THREE.Clock();
@@ -134,7 +140,7 @@ export class App {
       this.params.theme = theme ?? (this.worldMode === 'random' ? pickTheme(seed) : this.worldMode);
       this.params.world = world;
     }
-    this.hud.setLoading(true);
+    if (!(initial && this.start?.open)) this.hud.setLoading(true);
     await new Promise((res) => setTimeout(res, 30)); // let the overlay paint first
     try {
       this.swapIn(await this.buildPlanet(this.params), initial);
@@ -145,7 +151,8 @@ export class App {
     this.hud.setLoading(false);
     this.quality.pauseFor(3);
     this.building = false;
-    if (initial && this.settings.playerName) this.hud.toast(`👋 Welcome back, ${this.settings.playerName}!`);
+    if (initial && this.planet) this.start?.ready();
+    if (initial && this.settings.playerName && !this.start?.open) this.hud.toast(`👋 Welcome back, ${this.settings.playerName}!`);
     if (initial) SaveBox.welcome(this.hud);
     if (initial && this.roomLink) { // opened from an invite: into the room (and a name first, if there isn't one)
       this.friends.join(this.roomLink);
@@ -153,8 +160,8 @@ export class App {
     }
     if (initial && this.dailyLink) {
       this.dailyLink = false;
-      this.hud.toast("📅 Today's daily challenge is ready. Press Daily challenge to fly it!");
-      this.game.openHangar();
+      this.hud.toast("📅 Today's daily challenge is ready. Choose Daily on Home to fly it!");
+      this.game.openHome();
     }
     if (this.pending) {
       const { seed: s, theme: t, world: w } = this.pending;
@@ -256,6 +263,7 @@ export class App {
     this.hud.update(real);
     this.sfx.update(real);
     this.ambience.update(real);
+    this.music?.update(real);
     this.quality.tick(real);
     this.debug.begin();
     if (map) this.map.render(this.postfx);

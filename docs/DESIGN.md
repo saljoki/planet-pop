@@ -68,8 +68,9 @@ A beginner's run changes by a few seconds. A strong run now builds to a finish a
 ### 5.2 The daily (B1)
 
 Today's route is **exactly ten parcels** in the stock plane. The run ends when ten have been delivered or stolen, or
-the clock runs out. Seconds left at the end are worth 10 points each. That makes it a two-to-three-minute ritual with
-scores that can be compared, which the leaderboard in phase D needs.
+the clock runs out. Seconds left at the end are worth 10 points each. As built, a pilot who finishes the route takes
+about a minute and a half (ace 1:27, average 1:40), and a beginner runs out of clock at about five parcels. That
+makes it a short ritual with scores that can be compared, which the leaderboard in phase D needs.
 
 ### 5.3 Missions, chapters and stars (B1)
 
@@ -162,10 +163,14 @@ second is the clock rule in 5.1.
 | **Today:** coins a run | 167 | 634 | 3,900 in 15 min | 5,600 in 15 min |
 | **New clock:** run length | 2:30 | 2:58 | 4:00 | 4:47 |
 | **New clock:** coins a run | 306 | 449 | 1,086 | 1,680 |
+| **As built in B1:** run length | 1:48 | 2:31 | 3:45 | 4:49 |
+| **As built in B1:** coins a run | 153 | 313 | 1,003 | 1,817 |
 
 The pilots: the ace flies straight at the town, boosts and never crashes. The good pilot looks away 15% of the time
 and crashes every 45 s. The average pilot doesn't boost, looks away 30% of the time and crashes every 25 s. The
-beginner doesn't boost, looks away half the time and crashes every 14 s. Each figure is the mean of three runs.
+beginner doesn't boost, looks away half the time and crashes every 14 s. The first two pairs of rows are the mean
+of three runs; the as-built rows are the mean of ten, flown on the merged code. The beginner's 2:30 was noise from
+three runs: a beginner's run is about as long as it was before.
 
 Everything in today's shop costs 10,470 coins. An average pilot earns that in about an hour.
 
@@ -235,9 +240,9 @@ five returns the next day, the loop gets fixed before any store work starts.
 
 | Phase | What | Who | When |
 |---|---|---|---|
-| A | The first five minutes | Codex | Now |
-| B1 | The clock, the daily, the missions | A second agent | Now, in parallel |
-| B2 | Rank, Rex, craft, supplies, contracts, streak, passport, coin retune | To assign | After A merges |
+| A | The first five minutes | Codex | Merged, v0.18.0 |
+| B1 | The clock, the daily, the missions | A second Codex session | Merged, v0.19.0 |
+| B2 | Rank, Rex, craft, supplies, contracts, streak, passport, coin retune | To assign | Next |
 | C | Mobile wrapper | To assign | After B2 |
 | D | Accounts, cloud save, boards, events | To assign | After C |
 | E | Ads, Premium, packs | To assign | After D |

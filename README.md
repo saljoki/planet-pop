@@ -11,8 +11,8 @@ classic, ice, desert, candy and lava, and there are seventeen real worlds to vis
 cloud stations, and the moons **Io**, **Europa**, **Ganymede**, **Titan**, **Enceladus**, **Triton** and **Charon**, on a 🪐
 **map of the solar system** with every planet
 where it really is today, and **rocket trips** between them, with a 🚀 **space courier** taking parcels from world to
-world. Plus the **Sky Courier** mini-game with twenty-two missions (twelve on the real worlds), a daily challenge (on a
-real world about every other day) and free flight, **road trips** (drive any car or steer any boat, taxi, van courier and a race round
+world. Plus the **Sky Courier** mini-game with 61 missions in 18 chapters (51 on the real worlds), three stars to earn on every mission, a ten-parcel
+daily challenge (on a real world about every other day) and free flight, **road trips** (drive any car or steer any boat, taxi, van courier and a race round
 the world) with a 🗺️ mini-map, 👥 playing with friends on the same planet, a 📍 Find menu, a hands-free 📺 tour, a
 photo mode and 55 trophies (in groups). It's built for
 phones as much as laptops (touch gestures, a thumbstick, tilt steering), installs as an app and works offline.
@@ -38,6 +38,27 @@ On a secure page (https, or localhost) a service worker caches every game file, 
 Planet Pop also works offline. Browsers that can install web apps show a **📲** button next to the camera;
 on iPhone use Share → Add to Home Screen. After changing any game file, run `npm run precache` so the
 service worker picks up the new version (the tests check this).
+
+## Start playing
+
+The title screen appears while the first planet builds. Tap **▶ PLAY** when it is ready: a new pilot goes straight
+into the **🎓 flying lesson**, and a returning pilot opens **🏠 Home**. **Enter** or **Space** plays;
+**Esc** explores. On a controller, **A** or **Start** plays and **B** explores.
+
+The lesson teaches steering, climbing, boosting, blue rings and the first parcel, one short prompt at a time.
+The sun stays at noon over your plane, and a missed practice ring returns ahead at your height.
+There is no clock, and a wreck gives you a fresh plane. Completing it earns **50 coins**, once; skipping marks it
+done without coins. Its results offer **First Flight**, the existing three-parcel mission, or **Home**. Pause offers
+**Skip the lesson**; **⚙️ Options → 🎓 Flying lesson** lets you practise again between runs. Existing progress
+carries on without an automatic lesson.
+
+**Home** has a big next-flight button, then six cards: **Courier run**, **Daily challenge**, **Missions**,
+**Space courier**, **Road trips** and **Free flight**. It suggests First Flight, today's daily, the first unlocked
+unfinished mission, then a courier run. Use the footer for the **Hangar** (upgrades and paint jobs), trophies,
+Options, or **🌍 Explore**. Closing the hangar returns Home. Results also have a **🏠 Home** button.
+
+**🌍 Explore the planet** opens the planet view. Its **▶ Play** button is always available; on a phone it sits
+near the bottom, above the hint. Invite and daily-result links keep their direct entry to the room or Home.
 
 ## Controls
 
@@ -77,8 +98,11 @@ service worker picks up the new version (the tests check this).
   straight to each other's browsers (WebRTC, matched up through public Nostr relays by Trystero), with no server of
   our own, so they can see each other's IP addresses; a few strict networks (some mobile carriers) can't connect this
   way. To try it on one computer, open the game in two tabs with `?net=tabs`.
-- **Sound** (panel) mutes everything; **Ambience** sets the volume of the soundscape (wind, surf, a
+- **Sound** (panel or Options) mutes everything; **Ambience** sets the volume of the soundscape (wind, surf, a
   town's murmur, birds by day, crickets by night, a hum out in space), which follows the camera.
+  **Music** (Options) has its own volume: bouncy menu and flight tunes, and sparse pads on the system map and trips.
+  It is synthesised like the effects, softens while paused, and speeds up for the last ten seconds of a clocked run.
+  Explore keeps the ambient soundscape. The music volume is remembered on this device.
 - **P** pause · **N** new planet · **H** show/hide the control panel · **F** Find · **T** tour · **M** the system map.
 
 ### The solar system
@@ -126,7 +150,7 @@ service worker picks up the new version (the tests check this).
   cruise across the map: steer (drag, arrow keys or WASD) to catch ⭐ fuel stars (a coin each) and miss the rocks
   (thickest in the asteroid belt), and boost (Space, or **🔥 Boost**) with the fuel. The next world is built while you
   cruise, and the rocket lands on its pad, where you can drive off or start a courier run.
-- **🚀 Space courier** (📦 on the system map, or **🚀 Space courier** in the hangar): three parcels from the world you're
+- **🚀 Space courier** (📦 on the system map, or **🚀 Space courier** on Home): three parcels from the world you're
   on to other worlds, paid by how far apart they are today (fragile, urgent and heavy ones pay more). Take one and the
   rocket leaves at once; the parcel's clock runs through the trip and the last stretch, from the spaceport to its town
   by rover or by hopper, glider or plane. On time pays in full and builds a streak (up to +50%), late pays half, and a
@@ -158,23 +182,27 @@ anywhere on the left half and drag to steer and climb, hold the big **BOOST** bu
 menu's **⚙️ Options** switch on **tilt to steer** (hold the phone as you like when the run starts; tip it like a steering wheel,
 tip the top away to dive) and **vibration** on deliveries, crashes and lightning (Android; iPhones don't allow
 it). **Controllers** work too: left stick or d-pad steers and climbs, A / RB / RT boost, Start pauses (or opens
-the hangar), A / B answer the end-of-run screen.
+Home from the planet view), A launches the suggested flight on Home, B closes Home or returns there from the hangar,
+and A / B answer the end-of-run screen.
 
 - **🗺️ Mini-map:** a round, heading-up map in the corner of every run shows where you are, the towns and roads, and
   where to go: the goal of the arrow, the delivery pin, pickups and drop-offs, rings, race checkpoints and Rex. Tap it
   to zoom out. **🗺️** (next to ⏸) or **M** hides it on small screens, and that's remembered (also in Options).
-- **Briefing and Options:** before each run a briefing explains the goal and shows the controls for your
-  device (keyboard, touch or controller), with **▶ Start**, **⚙️ Options** and **Back**; tick "Don't show this"
-  to skip it. **⚙️ Options** (in the briefing, the hangar and the pause menu) has **your name**, **Invert Y axis** (up dives,
-  down climbs, for keys, thumbstick, tilt and controller alike), steering sensitivity, tilt steering and
-  vibration on phones, sound and ambience volume, the briefing and mini-map switches, **💾 Your progress** (copy a save
-  code or save a file, and load one on another phone or browser), and a two-tap **Reset Sky Courier
-  progress** (trophies stay). Options are remembered.
-- **📦 Courier run:** the classic timed game below. **🕊️ Free flight:** no clock, no parcels, no Rex, no coins:
+- **Briefing and Options:** a briefing shows the title and one goal line, with **▶ Start**, **⚙️ Options** and
+  **✕ Back**. Open **ℹ️ How to play** for the original tips, controls for your device and "Don't show this" choice.
+  The lesson starts straight away. **⚙️ Options** (on the title screen and Home, in the briefing, hangar and pause
+  menu) has **your name**, **Invert Y axis** (up dives, down climbs, for keys, thumbstick, tilt and controller alike),
+  steering sensitivity, tilt steering and vibration on phones, effects, ambience and music volume, the briefing
+  and mini-map switches, **🎓 Flying lesson** between runs, **💾 Your progress** (copy a save code or save a file,
+  and load one on another phone or browser), and a two-tap **Reset Sky Courier progress** (trophies stay).
+  Options are remembered.
+- **📦 Courier run:** the classic timed game below. Each delivery adds a second less time than the last, from 20
+  seconds down to 6, and the clock is capped at its starting time plus 9 seconds, so every run builds to a finish.
+  **🕊️ Free flight:** no clock, no parcels, no Rex, no coins:
   fly anywhere you like. Rings refill your boost and runways still refuel.
 - **Health ❤️:** hitting the ground costs a quarter of your health and makes the engine splutter; lightning hurts
-  too. Out of health is a wreck: KABOOM, and the run's over (free flight and free drive put a fresh one at the
-  nearest town instead). Skimming a runway repairs the plane, every delivery patches it up a little, and the
+  too. Out of health is a wreck: KABOOM, and the run's over (free flight, free drive and the lesson put a fresh
+  one at the nearest town). Skimming a runway repairs the plane, every delivery patches it up a little, and the
   **🛡️ Armour** upgrade softens every knock.
 
 - **Cargo:** 📦 parcels, ⚡ urgent (tight timer, double pay), 🥚 fragile (a crash breaks it: no pay),
@@ -186,18 +214,15 @@ the hangar), A / B answer the end-of-run screen.
 - **Rival Rex:** after your first delivery a purple rival courier races you for every parcel. He has to
   collect it from the pickup city first, never boosts, and gets a little faster each delivery. If he
   swoops over the destination before you, he steals it (no pay, combo lost). Beat him 5 times in a row for a trophy.
-- **Hangar:** coins from deliveries and rings buy engine, wings, boost tank, ring magnet and head-start
-  upgrades, plus six paint jobs. Progress is saved in your browser (and the browser is asked to keep it); a save code
-  in Options moves it to another one.
-- **🎯 Missions** (in the hangar): ten goals played in order, each on its own planet: First Flight, Rush
-  Hour, Ring Master, Handle With Care, Pit Stop, Heavy Lifter, Outrun Rex, Night Shift, Close Encounter
-  and Ash Dodger. Twelve more on the real worlds open up in their own order: One Small Step (a flag to Tranquility
-  Base), Dust Storm Medicine on Mars, Acid Rain on Venus (one lightning strike and it's over), Keep to the Shade on
-  Mercury, Room Service at Pluto's ice hotel, Eye of the Storm (a loop round the Great Red Spot), Ring Run (through
-  Saturn's ring ice without touching any), Cold Chain on Uranus, Gale Force on Neptune, Sulphur Run on Io, Ocean
-  Sample on Europa and a battery for Huygens on Titan. The arrow points where a mission needs you (a runway, the next
-  ring, the UFO, a landmark, the storm, the ring), and each pays coins the first time you complete it.
-- **🚗 Road trips** (in the hangar), in a car on the ground: ↑ / W to go, ↓ / S to brake and reverse (on phones,
+- **🛠️ Hangar** (from Home): coins from deliveries and rings buy engine, wings, boost tank, ring magnet, head-start
+  and armour upgrades, plus paint jobs. The hangar is for improving and painting your vehicle. Progress is saved
+  in your browser (and the browser is asked to keep it); a save code in Options moves it to another one.
+- **🎯 Missions** (on Home): ten Flight school missions, then three on each of the 17 real worlds: 61 in 18
+  chapters. Finish, beat the par time and meet a bonus goal for three stars. Your best stars open the chapters;
+  missions open in order inside each chapter, and completed missions stay replayable. Tours visit landmarks, and
+  fetch missions collect a parcel before delivering it. The arrow points where a mission needs you (a runway, the
+  next ring, the UFO, a landmark, the storm, the ring). Coins pay on the first completion only; stars pay no coins.
+- **🚗 Road trips** (on Home), in a car on the ground: ↑ / W to go, ↓ / S to brake and reverse (on phones,
   drag up and down on the left). Highways and town streets are quickest (two main streets cross in the middle of
   every town); grass, sand and snow are slower and hills slow you going up, and you get a little air over crests.
   Steering eases in and turns wider at speed. Buildings, trees, steep mountains and the sea are in the way: glance
@@ -209,10 +234,12 @@ the hangar), A / B answer the end-of-run screen.
   - **🚐 Van courier:** the courier run by road, to a pad at one of the two nearest towns.
   - **🏁 Round the world:** race Rex once round the planet on a highway through 8 checkpoints, after a 3-2-1-GO.
     He keeps left, overtakes traffic and runs red lights. Your fastest win is kept.
-- **📅 Daily challenge** (in the hangar): today's planet and parcel route, the same for everyone and
-  changing at midnight UTC, flown in the stock plane so upgrades don't count. About every other day the planet is
-  one of the real worlds; the hangar says which. Your best daily score is
-  kept separately, and **Share result** copies your score with a `?daily` link that opens the challenge.
+- **📅 Daily challenge** (on Home): ten parcels on today's planet and route, the same for everyone and changing
+  at midnight UTC, flown in the stock plane so upgrades don't count. It ends when ten parcels have been delivered
+  or stolen (a broken parcel handed over uses its place too), or when the clock runs out. Finish the route and every
+  whole second left pays 10 points. About every other day the planet is one of the real worlds; the Home card says
+  which. Your best daily score is kept separately, and **Share result** copies your score with a `?daily` link that
+  opens the challenge.
 
 ## Structure
 
@@ -221,7 +248,7 @@ planet-pop/
 ├─ index.html                 page + import map (three.js from vendor/)
 ├─ manifest.webmanifest       app name, colours and icons for installing
 ├─ sw.js, precache.js         service worker and the generated list of files it caches
-├─ css/                       comic UI styles by area: base, hud, game, cards, menus, photo, space, phone (loaded in that order)
+├─ css/                       comic UI styles by area: base, hud, game, cards, menus, home, photo, space, phone (loaded in that order)
 ├─ js/
 │  ├─ main.js                 entry point, registers the service worker
 │  ├─ App.js                  renderer, frame loop, planet swapping
@@ -249,21 +276,22 @@ planet-pop/
 │  ├─ net/                    Friends (rooms, who's where), Ghost (a friend's vehicle and name tag), Wire (the messages,
 │  │                          checked), TrysteroLink (over the internet), TabLink (between tabs, ?net=tabs)
 │  ├─ ui/                     Widget + Overlay (UI building blocks), Hud, ControlPanel (☰), AboutCard, FriendsMenu,
-│  │                          InfoCard, FindMenu, TourMode, PhotoMode, Sfx (bubbles + synthesized sound), Ambience
-│  │                          (soundscape), EngineSound (cars and boats), Achievements + TrophyWatch, Haptics,
+│  │                          StartScreen, InfoCard, FindMenu, TourMode, PhotoMode, Sfx (bubbles + synthesised sound),
+│  │                          Ambience (soundscape), Music + Tunes (frame-driven soundtrack), EngineSound (cars and boats),
+│  │                          Achievements + TrophyWatch, Haptics,
 │  │                          WakeLock, DebugStats (?debug), SystemBar, MapLabels, WorldCard, CruiseHud, LandedCard
 │  │                          (the system map and trips)
 │  └─ game/                   CourierGame (runs the show), Rival + RoadRival (Rex in the air and on the road), Cargo,
 │     │                       CourierProps (beacon, rings, pads, race arches), FlightHazards (storms, runways, ash, heat,
 │     │                       ring ice, wind), Feats (trophy moves: long jumps, loops round a storm, threading the ring),
-│     │                       Progress, Settings, Daily, Missions
+│     │                       Progress, Settings, Daily, Missions, Chapters, Stars, HomeCards (cards and next flight), Lessons (coach text)
 │     ├─ vehicles/            Vehicle (health, boost, smoke), Plane, GroundVehicle, Car, Boat, Ground (what's under a
 │     │                       car or boat: roads, water, buildings, mountains, where to start and stop)
 │     ├─ runs/                Run (the hooks), modes.js (which run for which options), DeliveryRun (courier run),
-│     │                       DailyRun, MissionRun, FreeFlight, FreeDrive, TaxiRun, VanRun, RaceRun, SpaceDropRun (the
+│     │                       LessonRun, DailyRun, MissionRun, FreeFlight, FreeDrive, TaxiRun, VanRun, RaceRun, SpaceDropRun (the
 │     │                       space courier's last stretch)
-│     ├─ screens/             CourierHud, MiniMap, ResultsScreen, Briefing, OptionsMenu, SaveBox, PauseMenu, Hangar,
-│     │                       MissionBoard, RoadBoard, ParcelBoard (the space courier's)
+│     ├─ screens/             CourierHud, MiniMap, ResultsScreen, Briefing, OptionsMenu, SaveBox, PauseMenu, HomeScreen,
+│     │                       Hangar, Coach, MissionBoard, RoadBoard, ParcelBoard (the space courier's)
 │     └─ input/               FlightControls (keys, stick, tilt, boost), TouchStick, TiltSteer, Gamepad
 ├─ vendor/, fonts/            three.js, Trystero (bundled into one file) and the Bangers font, with their licences
 ├─ icons/                     app icons (drawn by scripts/icons.mjs)
@@ -273,7 +301,7 @@ planet-pop/
 ├─ tests/
 │  ├─ *.test.mjs              node:test suites: world (3 full planets simulated, camera, trophies), courier (Sky
 │  │                          Courier and the daily on the same planets), health, drive (cars, boats, traffic), road
-│  │                          (taxi, van, race), quality, progress, daily, ambience, themes,
+│  │                          (taxi, van, race), quality, progress, daily, clock, stars, pilot, ambience, music, home, start, lesson, themes,
 │  │                          missions + controller, touch (gestures, stick, tilt, Find, tour, free flight), options
 │  │                          (briefing, Invert Y, sensitivity, reset, your name), saves (save codes), friends (two
 │  │                          players in a room), space (real orbits, the real worlds, the map, trips, rovers and
@@ -288,12 +316,13 @@ planet-pop/
 ## Tests
 
 ```bash
-npm install
+npm ci
 npm test                  # unit + simulation tests, no browser needed (~80 s)
 npm run lint              # ESLint
 npm run screenshots       # renders scenes into ./screenshots and fails on page or shader errors
                           # (SCENES=photo,theme renders only the scenes whose names contain those words)
 ```
 
-GitHub Actions runs both on every push and pull request, uploads the screenshots as an artifact, and
-publishes them to the `ci-shots/<branch>` branch so they can be viewed on GitHub.
+Run tests and screenshots separately; overlapping them has crashed the browser. Open the PNGs after a screenshot
+run to check layout as well as page and shader errors. GitHub Actions is currently blocked by a billing lock,
+so this phase is checked locally. The handoff spec is [docs/PHASE_A.md](docs/PHASE_A.md).
