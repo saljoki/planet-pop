@@ -16,6 +16,7 @@ import { PauseMenu } from './screens/PauseMenu.js';
 import { Briefing } from './screens/Briefing.js';
 import { OptionsMenu } from './screens/OptionsMenu.js';
 import { Hangar } from './screens/Hangar.js';
+import { HomeScreen } from './screens/HomeScreen.js';
 import { MissionBoard } from './screens/MissionBoard.js';
 import { RoadBoard } from './screens/RoadBoard.js';
 
@@ -55,10 +56,10 @@ export class CourierGame {
     this.pauseMenu = new PauseMenu(this);
     this.board = new MissionBoard(app, this.progress, (m) => this.startMission(m));
     this.roads = new RoadBoard(app, (opts) => this.launch(opts));
+    this.home = new HomeScreen(app, this);
     this.hangar = new Hangar(app, this.progress, {
-      onFly: () => this.launch(), onFree: () => this.launch({ free: true }), onDaily: () => this.startDaily(),
-      onMissions: () => this.board.show(), onRoads: () => this.roads.show(), onSpace: () => app.spaceCourier?.openBoard(),
       onOptions: () => this.options.show(() => this.hangar.show()),
+      onClose: () => this.openHome(),
     });
   }
 
@@ -96,6 +97,12 @@ export class CourierGame {
   openHangar() {
     if (this.active) return;
     this.hangar.show();
+  }
+
+  /** Choose a way to play, between runs. */
+  openHome() {
+    if (this.active) return;
+    this.home.show();
   }
 
   /** Take over a car or boat from the planet (its info card's Drive button) and drive it about. */

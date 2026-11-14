@@ -65,7 +65,7 @@ export class ControlPanel extends Widget {
       this.on('buzz', 'change', (e) => app.haptics.setEnabled(e.target.checked));
     }
     this.slider('ambience', (v) => (v ? `${v}%` : 'off'), (v) => app.ambience?.setVolume(v / 100), true);
-    this.on('playBtn', 'click', () => app.game.openHangar());
+    this.on('playBtn', 'click', () => app.game.openHome());
     this.on('trophies', 'click', () => app.hud.showTrophies(app.achievements.list()));
     this.on('aboutBtn', 'click', () => app.hud.about.show());
   }

@@ -153,8 +153,8 @@ export class App {
     }
     if (initial && this.dailyLink) {
       this.dailyLink = false;
-      this.hud.toast("📅 Today's daily challenge is ready. Press Daily challenge to fly it!");
-      this.game.openHangar();
+      this.hud.toast("📅 Today's daily challenge is ready. Choose Daily on Home to fly it!");
+      this.game.openHome();
     }
     if (this.pending) {
       const { seed: s, theme: t, world: w } = this.pending;

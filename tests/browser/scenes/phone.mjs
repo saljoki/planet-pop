@@ -9,6 +9,11 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await open(`${PLANET}&debug`);
     await frames(4);
   });
+  await scene('mobile-home', 'Phone: next-up and all six Home cards without scrolling', async () => {
+    await page.evaluate(() => app.game.openHome());
+    await frames(2);
+  });
+  await page.evaluate(() => app.game.home.hide());
   await scene('mobile-sheet', 'Phone: the controls slide up from the bottom as a sheet', async () => {
     await page.evaluate(() => document.getElementById('panelToggle').click());
     await frames(2);

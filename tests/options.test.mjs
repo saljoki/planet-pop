@@ -83,8 +83,8 @@ describe('briefing, options and invert Y in Sky Courier', () => {
     game.launch();
     assert.ok(game.briefing.open && !game.active);
     game.briefing.back();
-    assert.ok(!game.briefing.open && game.hangar.open, 'Back should reopen the hangar');
-    game.hangar.hide();
+    assert.ok(!game.briefing.open && game.home.open, 'Back should reopen Home');
+    game.home.hide();
     game.launch({ mission: MISSIONS[0] });
     game.briefing.back();
     assert.ok(game.board.open, 'Back from a mission briefing should reopen the mission board');
@@ -95,21 +95,36 @@ describe('briefing, options and invert Y in Sky Courier', () => {
     game.stop();
   });
 
-  it('controller: A in the hangar opens the briefing, A again takes off, B goes back', async () => {
+  it('controller: Start opens Home, A launches next-up, B from the hangar returns Home', async () => {
     const { Gamepad } = await import('../js/game/input/Gamepad.js');
     const buttons = Array.from({ length: 16 }, () => ({ pressed: false, value: 0 }));
     const pad = { connected: true, id: 'Test pad', axes: [0, 0, 0, 0], buttons }, router = new Gamepad(app);
     Object.defineProperty(navigator, 'getGamepads', { value: () => [pad], configurable: true });
     const press = (i) => { buttons[i].pressed = true; router.update(); buttons[i].pressed = false; router.update(); };
+    press(9);
+    assert.ok(game.home.open, 'Start opens Home');
+    press(1);
+    assert.ok(!game.home.open, 'B closes Home');
     game.openHangar();
     press(0);
-    assert.ok(game.briefing.open && !game.hangar.open && !game.active, 'A in the hangar should open the briefing');
+    assert.ok(game.hangar.open && !game.briefing.open, 'A in the hangar does nothing');
     press(1);
-    assert.ok(!game.briefing.open && game.hangar.open, 'B should go back to the hangar');
+    assert.ok(game.home.open && !game.hangar.open, 'B in the hangar returns Home');
+    const startMission = game.startMission;
+    let chosen;
+    game.startMission = (mission) => { chosen = mission; game.launch({ mission }); };
+    press(0);
+    assert.equal(chosen, MISSIONS[0], 'A launches next-up');
+    assert.ok(game.briefing.open && !game.home.open && !game.active);
+    press(1);
+    assert.ok(game.board.open && !game.briefing.open, 'B returns to the mission board');
+    game.board.hide();
+    game.openHome();
     press(0);
     press(0);
-    assert.ok(game.active, 'A on the briefing should take off');
+    assert.ok(game.active, 'A on the briefing takes off');
     game.stop();
+    game.startMission = startMission;
     delete navigator.getGamepads;
   });
 

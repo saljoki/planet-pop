@@ -1,0 +1,24 @@
+/* Home: one prominent next flight, then the six ways to play. The trophy list can open above it. */
+#home { z-index: 19; padding: calc(12px + var(--st)) calc(12px + var(--sr)) calc(12px + var(--sb)) calc(12px + var(--sl)); }
+#home .panel { width: 680px; max-width: 100%; max-height: 100%; padding: 20px 24px; }
+.home-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#home h2 { margin: 0; text-align: left; }
+#hoCoins { font-size: 24px; white-space: nowrap; }
+#hoName { display: block; margin: 6px 0 14px; background: #fff; font-size: 17px; }
+#hoNext { display: block; width: 100%; padding: 14px 16px 10px; margin-bottom: 16px; }
+#hoNext .next-title { display: block; font-size: 30px; }
+#hoNext small { display: block; margin-top: 4px; font: 14px/1.35 system-ui, sans-serif; letter-spacing: 0; text-shadow: none; }
+#hoCards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+#hoCards button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 114px; padding: 10px 8px; background: #fff; }
+#hoCards button[data-card="daily"] { background: #dceeff; }
+#hoCards button[data-card="missions"] { background: #d3f8e8; }
+#hoCards button[data-card="space"] { background: #e7ddff; }
+#hoCards button[data-card="roads"] { background: #ffe5cc; }
+#hoCards button[data-card="free"] { background: #def5ff; }
+#hoCards .card-icon { font-size: 28px; line-height: 1.15; }
+#hoCards .card-name { font-size: 21px; }
+#hoCards small { font: 12px/1.3 system-ui, sans-serif; letter-spacing: 0; }
+.home-foot { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.home-foot button { flex: 1 1 auto; min-height: 42px; }
+#hoOptions { flex: 0 0 46px; background: #fff; }
+#hoExplore { background: var(--blue); }

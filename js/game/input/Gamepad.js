@@ -38,11 +38,15 @@ export class Gamepad {
         else if (edge('b')) game.stop();
       } else if (pad) game.controls.pad(s, this.prev);
     } else if (hangar.open) {
-      if (edge('a')) { hangar.hide(); game.launch(); }
-      else if (edge('b')) hangar.hide();
+      if (edge('b')) hangar.close();
+    } else if (game.home?.open && game.home.trophiesOpen) {
+      if (edge('b')) game.home.closeTrophies();
+    } else if (game.home?.open) {
+      if (edge('a')) game.home.next();
+      else if (edge('b')) game.home.hide();
     } else if (game.roads?.open) {
-      if (edge('b')) { game.roads.hide(); game.openHangar(); }
-    } else if (edge('start') && !app.building && !game.board.open) game.openHangar();
+      if (edge('b')) { game.roads.hide(); game.openHome(); }
+    } else if (edge('start') && !app.building && !game.board.open) game.openHome();
     this.prev = s;
   }
 }

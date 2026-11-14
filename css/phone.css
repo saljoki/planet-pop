@@ -57,3 +57,36 @@
 }
 @keyframes sheetup { from { transform: translateY(40%); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes sheetin { from { transform: translateX(40%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Home keeps its next flight and all six cards in view on an upright phone. */
+@media (max-width: 700px) {
+  #home .panel { padding: 14px 16px; }
+  #home h2 { font-size: 29px; }
+  #hoCoins { font-size: 21px; }
+  #hoName { margin: 6px 0 12px; }
+  #hoNext { padding: 12px 10px 10px; margin-bottom: 12px; }
+  #hoNext .next-title { font-size: 28px; }
+  #hoCards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  #hoCards button { min-height: 105px; padding: 8px 5px; }
+  #hoCards .card-name { font-size: 20px; }
+  .home-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .home-foot button { padding: 5px 6px 2px; font-size: 16px; }
+}
+/* On its side, a phone has room for three columns and needs shorter cards. */
+@media (max-height: 500px) and (orientation: landscape) {
+  #home { padding-top: calc(8px + var(--st)); padding-bottom: calc(8px + var(--sb)); }
+  #home .panel { width: 740px; padding: 10px 16px; position: relative; }
+  #home h2 { font-size: 26px; }
+  #hoCoins { font-size: 20px; }
+  #hoName { position: absolute; top: 8px; left: 45%; margin: 0; font-size: 15px; }
+  #hoNext { margin: 8px 0 10px; padding: 7px 10px 5px; }
+  #hoNext .next-title { font-size: 24px; }
+  #hoNext small { margin-top: 1px; font-size: 12px; }
+  #hoCards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  #hoCards button { min-height: 64px; padding: 5px; display: grid; grid-template-columns: 32px 1fr; column-gap: 5px; }
+  #hoCards .card-icon { grid-row: 1 / 3; font-size: 25px; }
+  #hoCards .card-name { font-size: 19px; }
+  #hoCards small { font-size: 11px; }
+  .home-foot { display: flex; margin-top: 10px; gap: 8px; }
+  .home-foot button { min-height: 36px; font-size: 16px; }
+}

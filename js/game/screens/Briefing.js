@@ -81,7 +81,7 @@ export class Briefing extends Overlay {
 
   options() { this.game.options.show(() => this.open && this.render()); }
 
-  /** Back to where the run was chosen: the mission board, the road trips, the planet (Drive this) or the hangar. */
+  /** Back to where the run was chosen: the mission board, road trips, planet (Drive this) or Home. */
   back() {
     if (!this.open) return;
     const opts = this.pending || {};
@@ -90,6 +90,6 @@ export class Briefing extends Overlay {
     if (opts.mission) this.game.board.show();
     else if (opts.take) return;
     else if (opts.drive || opts.road) this.game.roads.show();
-    else this.game.openHangar();
+    else this.game.openHome();
   }
 }

@@ -124,5 +124,6 @@ export class OptionsMenu extends Overlay {
     b.textContent = '✔ Progress reset';
     this.app.hud.toast('🗑️ Sky Courier progress reset: a fresh start in the hangar.');
     if (this.game.hangar.open) this.game.hangar.render();
+    if (this.game.home.open) this.game.home.render();
   }
 }

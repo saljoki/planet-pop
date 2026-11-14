@@ -64,6 +64,12 @@ export class Progress {
   /** Price of the next level, or null when maxed. */
   nextCost(id) { return UPGRADES.find((u) => u.id === id)?.costs[this.level(id)] ?? null; }
 
+  /** Upgrades and paint jobs that can be bought now (each next level counts once). */
+  affordable(trophies = new Set()) {
+    return UPGRADES.filter((u) => this.nextCost(u.id) !== null && this.nextCost(u.id) <= this.coins).length
+      + SKINS.filter((s) => this.skinState(s, trophies) === 'buy' && s.cost <= this.coins).length;
+  }
+
   buy(id) {
     const cost = this.nextCost(id);
     if (cost == null || this.coins < cost) return false;

@@ -6,8 +6,13 @@ export default async function courier({ page, frames, until, scene }) {
     await page.evaluate(() => { app.rig.release(true); app.game.progress.addCoins(400); app.game.openHangar(); });
     await frames(3);
   });
+  await scene('home', 'Home: next-up, six ways to play and the hangar for upgrades', async () => {
+    await page.evaluate(() => { app.game.hangar.hide(); app.game.openHome(); });
+    await frames(2);
+  });
   await scene('briefing', 'The briefing before a courier run: the goal, tips and the controls for this device', async () => {
-    await page.click('#hGo'); // a real click from the hangar
+    await page.evaluate(() => { app.game.hangar.hide(); app.game.openHome(); });
+    await page.click('[data-card="courier"]'); // a real click from Home
     await until(() => app.game.briefing.open);
     await frames(2);
   });
