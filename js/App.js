@@ -14,6 +14,7 @@ import { CameraRig } from './camera/CameraRig.js';
 import { CourierGame } from './game/CourierGame.js';
 import { DebugStats } from './ui/DebugStats.js';
 import { Ambience } from './ui/Ambience.js';
+import { Music } from './ui/Music.js';
 import { PhotoMode } from './ui/PhotoMode.js';
 import { Gamepad } from './game/input/Gamepad.js';
 import { Haptics } from './ui/Haptics.js';
@@ -91,6 +92,7 @@ export class App {
     this.postfx = new PostFX(r);
     this.sky = new Sky(this.scene);
     this.sfx = new Sfx(this);
+    this.music = new Music(this);
     this.achievements = new Achievements(this.hud);
     this.trophies = new TrophyWatch(this);
     this.rig = new CameraRig(this);
@@ -261,6 +263,7 @@ export class App {
     this.hud.update(real);
     this.sfx.update(real);
     this.ambience.update(real);
+    this.music?.update(real);
     this.quality.tick(real);
     this.debug.begin();
     if (map) this.map.render(this.postfx);

@@ -4,7 +4,7 @@ import { VERSION } from '../../core/Version.js';
 
 /**
  * ⚙️ Options, from the briefing, the hangar or the pause menu: the player's name, Invert Y and steering sensitivity,
- * tilt steering and vibration on phones, sound and ambience volume, whether to show the briefing and the mini-map,
+ * tilt steering and vibration on phones, sound, music and ambience volume, whether to show the briefing and mini-map,
  * saving and loading progress (SaveBox), and resetting Sky Courier progress.
  * Every change applies straight away and is remembered.
  */
@@ -25,6 +25,7 @@ export class OptionsMenu extends Overlay {
       <h3>Sound</h3>
       <label class="opt"><input id="oSound" type="checkbox"><span>Sound</span></label>
       <label class="opt slider"><span>Effects volume <b id="oSfxVal"></b></span><input id="oSfx" type="range" min="0" max="100" step="5"></label>
+      <label class="opt slider"><span>Music <b id="oMusVal"></b></span><input id="oMus" type="range" min="0" max="100" step="5"></label>
       <label class="opt slider"><span>Ambience <b id="oAmbVal"></b></span><input id="oAmb" type="range" min="0" max="100" step="5"></label>
       <h3>Game</h3>
       <button id="oLesson">🎓 Flying lesson</button>
@@ -38,8 +39,9 @@ export class OptionsMenu extends Overlay {
       <button id="oAbout" class="about">ℹ️ About Planet Pop · v${VERSION}</button>` });
     this.app = app;
     this.game = game;
-    this.dom = { lesson: this.$('oLesson') };
+    this.dom = { lesson: this.$('oLesson'), mus: this.$('oMus'), musVal: this.$('oMusVal') };
     this.dom.lesson.addEventListener('click', () => this.lesson());
+    this.dom.mus.addEventListener('input', (e) => this.setMusic(e.target.value));
     this.saves = new SaveBox(app, this.$('oSaves'));
     const $ = (id) => this.$(id), pct = (v) => `${Math.round(v)}%`;
     this.bind('oInvert', 'change', (e) => s.set('invertY', e.target.checked));
@@ -67,6 +69,13 @@ export class OptionsMenu extends Overlay {
   }
 
   bind(id, ev, fn) { this.on(id, ev, fn); }
+
+  setMusic(value) {
+    const pct = Math.max(0, Math.min(100, Number(value) || 0));
+    this.app.music?.setVolume(pct / 100);
+    this.dom.mus.value = pct;
+    this.dom.musVal.textContent = `${pct}%`;
+  }
 
   lesson() {
     if (this.game.active) return;
@@ -100,6 +109,8 @@ export class OptionsMenu extends Overlay {
     $('oSensVal').textContent = `${$('oSens').value}%`;
     $('oSfx').value = Math.round(s.get('sfxVolume') * 100);
     $('oSfxVal').textContent = `${$('oSfx').value}%`;
+    this.dom.mus.value = Math.round((app.music?.volume ?? 0.4) * 100);
+    this.dom.musVal.textContent = `${this.dom.mus.value}%`;
     $('oAmb').value = Math.round((app.ambience?.volume ?? 0.5) * 100);
     $('oAmbVal').textContent = `${$('oAmb').value}%`;
     $('oSound').checked = app.sfx.enabled;
