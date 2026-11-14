@@ -242,7 +242,9 @@ five returns the next day, the loop gets fixed before any store work starts.
 |---|---|---|---|
 | A | The first five minutes | Codex | Merged, v0.18.0 |
 | B1 | The clock, the daily, the missions | A second Codex session | Merged, v0.19.0 |
-| B2 | Rank, Rex, craft, supplies, contracts, streak, passport, coin retune | To assign | Next |
+| B2 | Coin retune, rank, trophies that pay, Rex's ladder, contracts, streak and gift | Codex | Now |
+| B3 | Craft, upgrade levels, paint, trails, supplies | A second Codex session | Now, in parallel |
+| B4 | Passport | To assign | After B3 |
 | C | Mobile wrapper | To assign | After B2 |
 | D | Accounts, cloud save, boards, events | To assign | After C |
 | E | Ads, Premium, packs | To assign | After D |
