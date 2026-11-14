@@ -32,6 +32,9 @@ export class LessonRun extends DeliveryRun {
 
   begin() {
     const g = this.game;
+    this.dayLength = this.app.sky.dayLength;
+    this.app.sky.dayLength = Infinity;
+    this.noon();
     this.coach = (g.coach ??= new Coach(g));
     g.el.classList.add('lesson');
     this.helpWasHidden = g.hud.dom.help.classList.contains('hidden');
@@ -54,11 +57,7 @@ export class LessonRun extends DeliveryRun {
     const g = this.game, pl = this.player, id = LESSONS[index].id;
     if (id === 'ring') {
       this.ringTarget = g.props.rings.reduce((a, b) => a.position.distanceTo(pl.pos) < b.position.distanceTo(pl.pos) ? a : b);
-      g.props.ahead(this.ringTarget, pl);
-      // Keep ahead()'s gentle placement, but use our seed for the lesson's direction and height.
-      const side = pl.up.clone().cross(pl.fwd), d = pl.up.clone().addScaledVector(pl.fwd, 0.25 + this.rand() * 0.05)
-        .addScaledVector(side, (this.rand() - 0.5) * 0.04).normalize();
-      this.putRing(this.ringTarget, d, pl.fwd, Math.max(R + 2.3, this.planet.groundR(d) + 0.9));
+      this.ringAhead();
     }
     if (id === 'deliver') {
       const towns = this.planet.cities.sites.filter((town) => pl.up.angleTo(town.c) >= 0.35);
@@ -87,6 +86,7 @@ export class LessonRun extends DeliveryRun {
   }
 
   update(dt) {
+    this.noon();
     if (this.wait > 0) {
       this.wait -= dt;
       if (this.wait <= 0) this.enter(this.step + 1);
@@ -102,6 +102,8 @@ export class LessonRun extends DeliveryRun {
       progressed = true;
       if (this.effort + 1e-6 >= step.seconds) { this.advance(); return; }
     }
+    if (step.id === 'ring' && _target.copy(this.ringTarget.position).sub(pl.pos).dot(pl.fwd) < 0
+      && _target.length() > 2.5) this.ringAhead(true);
     if (step.id === 'ring' || step.id === 'deliver') {
       const distance = step.id === 'ring' ? pl.pos.distanceTo(this.ringTarget.position)
         : pl.up.angleTo(this.dest.c) * R + Math.max(0, pl.alt - this.planet.surfR(this.dest.c) - 2.3);
@@ -119,6 +121,24 @@ export class LessonRun extends DeliveryRun {
 
   /** A blue ring only teaches this step when collected while its prompt is up. */
   ring() { if (LESSONS[this.step].id === 'ring') this.advance(); }
+
+  /** Keep the first flight in daylight wherever the pilot goes, including between prompts. */
+  noon() {
+    const sky = this.app.sky, c = this.player.up;
+    sky.angle = Math.atan2(c.dot(sky.sv), c.dot(sky.su));
+    sky.update(0);
+  }
+
+  /** A missed practice ring returns ahead at the pilot's height, without a reward. */
+  ringAhead(atHeight = false) {
+    const pl = this.player;
+    this.game.props.ahead(this.ringTarget, pl);
+    // Keep ahead()'s gentle placement, but use our seed for the lesson's direction and height.
+    const side = pl.up.clone().cross(pl.fwd), d = pl.up.clone().addScaledVector(pl.fwd, 0.25 + this.rand() * 0.05)
+      .addScaledVector(side, (this.rand() - 0.5) * 0.04).normalize();
+    this.putRing(this.ringTarget, d, pl.fwd, Math.max(atHeight ? pl.alt : R + 2.3, this.planet.groundR(d) + 0.9));
+    this.bestDistance = Infinity;
+  }
 
   /** Seeded scatter keeps all the lesson's rings repeatable, including after collection. */
   placeRing(ring) {
@@ -159,6 +179,7 @@ export class LessonRun extends DeliveryRun {
   }
 
   end() {
+    this.app.sky.dayLength = this.dayLength;
     this.coach?.hide();
     this.game.el.classList.remove('lesson');
     this.game.hud.dom.help.classList.toggle('hidden', this.helpWasHidden);

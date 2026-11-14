@@ -46,6 +46,7 @@ into the **🎓 flying lesson**, and a returning pilot opens **🏠 Home**. **En
 **Esc** explores. On a controller, **A** or **Start** plays and **B** explores.
 
 The lesson teaches steering, climbing, boosting, blue rings and the first parcel, one short prompt at a time.
+The sun stays at noon over your plane, and a missed practice ring returns ahead at your height.
 There is no clock, and a wreck gives you a fresh plane. Completing it earns **50 coins**, once; skipping marks it
 done without coins. Its results offer **First Flight**, the existing three-parcel mission, or **Home**. Pause offers
 **Skip the lesson**; **⚙️ Options → 🎓 Flying lesson** lets you practise again between runs. Existing progress

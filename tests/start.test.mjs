@@ -134,3 +134,32 @@ test('PLAY sends a fresh pilot straight to the flying lesson', () => {
   assert.equal(start.open, false);
   assert.equal(app.game.home.open, false);
 });
+
+test('the paused planet uses Resume to distinguish it from starting a game', () => {
+  const panel = titleScreen().hud.panel, button = fakeEl('button'), select = panel.$;
+  panel.$ = (id) => id === 'pauseBtn' ? button : select.call(panel, id);
+  panel.setPaused(true);
+  assert.equal(button.textContent, '▶ Resume');
+  panel.setPaused(false);
+  assert.equal(button.textContent, '⏸ Pause');
+});
+
+test('a named pilot gets only the start greeting, while invite and daily links keep the welcome toast', async () => {
+  const { App } = await import('../js/App.js');
+  for (const route of ['start', 'invite', 'daily']) {
+    const app = titleScreen(), messages = [];
+    app.settings.setPlayerName('Ata');
+    app.hud.toast = (text) => messages.push(text);
+    app.buildPlanet = async () => ({});
+    app.swapIn = (planet) => { app.planet = planet; };
+    app.quality = { pauseFor() {} };
+    app.friends = { join() {} };
+    app.roomLink = route === 'invite' ? 'ABCD' : null;
+    app.dailyLink = route === 'daily';
+    if (route === 'start') app.start.show();
+    await App.prototype.newPlanet.call(app, 20261014, true);
+    assert.equal(messages.filter((text) => text.includes('Welcome back')).length, route === 'start' ? 0 : 1, route);
+    app.start.dismiss();
+    app.game.home.hide();
+  }
+});

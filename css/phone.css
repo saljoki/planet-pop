@@ -6,6 +6,15 @@
   #gGoal { font-size: 16px; white-space: normal; width: max-content; max-width: calc(100vw - 32px); text-align: center; }
   .skins { grid-template-columns: repeat(2, 1fr); }
 }
+/* Upright flights reserve two rows for badges, with the mode on its own line. */
+@media (max-width: 640px) and (orientation: portrait) {
+  #gStats { left: calc(16px + var(--sl)); right: calc(16px + var(--sr)); transform: none;
+    flex-wrap: wrap; justify-content: center; }
+  #gStats .badge { flex: none; }
+  #gDaily, #gMission, #gFree { width: 100%; text-align: center; }
+  #game:not(.lesson) #gArrow { top: calc(116px + var(--st)); }
+  #game:not(.lesson) #gGoal { top: calc(206px + var(--st)); }
+}
 
 /* ---------- Phones ---------- */
 /* bigger targets for fingers */
@@ -37,6 +46,9 @@
   #gPauseBtn { top: calc(66px + var(--st)); }
   #gMapBtn { top: calc(66px + var(--st)); right: calc(72px + var(--sr)); }
   #gMap { left: auto; top: auto; right: calc(12px + var(--sr)); bottom: calc(186px + var(--sb)); width: 116px; height: 116px; border-width: 3px; }
+}
+@media (max-width: 640px) and (orientation: portrait) {
+  #gPauseBtn, #gMapBtn { top: calc(100px + var(--st)); }
 }
 /* phones on their side: little vertical room, so slimmer badges and the sheets come in from the right */
 @media (max-height: 500px) and (orientation: landscape) {
@@ -79,7 +91,7 @@
   #home h2 { font-size: 26px; }
   #hoCoins { font-size: 20px; }
   #hoName { position: absolute; top: 8px; left: 45%; margin: 0; font-size: 15px; }
-  #hoNext { margin: 8px 0 10px; padding: 7px 10px 5px; }
+  #hoNext { margin: 20px 0 10px; padding: 7px 10px 5px; }
   #hoNext .next-title { font-size: 24px; }
   #hoNext small { margin-top: 1px; font-size: 12px; }
   #hoCards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }

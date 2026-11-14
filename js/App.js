@@ -152,7 +152,7 @@ export class App {
     this.quality.pauseFor(3);
     this.building = false;
     if (initial && this.planet) this.start?.ready();
-    if (initial && this.settings.playerName) this.hud.toast(`👋 Welcome back, ${this.settings.playerName}!`);
+    if (initial && this.settings.playerName && !this.start?.open) this.hud.toast(`👋 Welcome back, ${this.settings.playerName}!`);
     if (initial) SaveBox.welcome(this.hud);
     if (initial && this.roomLink) { // opened from an invite: into the room (and a name first, if there isn't one)
       this.friends.join(this.roomLink);

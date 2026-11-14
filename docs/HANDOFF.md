@@ -69,7 +69,9 @@ system you can fly round.
     stats and suggestion order. `screens/Hangar.js` is upgrades and paint only. `screens/Briefing.js` keeps its
     tips, controls and skip choice inside closed How to play details.
   - **Lesson:** `runs/LessonRun.js`, `Lessons.js` (steps and text) and `screens/Coach.js`; separate from First Flight,
-    on the same default planet, with no countdown or Rex. `Progress` keeps the optional `lesson` flag and pays 50
+    on the same default planet, with no countdown or Rex. The sun follows the plane at noon; a missed practice
+    ring returns ahead at the plane's height. The previous day length is restored when the lesson ends.
+    `Progress` keeps the optional `lesson` flag and pays 50
     coins on first completion; skipping marks it done without coins.
   - **Runs:** `runs/*Run.js` are the game modes. `Run.js` documents the hooks and `modes.js` picks the run.
   - **Hazards and moves:** `FlightHazards` (storms, dust, heat, ring ice, wind) and `Feats` (long jumps, loops round
@@ -160,6 +162,9 @@ system you can fly round.
   hangar to Home, the hangar keeps upgrades and paint, briefings open short, and menu/flight/space music has its
   own Options slider. Existing progress and First Flight stay intact. The full scope and package order are in
   [PHASE_A.md](PHASE_A.md); see the PR for final check results and any deviations.
+- **A7 review fixes** keep the lesson in daylight and bring missed rings ahead, recognise paint-only and daily-only
+  pilots, label paused time Resume, avoid a duplicate welcome, and give Home and flight badges room on phones.
+  Version stays v0.18.0; the branch is still awaiting review and has not been merged.
 - **Music is ready for Ata's ear.** Audio scheduling, states and persistence are tested. Ata must listen and say yes
   before the music package is accepted. Claude reviews the phase; Ata decides when the branch merges.
 - **The solar system plan is complete.** Ata's design doc, "Planet Pop: Solar System design" (a Claude Docs artifact

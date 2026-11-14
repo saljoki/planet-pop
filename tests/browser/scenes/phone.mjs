@@ -62,6 +62,46 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await frames(6);
   });
   await page.touchscreen.touchEnd().catch(() => {}); // (nothing to lift if that scene was filtered out)
+  for (const [width, height] of [[390, 844], [360, 780]]) {
+    await scene(`mobile-courier-badges-${width}`, `Phone (${width} × ${height}): a long mission badge, five-digit score and four-digit coins fit`, async () => {
+      await page.setViewport({ width, height, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+      await page.evaluate(async () => {
+        const { MISSIONS } = await import('./js/game/Missions.js');
+        app.game.stop();
+        app.game.start({ mission: MISSIONS.find((m) => m.id === 'rings') });
+        app.paused = true; // Keep the staged badge values while the browser renders.
+        app.game.hud.update();
+        const d = app.game.hud.dom;
+        d.mission.textContent = '🎯 0 / 3 through the ring · ⭐ 20s';
+        d.score.textContent = '⭐ 99999';
+        d.time.textContent = '⏱ 120';
+        d.combo.textContent = '🔥 x5';
+        d.coins.textContent = '🪙 9999';
+        d.arrow.style.transform = 'rotate(45deg)'; // Its largest bounds must still clear the badge row.
+      });
+      await until(() => app.rig.mode === 'game');
+      await frames(2);
+      await page.evaluate(() => {
+        const badges = [...document.querySelectorAll('#gStats .badge:not(.hidden)')];
+        const controls = ['gArrow', 'gGoal', 'gMapBtn', 'gPauseBtn'].map((id) => document.getElementById(id));
+        for (const badge of badges) {
+          const r = badge.getBoundingClientRect();
+          // Include the badge's 4 px shadow in the visible bounds and clearance checks.
+          if (r.left < 0 || r.right + 4 > innerWidth || r.top < 0 || r.bottom + 4 > innerHeight)
+            throw new Error(`${badge.id} is clipped at ${innerWidth} px`);
+          if (badge.scrollWidth > badge.clientWidth) throw new Error(`${badge.id} text overflows at ${innerWidth} px`);
+          for (const control of controls) {
+            if (getComputedStyle(control).display === 'none') continue;
+            const c = control.getBoundingClientRect();
+            if (r.left < c.right && r.right + 4 > c.left && r.top < c.bottom && r.bottom + 4 > c.top)
+              throw new Error(`${badge.id} overlaps ${control.id} at ${innerWidth} px`);
+          }
+        }
+      });
+    });
+  }
+  await page.evaluate(() => { app.paused = false; });
+  await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
   await scene('mobile-briefing', 'Phone: short briefing with Start visible and How to play closed', async () => {
     await page.evaluate(async () => {
       const { MISSIONS } = await import('./js/game/Missions.js'); // (the page was reloaded at phone size)
@@ -136,6 +176,10 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
   await scene('landscape-home', 'Phone on its side: next-up and all six Home cards', async () => {
     await page.evaluate(() => { app.game.stop(); app.game.openHome(); });
     await frames(2);
+    const gap = await page.evaluate(() => document.getElementById('hoNext').getBoundingClientRect().top
+      - document.getElementById('hoName').getBoundingClientRect().bottom);
+    // The name button casts a 3 px shadow: leave at least 4 px clear below it.
+    if (gap < 7) throw new Error(`Home's name button needs a clear 4 px gap; measured ${gap - 3} px`);
   });
   await page.evaluate(() => app.game.home.hide());
   await scene('landscape-panel', 'Phone on its side: the controls come in from the right', async () => {

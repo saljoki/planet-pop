@@ -70,8 +70,16 @@ describe('the flying lesson', () => {
     assert.equal(lesson.wait, 0);
   });
 
-  it('a scripted pilot physically flies through the ring and delivers in under 45 seconds', () => {
+  it('a scripted pilot flies in daylight from a midnight start and delivers in under 45 seconds', () => {
+    const sky = app.sky, dayLength = sky.dayLength;
     game.start({ lesson: true });
+    const town = game.player.up.clone();
+    game.stop();
+    sky.angle = Math.atan2(town.dot(sky.sv), town.dot(sky.su)) + Math.PI;
+    sky.update(0);
+    assert.ok(planet.nightAt(town) > 0.9, 'the lesson town must be dark before take-off');
+    game.start({ lesson: true });
+    assert.ok(planet.nightAt(game.player.up) < 0.1, 'the lesson should begin in daylight');
     const seen = new Set(), dt = 1 / 60;
     let seconds = 0;
     for (; seconds < 45 && !game.over; seconds += dt) {
@@ -94,6 +102,7 @@ describe('the flying lesson', () => {
       app.sky.update(dt);
       planet.update(dt, app.simTime);
       game.update(dt);
+      assert.ok(planet.nightAt(game.player.up) < 0.1, `night during ${id} at ${seconds.toFixed(2)} s`);
     }
     assert.deepEqual([...seen], LESSONS.map((step) => step.id));
     assert.ok(game.over, `still on ${LESSONS[game.run.step].id} after ${seconds.toFixed(1)} seconds`);
@@ -101,6 +110,32 @@ describe('the flying lesson', () => {
     assert.equal(game.results.dom.title.textContent, LESSON_TEXT.title);
     assert.equal(game.progress.coins, LESSON_COINS, 'practice rings must not pay extra coins');
     assert.equal(game.progress.lesson, true);
+    game.stop();
+    assert.equal(sky.dayLength, dayLength, 'stopping restores the previous day length');
+  });
+
+  it('brings a missed ring ahead so a climbing pilot can finish it flying straight and level', () => {
+    game.start({ lesson: true });
+    const lesson = game.run, dt = 1 / 60;
+    let ringSeconds = 0, reachedRing = false;
+    for (let seconds = 0; seconds < 25 && lesson.step < 4 && ringSeconds < 15; seconds += dt) {
+      const pl = game.player, id = LESSONS[lesson.step].id;
+      release(pl);
+      if (lesson.wait <= 0) {
+        if (id === 'steer') pl.input.left = true;
+        else if (id === 'climb') pl.input.up = true;
+        else if (id === 'boost') pl.input.boost = true;
+      }
+      if (id === 'ring') { reachedRing = true; ringSeconds += dt; }
+      app.simTime += dt;
+      app.sky.update(dt);
+      planet.update(dt, app.simTime);
+      game.update(dt);
+    }
+    assert.ok(reachedRing, 'the first three steps must be flown with their inputs');
+    assert.equal(lesson.step, 4, `the level pilot is still chasing the ring after ${ringSeconds.toFixed(1)} s`);
+    assert.ok(ringSeconds < 15);
+    assert.equal(game.progress.coins, 0, 'a returned practice ring pays no coins');
   });
 
   it('has no clock or Rex and stays active through 200 idle seconds', () => {
@@ -165,7 +200,8 @@ describe('the flying lesson', () => {
     const saved = loadJson('planetpop.courier', {});
     delete saved.lesson;
     assert.deepEqual(saved, old);
-    for (const progress of [{ coins: 1 }, { best: 1 }, { levels: { wings: 1 } }, { missions: ['first'] }, { bests: { taxi: 0 } }]) {
+    for (const progress of [{ coins: 1 }, { best: 1 }, { levels: { wings: 1 } }, { missions: ['first'] }, { bests: { taxi: 0 } },
+      { owned: ['classic', 'sky'] }, { daily: { date: '2026-11-13', best: 0 } }]) {
       saveJson('planetpop.courier', progress);
       assert.equal(new Progress().needsLesson, false, JSON.stringify(progress));
     }

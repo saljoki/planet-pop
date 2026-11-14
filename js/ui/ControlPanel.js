@@ -122,7 +122,7 @@ export class ControlPanel extends Widget {
     }
   }
 
-  setPaused(paused) { this.$('pauseBtn').textContent = paused ? '▶ Play' : '⏸ Pause'; }
+  setPaused(paused) { this.$('pauseBtn').textContent = paused ? '▶ Resume' : '⏸ Pause'; }
 
   /** Shows the chosen quality mode; in Auto it also names the level currently in use. */
   setQuality(mode, levelName) {

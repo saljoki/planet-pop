@@ -108,7 +108,7 @@ export class Progress {
 
   /** Existing pilots keep going where they left off; only an empty save needs the lesson. */
   get needsLesson() {
-    return !this.lesson && !this.coins && !this.best && !this.missions.size
+    return !this.lesson && !this.coins && !this.best && !this.missions.size && this.owned.size <= 1 && !this.daily
       && !Object.values(this.levels).some((n) => n > 0) && !Object.keys(this.bests).length;
   }
 
