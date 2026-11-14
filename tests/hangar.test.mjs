@@ -23,21 +23,23 @@ test('at rank thirty and 50,000 coins all five craft can be bought', () => {
   const g = makeApp({}).game, h = g.hangar;
   g.career = { rank: 30 }; g.progress.addCoins(50000); h.show();
   assert.equal((h.dom.crafts.innerHTML.match(/class="craft-card buy"/g) || []).length, 5);
-  assert.match(h.dom.crafts.innerHTML, /🪙 3,000/);
+  assert.deepEqual([...h.dom.crafts.innerHTML.matchAll(/data-craft="([^"]+)"/g)].map((m) => m[1]), ['classic', 'bulldog', 'hummingbird', 'mule', 'swift', 'comet']);
+  assert.match(h.dom.crafts.innerHTML, /data-craft="bulldog"[^>]*>🪙 3,000/);
+  assert.match(h.dom.crafts.innerHTML, /data-craft="swift"[^>]*>🪙 9,000/);
   assert.doesNotMatch(h.dom.crafts.innerHTML, /🔒 Rank/);
   assert.equal((h.dom.skins.innerHTML.match(/data-skin=/g) || []).length, 12);
   assert.equal((h.dom.trails.innerHTML.match(/data-trail=/g) || []).length, 6);
 });
 
-test('the delegated purchase flies Swift, refreshes the header and pays only once', () => {
+test('the delegated purchase flies Bulldog, refreshes the header and pays only once', () => {
   const g = makeApp({}).game, h = g.hangar;
   g.career = { rank: 4 }; g.progress.addCoins(50000); h.show();
-  h.click({ target: { closest: () => ({ dataset: { craft: 'swift' } }) } });
-  assert.equal(g.progress.craft, 'swift');
+  h.click({ target: { closest: () => ({ dataset: { craft: 'bulldog' } }) } });
+  assert.equal(g.progress.craft, 'bulldog');
   assert.equal(g.progress.coins, 47000);
-  assert.equal(h.dom.craftHeader.textContent, '✈️ Craft · Swift');
-  assert.match(h.dom.crafts.innerHTML, /data-craft="swift" disabled>Flying/);
-  h.pickCraft('classic'); h.pickCraft('swift');
+  assert.equal(h.dom.craftHeader.textContent, '✈️ Craft · Bulldog');
+  assert.match(h.dom.crafts.innerHTML, /data-craft="bulldog" disabled>Flying/);
+  h.pickCraft('classic'); h.pickCraft('bulldog');
   assert.equal(g.progress.coins, 47000);
   h.pickTrail('snow');
   assert.equal(h.dom.trailHeader.textContent, '💨 Trails · 2 / 6');

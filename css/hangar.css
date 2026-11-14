@@ -3,6 +3,7 @@
 .supply-choices { display: flex; flex-wrap: wrap; gap: 6px; }
 #bSupplies button { flex: 1 1 120px; padding: 7px 5px 4px; font-size: 17px; background: #fff; }
 #bSupplies button[aria-pressed="true"] { background: var(--blue); }
+.supply-price { white-space: nowrap; }
 .supply-note { margin: 6px 0 0; text-align: center; font: 13px/1.4 system-ui, sans-serif; letter-spacing: 0; }
 #gSupplies { position: fixed; left: calc(224px + var(--sl)); bottom: calc(44px + var(--sb)); font-size: 18px; }
 @media (max-width: 480px), (max-height: 500px) {
@@ -17,6 +18,9 @@
 }
 
 @media (max-width: 480px) {
+  #bSupplies button { min-width: 0; padding-right: 2px; padding-left: 2px; font-size: 14px; letter-spacing: 0; }
+  #bSupplies .supply-name, #bSupplies .supply-price { display: block; white-space: nowrap; }
+  #bSupplies .supply-separator { display: none; }
   #gHealth, #gBoost { width: 145px; }
   #gSupplies { left: calc(196px + var(--sl)); font-size: 16px; }
 }

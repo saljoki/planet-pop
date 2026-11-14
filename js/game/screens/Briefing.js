@@ -113,7 +113,7 @@ export class Briefing extends Overlay {
     d.supplyButtons.innerHTML = allowed ? SUPPLIES.map((s) => {
       const chosen = this.selected.has(s.id);
       const disabled = !chosen && (this.selected.size >= slots || this.supplyCost + s.cost > this.game.progress.coins);
-      return `<button data-supply="${s.id}" title="${s.desc}" aria-pressed="${chosen}" ${disabled ? 'disabled' : ''}>${s.icon} ${s.name} · 🪙 ${s.cost}</button>`;
+      return `<button data-supply="${s.id}" title="${s.desc}" aria-pressed="${chosen}" ${disabled ? 'disabled' : ''}><span class="supply-name">${s.icon} ${s.name}</span><span class="supply-separator" aria-hidden="true"> · </span><span class="supply-price">🪙 ${s.cost}</span></button>`;
     }).join('') : '';
     const short = allowed && this.selected.size < slots && !SUPPLIES.some((s) => !this.selected.has(s.id) && this.supplyCost + s.cost <= this.game.progress.coins);
     d.supplyNote.textContent = this.supplyError || (short ? 'Not enough coins' : `${this.selected.size} of ${slots} slots · 🪙 ${this.supplyCost}`);

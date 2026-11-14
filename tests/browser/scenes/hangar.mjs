@@ -14,9 +14,12 @@ export default async function hangar({ page, frames, until, scene }) {
     await page.evaluate((section) => {
       const g = app.game, p = g.progress;
       p.reset(); p.addCoins(50000); g.career = { rank: 30 };
-      p.chooseCraft('swift', 30); p.chooseSkin('sky', app.achievements.done);
+      p.chooseCraft('bulldog', 30); p.chooseSkin('sky', app.achievements.done);
       for (const id of ['engine', 'engine', 'wings', 'wings', 'tank', 'clock', 'armour']) p.buy(id);
       g.openHangar(); g.hangar.openSection(section);
+      const cards = [...g.hangar.dom.crafts.querySelectorAll('[data-craft]')];
+      if (cards.map((b) => b.dataset.craft).join(',') !== 'classic,bulldog,hummingbird,mule,swift,comet') throw new Error('Wrong craft order');
+      if (cards[1].textContent !== 'Flying' || cards[4].textContent !== '🪙 9,000' || g.hangar.dom.craftHeader.textContent !== '✈️ Craft · Bulldog') throw new Error('Bulldog or Swift has the wrong shop state');
     }, section);
     await frames(2);
   };
@@ -36,6 +39,17 @@ export default async function hangar({ page, frames, until, scene }) {
       if (start.top < Math.max(0, box.top) || start.bottom > Math.min(innerHeight, box.bottom) || start.left < 0 || start.right > innerWidth) throw new Error('Start is outside the visible briefing');
       if (panel.scrollHeight > panel.clientHeight + 1) throw new Error('The closed briefing needs scrolling');
       if (g.briefing.dom.supplies.classList.contains('hidden') || g.briefing.supplyCost !== 150) throw new Error('All three supplies are not selected');
+      if (innerWidth <= 480) {
+        const buttons = [...g.briefing.dom.supplyButtons.querySelectorAll('button')];
+        for (const button of buttons) {
+          const name = button.querySelector('.supply-name'), price = button.querySelector('.supply-price');
+          const n = name?.getBoundingClientRect(), p = price?.getBoundingClientRect();
+          const line = parseFloat(getComputedStyle(button).fontSize) * 1.5;
+          if (!n || !p || n.height > line || p.height > line) throw new Error('Supply name or price wraps onto another line');
+          if (name.scrollWidth > name.clientWidth || price.scrollWidth > price.clientWidth || p.top < n.bottom) throw new Error(`Supply label is not two unclipped lines: ${button.dataset.supply}`);
+        }
+        if (new Set(buttons.map((b) => b.getBoundingClientRect().top)).size !== 1) throw new Error('Supply buttons broke into multiple rows');
+      }
     });
   };
   const flight = async (craft, trail, showTrail = false) => {
@@ -71,7 +85,7 @@ export default async function hangar({ page, frames, until, scene }) {
     });
     await frames(2);
   });
-  for (const craft of ['swift', 'hummingbird', 'mule', 'bulldog', 'comet']) {
+  for (const craft of ['bulldog', 'hummingbird', 'mule', 'swift', 'comet']) {
     await scene(`flight-craft-${craft}`, `${craft}: its silhouette from the chase camera`, () => flight(craft, 'classic'));
   }
   for (const trail of ['snow', 'candy', 'ember', 'aurora', 'stardust']) {

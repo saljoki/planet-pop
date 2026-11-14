@@ -17,10 +17,14 @@ describe('hangar craft', () => {
   after(() => { game.stop(); planet.dispose(); });
 
   it('applies each craft to a copy, keeping the stock stats intact and armour positive', () => {
-    const mods = [{}, { speed: 1.06, armour: 1.6 }, { turn: 1.35, drain: 1.3 }, { hauler: true, speed: .94 }, { armour: .6, turn: .85 }, { drain: .5, speed: .93 }];
-    CRAFTS.forEach((c, i) => {
+    const mods = { classic: {}, bulldog: { armour: .6, turn: .85 }, hummingbird: { turn: 1.35, drain: 1.3 },
+      mule: { hauler: true, speed: .97 }, swift: { speed: 1.06, armour: 1.6 }, comet: { drain: .5, speed: .93 } };
+    assert.deepEqual(CRAFTS.map(({ id, rank, cost }) => [id, rank, cost]), [
+      ['classic', 1, 0], ['bulldog', 4, 3000], ['hummingbird', 7, 5000], ['mule', 10, 7000], ['swift', 14, 9000], ['comet', 18, 12000],
+    ]);
+    CRAFTS.forEach((c) => {
       const expected = { ...BASE_STATS };
-      for (const [key, value] of Object.entries(mods[i])) expected[key] = key === 'hauler' ? value : BASE_STATS[key] * value;
+      for (const [key, value] of Object.entries(mods[c.id])) expected[key] = key === 'hauler' ? value : BASE_STATS[key] * value;
       assert.deepEqual(craftStats(BASE_STATS, c), expected);
       assert.notEqual(craftStats(BASE_STATS, c), BASE_STATS);
       assert.equal(craftStats({ ...BASE_STATS, armour: .01 }, c).armour, .1);
@@ -41,24 +45,31 @@ describe('hangar craft', () => {
   });
 
   it('rank and wallet gate a purchase once; switching and reload keep ownership', () => {
-    const p = game.progress;
-    p.addCoins(8000);
-    assert.equal(p.chooseCraft('swift', 3), false);
-    assert.equal(p.coins, 8000);
-    assert.equal(p.chooseCraft('swift', 4), true);
-    assert.equal(p.coins, 5000);
-    assert.equal(p.craftState(CRAFTS[1], 4), 'flying');
-    assert.equal(p.chooseCraft('classic', 4), true);
-    assert.equal(p.craftState(CRAFTS[1], 4), 'owned');
-    assert.equal(p.chooseCraft('swift', 4), true);
-    assert.equal(p.coins, 5000);
-    assert.equal(p.chooseCraft('comet', 30), false);
-    const again = new Progress();
-    assert.equal(again.craft, 'swift');
-    assert.deepEqual([...again.crafts], ['classic', 'swift']);
-    again.reset();
-    assert.equal(again.craft, 'classic');
-    assert.deepEqual([...again.crafts], ['classic']);
+    for (const { id, rank, cost } of [{ id: 'bulldog', rank: 4, cost: 3000 }, { id: 'swift', rank: 14, cost: 9000 }]) {
+      const p = new Progress(), craft = CRAFTS.find((c) => c.id === id);
+      p.reset();
+      p.addCoins(cost + 5000);
+      assert.equal(p.chooseCraft(id, rank - 1), false);
+      assert.equal(p.coins, cost + 5000);
+      assert.equal(p.chooseCraft(id, rank), true);
+      assert.equal(p.coins, 5000);
+      assert.equal(p.craftState(craft, rank), 'flying');
+      assert.equal(p.chooseCraft('classic', rank), true);
+      assert.equal(p.craftState(craft, rank), 'owned');
+      assert.equal(p.chooseCraft(id, rank), true);
+      assert.equal(p.coins, 5000);
+      assert.equal(p.chooseCraft('comet', 30), false);
+      const again = new Progress();
+      assert.equal(again.craft, id);
+      assert.deepEqual([...again.crafts], ['classic', id]);
+      // Moving a gate never charges an existing owner again or takes their craft away.
+      assert.equal(again.chooseCraft('classic', 1), true);
+      assert.equal(again.chooseCraft(id, 1), true);
+      assert.equal(again.coins, 5000);
+      again.reset();
+      assert.equal(again.craft, 'classic');
+      assert.deepEqual([...again.crafts], ['classic']);
+    }
   });
 
   it('the daily stays stock Classic with max upgrades and Comet selected', () => {
@@ -152,7 +163,7 @@ describe('hangar craft', () => {
     assert.equal(p.affordable(new Set(), 1), 21);
     assert.equal(p.affordable(new Set(), 4), 22);
     assert.equal(p.affordable(new Set(), 30), 26);
-    p.chooseCraft('swift', 4);
+    p.chooseCraft('bulldog', 4);
     p.chooseTrail('snow');
     p.chooseSkin('sunset', new Set());
     assert.equal(p.affordable(new Set(), 30), 23);
