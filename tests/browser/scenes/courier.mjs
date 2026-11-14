@@ -16,6 +16,11 @@ export default async function courier({ page, frames, until, scene }) {
     await frames(2);
     await careerFits(page, '#home');
   });
+  await scene('trophy-pay', 'A trophy toast includes its 100-coin reward', async () => {
+    await stageTrophy(page);
+    await frames(1);
+  });
+  await page.evaluate(() => document.querySelector('#toasts [data-career-toast]')?.remove());
   await scene('pilot-card', 'Pilot: rank, XP and the next three rewards', async () => {
     await page.evaluate(() => {
       const g = app.game;
@@ -272,5 +277,21 @@ export async function stageRankUp(page) {
     g.stop(); g.home.hide(); g.pilot.hide(); g.career.news(); g.start({ free: true });
     g.career.addXp(xpForRank(Math.min(30, g.career.rank + 2)) - g.career.xp + 85);
     g.finish({ title: '🎖️ Two ranks up!', html: '✈️ A great flight.' }, 'trophy');
+  });
+}
+
+export async function stageTrophy(page) {
+  await page.evaluate(() => {
+    const g = app.game;
+    g.stop(); g.home.hide(); g.pilot.hide();
+    const trophy = app.achievements.list().find((t) => !t.unlocked);
+    app.achievements.unlock(trophy.id);
+    const box = document.getElementById('toasts'), toast = box.lastElementChild.cloneNode(true);
+    toast.dataset.careerToast = 'true';
+    toast.style.animation = 'none'; // Hold the real toast's appearance for a slow software-WebGL capture.
+    box.replaceChildren(toast);
+    const r = toast.getBoundingClientRect();
+    if (!toast.textContent.includes('+100 🪙') || r.left < 0 || r.right + 4 > innerWidth || r.top < 0 || r.bottom + 4 > innerHeight)
+      throw new Error(`Trophy payout toast does not fit ${innerWidth} × ${innerHeight}`);
   });
 }

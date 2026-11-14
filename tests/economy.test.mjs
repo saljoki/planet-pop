@@ -1,6 +1,7 @@
 import { describe, it, before, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeWorld } from './helpers/world.mjs';
+import { rewardCoins } from './helpers/rewards.mjs';
 import { coinsFor, RING_COINS, UFO_COINS, RACE_COINS } from '../js/game/Economy.js';
 import { CARGO } from '../js/game/Cargo.js';
 import { MISSIONS } from '../js/game/Missions.js';
@@ -49,8 +50,8 @@ describe('the scored-run economy', () => {
       game.stop();
       game.start({ road: 'race' });
       const before = game.progress.coins;
-      game.run.over(won);
-      assert.equal(game.progress.coins - before, RACE_COINS[won ? 'win' : 'lose']);
+      const rewards = rewardCoins(game.progress, () => game.run.over(won));
+      assert.equal(game.progress.coins - before, RACE_COINS[won ? 'win' : 'lose'] + rewards);
     }
   });
 

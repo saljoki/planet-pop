@@ -35,7 +35,8 @@
 .label { position: fixed; z-index: 4; pointer-events: none; background: #fff; border: 3px solid var(--ink); border-radius: 12px;
   box-shadow: 3px 3px 0 var(--ink); padding: 4px 10px 2px; font-size: 18px; white-space: nowrap; transform: translate(-50%, calc(-100% - 16px)); }
 
-#toasts { position: fixed; left: calc(16px + var(--sl)); bottom: calc(64px + var(--sb)); z-index: 9; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+#toasts { position: fixed; left: calc(16px + var(--sl)); bottom: calc(64px + var(--sb)); z-index: 30; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  max-width: calc(100vw - 36px - var(--sl) - var(--sr)); }
 .toast { background: var(--yellow); border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 6px 12px 3px; font-size: 19px;
   animation: slidein 0.35s ease-out, fadeout 0.6s ease-in 3.4s forwards; }
 

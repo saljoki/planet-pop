@@ -1,5 +1,5 @@
 import { loadJson, saveJson, forget } from '../core/Store.js';
-import { RANKS, MAX_RANK, XP, xpForRank, rankFor, rankReward } from './Ranks.js';
+import { RANKS, MAX_RANK, XP, TROPHY_COINS, xpForRank, rankFor, rankReward } from './Ranks.js';
 
 const KEY = 'planetpop.career';
 const fresh = () => ({ xp: 0, paid: [], rex: { you: 0, rex: 0 },
@@ -15,14 +15,18 @@ export class Career {
     this.data = { ...defaults, ...saved, rex: { ...defaults.rex, ...saved?.rex },
       day: { ...defaults.day, ...saved?.day }, streak: { ...defaults.streak, ...saved?.streak } };
     this.data.xp = Number.isFinite(this.data.xp) ? Math.max(0, this.data.xp) : 0;
+    this.data.paid = Array.isArray(this.data.paid) ? [...new Set(this.data.paid)] : [];
     this.lines = [];
     progress.onEarn = (n) => this.addXp(n);
     progress.onStars = (n) => this.addXp(n * XP.star);
+    app.achievements.onUnlock = (id) => this.trophy(id);
     const coins = progress.coins;
     this.migrating = true;
     if (!saved) this.addXp(progress.totalStars * XP.star);
+    let trophies = 0;
+    for (const id of app.achievements.done) if (this.trophy(id)) trophies++;
     this.migrating = false;
-    if (!saved && this.xp) this.lines.push(`🎖️ Welcome back: rank ${this.rank}, ${this.rankName}. +${(progress.coins - coins).toLocaleString('en-GB')} 🪙 for what you had already earned.`);
+    if ((!saved && this.xp) || trophies) this.lines.push(`🎖️ Welcome back: rank ${this.rank}, ${this.rankName}. +${(progress.coins - coins).toLocaleString('en-GB')} 🪙 for what you had already earned.`);
     this.mark();
     this.save();
   }
@@ -50,6 +54,15 @@ export class Career {
   mark() { this.marked = this.xp; }
   news() { const lines = this.lines; this.lines = []; return lines; }
 
+  trophy(id) {
+    if (this.data.paid.includes(id) || !this.app.achievements.list().some((t) => t.id === id)) return false;
+    this.data.paid.push(id);
+    this.save();
+    this.progress.addCoins(TROPHY_COINS, false);
+    this.addXp(XP.trophy);
+    return true;
+  }
+
   runEnded(run) {
     if (!run || run.careerEnded) return;
     run.careerEnded = true;
@@ -61,6 +74,8 @@ export class Career {
   reset() {
     forget(KEY);
     this.data = fresh();
+    // Options keeps trophies. Keep their receipts too, so a reset cannot pay them again.
+    this.data.paid = [...this.app.achievements.done];
     this.lines = [];
     this.mark();
     this.save();

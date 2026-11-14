@@ -139,3 +139,40 @@ test('controller B closes the pilot card back to Home', () => {
     assert.equal(app.game.home.open, true);
   } finally { navigator.getGamepads = saved; app.game.home.hide(); }
 });
+
+test('a new trophy pays once across repeats, reloads, save codes and a progress reset', async () => {
+  let app = makeApp({});
+  const messages = [];
+  app.hud.toast = (text) => messages.push(text);
+  app.achievements.unlock('courier');
+  assert.match(messages.at(-1), /\+100 🪙/);
+  assert.equal(app.game.progress.coins, 100);
+  assert.equal(app.game.career.xp, 200);
+  app.achievements.unlock('courier');
+  assert.equal(app.game.progress.coins, 100);
+  const code = await makeSaveCode();
+  localStorage.clear(); applySave(await readSaveCode(code));
+  app = makeApp({});
+  assert.equal(app.game.progress.coins, 100);
+  assert.equal(app.game.career.xp, 200);
+  app.game.options.reset(); app.game.options.reset();
+  app = makeApp({});
+  app.achievements.unlock('courier');
+  assert.equal(app.game.progress.coins, 0);
+  assert.equal(app.game.career.xp, 0);
+  assert.equal(app.game.career.trophy('unknown'), false);
+});
+
+test('legacy stars and three trophies pay 550 back pay in one welcome line, only once', () => {
+  localStorage.setItem('planetpop.courier', JSON.stringify(legacy));
+  localStorage.setItem('planetpop.trophies', JSON.stringify(['courier', 'combo', 'mechanic']));
+  let app = makeApp({});
+  assert.equal(app.game.career.xp, 1300);
+  assert.equal(app.game.career.rank, 3);
+  assert.equal(app.game.progress.coins, 1450);
+  assert.equal(app.game.career.news().length, 1);
+  app = makeApp({});
+  assert.equal(app.game.progress.coins, 1450);
+  assert.equal(app.game.career.xp, 1300);
+  assert.deepEqual(app.game.career.news(), []);
+});

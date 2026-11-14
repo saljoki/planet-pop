@@ -1,7 +1,7 @@
 // Phones, upright and on their side.
 // One of the screenshot run's scene files (see ../screenshots.mjs); the helpers are described in ../harness.mjs.
 import { PLANET } from '../harness.mjs';
-import { careerFits, stageRankUp } from './courier.mjs';
+import { careerFits, stageRankUp, stageTrophy } from './courier.mjs';
 
 async function phoneSize(page, until, width, height) {
   await page.setViewport({ width, height, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: width > height });
@@ -35,6 +35,12 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
       await frames(2);
       await careerFits(page, '#home');
     });
+    await scene(`mobile-trophy-pay-${width}`, `Phone (${width} × ${height}): a trophy's payout toast`, async () => {
+      await phoneSize(page, until, width, height);
+      await stageTrophy(page);
+      await frames(1);
+    });
+    await page.evaluate(() => document.querySelector('#toasts [data-career-toast]')?.remove());
     await scene(`mobile-pilot-card-${width}`, `Phone (${width} × ${height}): the pilot card`, async () => {
       await phoneSize(page, until, width, height);
       await page.evaluate(() => { app.game.home.hide(); app.game.pilot.show(); });
@@ -216,6 +222,12 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     if (gap < 7) throw new Error(`Home's name button needs a clear 4 px gap; measured ${gap - 3} px`);
   });
   await page.evaluate(() => app.game.home.hide());
+  await scene('landscape-trophy-pay', 'Phone on its side: a trophy payout toast', async () => {
+    await phoneSize(page, until, 844, 390);
+    await stageTrophy(page);
+    await frames(1);
+  });
+  await page.evaluate(() => document.querySelector('#toasts [data-career-toast]')?.remove());
   await scene('landscape-pilot-card', 'Phone on its side: the pilot card and every control', async () => {
     await phoneSize(page, until, 844, 390);
     await page.evaluate(() => app.game.pilot.show());
