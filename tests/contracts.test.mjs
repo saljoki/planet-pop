@@ -34,6 +34,16 @@ test('three deterministic groups, eligibility, tiers and thirty dates without ad
   }
 });
 
+test('a tier-2 star job is skipped when only one of the 183 stars remains', () => {
+  let offered = false;
+  for (let n = 0; n < 30; n++) {
+    const date = new Date(Date.UTC(2026, 9, 1 + n)).toISOString().slice(0, 10);
+    assert.ok(!pickContracts(date, 2, { stars: 182 }).includes('star'));
+    offered ||= pickContracts(date, 2, { stars: 181 }).includes('star');
+  }
+  assert.equal(offered, true, 'two remaining stars still allow the two-star contract');
+});
+
 test('adding stats accumulate, best stats keep a run maximum, and each job pays once', () => {
   const { c, p } = setup();
   jobs(c, ['parcels', 'combo', 'taxi']);

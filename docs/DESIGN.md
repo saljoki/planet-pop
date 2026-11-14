@@ -45,8 +45,8 @@ chat, no strangers, no forced ads, and nothing sold that wins a race.
 | This week | The world of the week | Events and leaderboards | D |
 | For good | The next rank | Pilot rank | B2 |
 | For good | The next world | Chapters, opened by stars | B1 |
-| For good | Every craft, every paint job | The hangar | B2 |
-| For good | Every stamp | The passport | B2 |
+| For good | Every craft, every paint job | The hangar | B3 |
+| For good | Every stamp | The passport | B4 |
 | For good | Beating Rex for good | Rex's ladder | B2 |
 
 ## 5. Systems
@@ -87,16 +87,25 @@ makes it a short ritual with scores that can be compared, which the leaderboard 
 
 - 30 ranks, from Cadet to Sky Marshal. Everything gives experience: coins earned in flight, new stars, contracts,
   trophies, streak days.
-- A rank-up pays coins and sometimes opens something: a craft, a supply slot, a new Rex.
-- Target: rank 5 in the first two sessions, rank 30 in 15 to 20 hours.
+- A rank-up pays 50 × rank in coins and announces Rex paint at thresholds. Craft/supplies arrive in B3.
+- Total XP for rank r is `300 × (r − 1) + 100 × (r − 1) × (r − 2)`; rank 30 is 89,900 XP.
+  Earned coins give XP; reward coins do not. New stars give 100, trophies 200, contracts 150, crates 300,
+  streak days 100 (300 on day seven).
+- First-session check: lesson, First Flight, Rush Hour and three average courier runs in one continuous
+  simulation, including camera/world trophies and production world swaps, reached rank 6, 4,176 XP,
+  3,166 coins and 13 trophies in 8:15.63. That exceeds the rank 4–5 target. The reference-helper batch,
+  rebuilding per leg without live camera trophies, reached rank 5, 2,717 XP, 2,107 coins and six trophies
+  in 6:54. Neither opened a gift/crate or bought upgrades. Keep this phase's fixed XP values; review the
+  faster integrated pacing before launch. Rank 30 in 15–20 hours remains an unmeasured long-term target.
 
 ### 5.5 Rex (B2)
 
 - Rex is the face of the game. His speed follows your rank, so he is always close.
-- From rank 10 he boosts on the last stretch.
+- Courier speed is `0.8 + 0.03 × min(level, 10) + 0.0025 × (rank − 1)`. Daily and missions keep rank 1 physics.
+- From rank 10 he boosts by 1.15 while loaded, out of rest and within 0.35 rad of the destination.
 - He earns five new liveries as you climb, and Home shows the running score between you: "You 34 · Rex 12".
 
-### 5.6 Craft and the hangar (B2)
+### 5.6 Craft and the hangar (B3)
 
 Six craft, each a trade-off, each flying as a plane, glider, hopper or ship to suit the world:
 
@@ -111,7 +120,7 @@ Six craft, each a trade-off, each flying as a plane, glider, hopper or ship to s
 
 The six upgrade tracks grow to five levels each. Paint jobs grow to twelve, and trails arrive.
 
-### 5.7 Supplies (B2)
+### 5.7 Supplies (B3)
 
 One-flight extras bought with coins before take-off: a shield that absorbs the first knock, a spare boost tank, a
 head start on the clock. One of each per flight. Never in the daily or in events. They are the sink that never runs
@@ -119,23 +128,25 @@ out, and in phase E a free one is what a rewarded ad gives.
 
 ### 5.8 Contracts (B2)
 
-Three small jobs a day drawn from the counters the game already keeps: "deliver 5 fragile parcels", "fly through 20
-rings", "beat Rex twice". Each pays coins and experience. Finishing all three opens a crate.
+Three seeded UTC jobs, one each from collecting, skill and variety. Targets freeze at the day’s starting rank
+tier (1–9, 10–19, 20–30). The 18-job pool uses live counters; every tier-2 target was reached by a reference
+pilot or a short detector script. Each pays 40–70 coins and 150 XP. Finishing all three offers a crate of
+100/150/250 coins and 300 XP. Completed and abandoned runs count; reward coins are excluded from income.
 
 ### 5.9 Streak and gift (B2)
 
-- Flying the daily on consecutive days pays a little more each day, with a larger reward on day seven.
-- One missed day a week is forgiven.
-- The first launch of each day opens a small gift.
+- A daily with at least one delivery pays 20, 25, 30, 35, 40, 50, then 150 coins; day eight starts at 20 again.
+- One missed day can be forgiven every seven days. Streaks use the run’s own UTC date and pay once per date.
+- The first visit offers a gift on Today: tap to open for 20, 30, 40 or 60 coins, with no XP. It is not auto-opened.
 
-### 5.10 Passport (B2)
+### 5.10 Passport (B4)
 
 A stamp for every world visited, every landmark flown over and every chapter finished. A full page pays out, and any
 page can be shared as a picture.
 
 ### 5.11 Trophies (B2)
 
-The 55 trophies start paying coins and experience. Trophies already won pay out once, on the first launch after the
+The 55 trophies each pay 100 coins and 200 XP once. Trophies already won pay out once, on the first launch after the
 update.
 
 ### 5.12 Events and leaderboards (D)
@@ -172,7 +183,31 @@ beginner doesn't boost, looks away half the time and crashes every 14 s. The fir
 of three runs; the as-built rows are the mean of ten, flown on the merged code. The beginner's 2:30 was noise from
 three runs: a beginner's run is about as long as it was before.
 
-Everything in today's shop costs 10,470 coins. An average pilot earns that in about an hour.
+The unchanged pre-B3 shop costs 10,470 coins. At B2’s measured 49.74 coins/min it would take about 3.5 hours
+of run income alone; rank, trophy, mission and daily rewards shorten that. B3 adds the new sinks.
+
+### As built in B2 (v0.20.0)
+
+A fresh batch of ten runs per pilot uses the same default planet and stock plane. Look-away is periodic in
+10-second cycles at the stated 50/30/15% shares; crashes are real ground collisions every 14/25/45 seconds.
+World and flight seeds are fixed per attempt. These samples are separate from the historical B1 batch above;
+the clock and rank-1 Rex formulas were not retuned. Coin rates exclude all career rewards.
+
+| Pilot | Mean length (s) | Mean run coins | Mean coins/minute |
+|---|---:|---:|---:|
+| Beginner | 102.24 | 54.1 | 30.17 |
+| Average | 169.21 | 145.2 | 49.74 |
+| Good | 259.56 | 444.8 | 102.99 |
+| Ace | 320.63 | 784.4 | 146.28 |
+
+The average's 49.74 coins/min passes the 45–65 target. Parcel/taxi points pay ÷ 25, rings 2, UFO 12, road races
+60/12; mission and space pay stay unchanged. All sixteen Rex rank/pilot cases were flown ten times. Initial
+rankStep 0.004 let Rex steal 21.56% from the rank-30 ace, above the 15% limit. Reducing it to 0.0025 while keeping
+boost at 1.15 gives 12.86% for ace and 16.85% for good (limit 35%). Rank-1 results match the economy batch exactly.
+
+Existing-save fixture: seven effective stars give 700 XP, rank 2 and 100 rank coins. Three existing trophies
+raise that to 1,300 XP, rank 3 and 550 total back-pay coins; an existing 900-coin wallet becomes 1,450. A real save
+code generated at main `48ad274` loads the same way. The only new saved key is `planetpop.career`.
 
 ### Targets (B2)
 
@@ -190,8 +225,8 @@ Everything in today's shop costs 10,470 coins. An average pilot earns that in ab
 
 Players keep every coin and purchase they have now.
 
-B1 adds 14,200 coins of mission rewards before B2 adds these sinks. That is fine between phases and wrong for a
-public launch: B1 and B2 reach players together.
+B1 adds 14,200 coins of mission rewards; B3 adds these sinks. B2 changes pay and career rewards while preserving
+all existing shop prices and purchases. Assess the full economy after B3 before a public launch.
 
 ## 7. Money (E)
 
@@ -242,7 +277,7 @@ five returns the next day, the loop gets fixed before any store work starts.
 |---|---|---|---|
 | A | The first five minutes | Codex | Merged, v0.18.0 |
 | B1 | The clock, the daily, the missions | A second Codex session | Merged, v0.19.0 |
-| B2 | Coin retune, rank, trophies that pay, Rex's ladder, contracts, streak and gift | Codex | Now |
+| B2 | Coin retune, rank, trophies that pay, Rex's ladder, contracts, streak and gift | Codex | Implemented on phase-b2-career, v0.20.0; awaiting review |
 | B3 | Craft, upgrade levels, paint, trails, supplies | A second Codex session | Now, in parallel |
 | B4 | Passport | To assign | After B3 |
 | C | Mobile wrapper | To assign | After B2 |

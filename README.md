@@ -195,10 +195,10 @@ and A / B answer the end-of-run screen.
   steering sensitivity, tilt steering and vibration on phones, effects, ambience and music volume, the briefing
   and mini-map switches, **🎓 Flying lesson** between runs, **💾 Your progress** (copy a save code or save a file,
   and load one on another phone or browser), and a two-tap **Reset Sky Courier progress** (trophies stay).
-  Options are remembered.
+  Options are remembered. Close a Missions, Road trips or Space courier board opened from Home to return there.
 - **📦 Courier run:** the classic timed game below. Each delivery adds a second less time than the last, from 20
   seconds down to 6, and the clock is capped at its starting time plus 9 seconds, so every run builds to a finish.
-  **🕊️ Free flight:** no clock, no parcels, no Rex, no coins:
+  **🕊️ Free flight:** no clock, no parcels, no Rex, no run coins:
   fly anywhere you like. Rings refill your boost and runways still refuel.
 - **Health ❤️:** hitting the ground costs a quarter of your health and makes the engine splutter; lightning hurts
   too. Out of health is a wreck: KABOOM, and the run's over (free flight, free drive and the lesson put a fresh
@@ -211,9 +211,24 @@ and A / B answer the end-of-run screen.
   (−5 s, empty boost tank).
 - **The world joins in:** skim low along an airport runway to refuel your boost; an erupting volcano's
   ash plume chokes the engine and drains the boost; fly through a hovering UFO for +300 points.
-- **Rival Rex:** after your first delivery a purple rival courier races you for every parcel. He has to
-  collect it from the pickup city first, never boosts, and gets a little faster each delivery. If he
-  swoops over the destination before you, he steals it (no pay, combo lost). Beat him 5 times in a row for a trophy.
+- **Rival Rex:** after your first delivery he races you for each parcel, collecting it from the pickup town first.
+  His courier speed follows your rank; from rank 10 he boosts on the last stretch. Missions and the daily keep
+  rank 1 speed. He changes paint at ranks 5, 10, 15, 20 and 25, and Home and your pilot card keep your running score.
+  If he arrives first he steals the parcel (no pay, combo lost). Beat him five times in a row for a trophy.
+- **🪙 Coins:** scored parcels and taxi fares pay points ÷ 25, rounded; blue rings pay 2, UFOs 12, and road races
+  pay 60 for winning or 12 for taking part. Mission rewards and space-parcel pay stay the same.
+- **🎖️ Pilot career:** Home shows your rank and XP bar. Tap it for the pilot card, the next three rewards and Rex's
+  paint ladder. Thirty ranks run from Cadet to Sky Marshal; each rank-up pays 50 × the new rank in coins.
+  Earn XP from flying/driving coins, first mission rewards, new stars (100), trophies (200), contracts (150),
+  crates (300) and daily-flight streaks (100, or 300 on day seven). Reward coins themselves never earn XP.
+- **🏆 Trophies that pay:** each of the 55 trophies pays 100 coins and 200 XP once. Existing pilots receive
+  back-pay and rank rewards in one welcome message; reloads, save codes and progress resets retain the receipts.
+- **📋 Today** (from Home): three seeded jobs, one each for collecting, skill and variety. Rank tiers 1–9, 10–19
+  and 20–30 set their sizes when the UTC day starts. Finished and abandoned runs count; all three unlock a
+  once-a-day crate of 100, 150 or 250 coins and 300 XP.
+- **🔥 Streak and 🎁 gift:** deliver at least one parcel in the daily to keep a streak: 20, 25, 30, 35, 40, 50,
+  then 150 coins, repeating weekly. One missed day can be forgiven every seven days. Today also offers a daily
+  gift of 20, 30, 40 or 60 coins; tap to open it, with no XP. All dates use UTC and rewards travel in save codes.
 - **🛠️ Hangar** (from Home): coins from deliveries and rings buy engine, wings, boost tank, ring magnet, head-start
   and armour upgrades, plus paint jobs. The hangar is for improving and painting your vehicle. Progress is saved
   in your browser (and the browser is asked to keep it); a save code in Options moves it to another one.
@@ -284,14 +299,15 @@ planet-pop/
 │  └─ game/                   CourierGame (runs the show), Rival + RoadRival (Rex in the air and on the road), Cargo,
 │     │                       CourierProps (beacon, rings, pads, race arches), FlightHazards (storms, runways, ash, heat,
 │     │                       ring ice, wind), Feats (trophy moves: long jumps, loops round a storm, threading the ring),
-│     │                       Progress, Settings, Daily, Missions, Chapters, Stars, HomeCards (cards and next flight), Lessons (coach text)
+│     │                       Progress, Career + Ranks (XP, rank rewards and receipts), Economy (run coins), Contracts (daily jobs),
+│     │                       Settings, Daily, Missions, Chapters, Stars, HomeCards (cards and next flight), Lessons (coach text)
 │     ├─ vehicles/            Vehicle (health, boost, smoke), Plane, GroundVehicle, Car, Boat, Ground (what's under a
 │     │                       car or boat: roads, water, buildings, mountains, where to start and stop)
 │     ├─ runs/                Run (the hooks), modes.js (which run for which options), DeliveryRun (courier run),
 │     │                       LessonRun, DailyRun, MissionRun, FreeFlight, FreeDrive, TaxiRun, VanRun, RaceRun, SpaceDropRun (the
 │     │                       space courier's last stretch)
 │     ├─ screens/             CourierHud, MiniMap, ResultsScreen, Briefing, OptionsMenu, SaveBox, PauseMenu, HomeScreen,
-│     │                       Hangar, Coach, MissionBoard, RoadBoard, ParcelBoard (the space courier's)
+│     │                       PilotCard, TodayScreen, Hangar, Coach, MissionBoard, RoadBoard, ParcelBoard (the space courier's)
 │     └─ input/               FlightControls (keys, stick, tilt, boost), TouchStick, TiltSteer, Gamepad
 ├─ vendor/, fonts/            three.js, Trystero (bundled into one file) and the Bangers font, with their licences
 ├─ icons/                     app icons (drawn by scripts/icons.mjs)
@@ -301,7 +317,8 @@ planet-pop/
 ├─ tests/
 │  ├─ *.test.mjs              node:test suites: world (3 full planets simulated, camera, trophies), courier (Sky
 │  │                          Courier and the daily on the same planets), health, drive (cars, boats, traffic), road
-│  │                          (taxi, van, race), quality, progress, daily, clock, stars, pilot, ambience, music, home, start, lesson, themes,
+│  │                          (taxi, van, race), economy, career, rex, contracts, streak, navigation, quality, progress, daily, clock, stars,
+│  │                          pilot, ambience, music, home, start, lesson, themes,
 │  │                          missions + controller, touch (gestures, stick, tilt, Find, tour, free flight), options
 │  │                          (briefing, Invert Y, sensitivity, reset, your name), saves (save codes), friends (two
 │  │                          players in a room), space (real orbits, the real worlds, the map, trips, rovers and
@@ -310,19 +327,19 @@ planet-pop/
 │  └─ browser/                screenshots.mjs + harness.mjs: headless Chrome (software WebGL) plays the scenes in
 │                             scenes/ (one file per area) on a laptop-sized screen and a phone, upright and on its
 │                             side, including an offline reload
-└─ .github/workflows/ci.yml   tests + screenshots on every push and pull request
+└─ .github/workflows/ci.yml   tests + screenshots workflow (GitHub CI currently switched off)
 ```
 
 ## Tests
 
 ```bash
 npm ci
-npm test                  # unit + simulation tests, no browser needed (~80 s)
+npm test                  # unit + simulation tests, no browser needed (~3 min)
 npm run lint              # ESLint
 npm run screenshots       # renders scenes into ./screenshots and fails on page or shader errors
-                          # (SCENES=photo,theme renders only the scenes whose names contain those words)
+                          # (SCENES=photo,theme matches words; SCENES_EXACT=home,today matches whole labels)
 ```
 
 Run tests and screenshots separately; overlapping them has crashed the browser. Open the PNGs after a screenshot
-run to check layout as well as page and shader errors. GitHub Actions is currently blocked by a billing lock,
-so this phase is checked locally. The handoff spec is [docs/PHASE_A.md](docs/PHASE_A.md).
+run to check layout as well as page and shader errors. GitHub CI is currently switched off; run all checks locally.
+The current phase spec is [docs/PHASE_B2.md](docs/PHASE_B2.md).

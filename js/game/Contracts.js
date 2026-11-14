@@ -33,7 +33,7 @@ export const tierFor = (rank) => rank < 10 ? 0 : rank < 20 ? 1 : 2;
 export function pickContracts(date, tier, { stars = 0 } = {}) {
   const rand = mulberry32(dailySeed(date) ^ 0xC0FFEE);
   return ['A', 'B', 'C'].map((group) => {
-    const pool = CONTRACTS.filter((c) => c.group === group && c.need[tier] > 0 && !(c.id === 'star' && stars >= 183));
+    const pool = CONTRACTS.filter((c) => c.group === group && c.need[tier] > 0 && !(c.id === 'star' && stars + c.need[tier] > 183));
     return pool[Math.floor(rand() * pool.length)].id;
   });
 }
