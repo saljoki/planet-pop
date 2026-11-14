@@ -62,6 +62,22 @@ describe('courier clocks and the daily route', () => {
     assert.equal(run.time, before + 25);
   });
 
+  it('the van courier keeps its twenty-second bonus, uncapped clock and existing toast', () => {
+    game.start({ road: 'van' });
+    const run = game.run, toast = app.hud.toast, messages = [];
+    app.hud.toast = (message) => messages.push(message);
+    try {
+      for (let i = 0; i < 4; i++) run.deliver();
+      run.time = run.stats.startTime + 100;
+      const before = run.time;
+      assert.equal(run.clockCap, Infinity);
+      assert.equal(run.deliveryBonus(), 20);
+      run.deliver();
+      assert.equal(run.time, before + 20);
+      assert.doesNotMatch(messages.at(-1), /\(\+\d+ s\)/);
+    } finally { app.hud.toast = toast; }
+  });
+
   it('an ace in the stock plane runs out of time in under eight simulated minutes', (t) => {
     const random = Math.random;
     Math.random = mulberry32(7);

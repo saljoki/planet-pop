@@ -228,3 +228,226 @@ describe('controller', () => {
     p.dispose();
   });
 });
+
+const trial = (id, world, flags = {}) => ({
+  id, icon: '📦', name: id, brief: 'A test flight.', planet: { world },
+  goal: { stat: 'deliveries', target: 99 }, reward: 10, par: 120, ...flags,
+});
+
+describe('new mission rules', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('a tour visits landmarks in any order, rejects high passes and points to the nearest one left', async () => {
+    const { app, planet } = await makeWorld({ world: 'earth' }), game = app.game;
+    const names = ['Mount Everest', 'The Sahara', 'The Amazon'];
+    game.start({ mission: trial('test-tour', 'earth', { tour: names, item: '📷 Photo', goal: { stat: 'visits', target: 3 } }) });
+    const pops = [], pop = app.sfx.pop.bind(app.sfx);
+    app.sfx.pop = (...args) => { pops.push(args); pop(...args); };
+    try {
+      const run = game.run, pl = game.player;
+      assert.equal(run.cargo, null, 'a tour has no town parcels');
+      for (const [i, name] of ['The Sahara', 'Mount Everest', 'The Amazon'].entries()) {
+        const spot = planet.landmarks.list.find((l) => l.name === name);
+        pl.up.copy(spot.d);
+        pl.alt = planet.surfR(spot.d) + 4;
+        assert.ok(run.target(pl.up).c.angleTo(spot.d) < 1e-7, `${name} is nearest`);
+        assert.equal(run.target(pl.up).text, `📷 Photo → ${name}`);
+        run.update(0.01);
+        assert.equal(run.tally.visits, i, 'a high pass counted');
+        const time = run.time;
+        pl.alt = planet.surfR(spot.d) + 1;
+        pl.health = 0.4;
+        run.update(0.01);
+        assert.equal(run.tally.visits, i + 1);
+        assert.equal(pops.at(-1)[1], name);
+        assert.equal(pops.at(-1)[3], 'deliver');
+        assert.ok(Math.abs(run.time - time - 19.99) < 1e-8, 'a visit adds twenty seconds');
+        assert.ok(Math.abs(pl.health - 0.55) < 1e-8, 'a visit repairs the plane');
+        assert.equal(run.tally.deliveries, 0, 'a photo counted as a town parcel');
+        if (i < names.length - 1) {
+          const left = planet.landmarks.list.filter((l) => names.includes(l.name) && !run.visited.has(l.name));
+          const nearest = left.reduce((a, b) => a.d.angleTo(pl.up) < b.d.angleTo(pl.up) ? a : b);
+          assert.ok(run.target(pl.up).c.angleTo(nearest.d) < 1e-7);
+          let ringAim;
+          const route = game.props.alongRoute;
+          game.props.alongRoute = (ring, from, to) => { ringAim = to; };
+          try { run.placeRing(game.props.rings[0]); } finally { game.props.alongRoute = route; }
+          assert.ok(ringAim.angleTo(nearest.d) < 1e-7, 'rings do not follow the tour target');
+        }
+      }
+      assert.ok(game.over);
+      assert.match(game.results.dom.title.textContent, /complete/);
+    } finally { game.stop(); planet.dispose(); }
+  });
+
+  it('a fetch collects at its landmark before any town delivery can count', async () => {
+    const { app, planet } = await makeWorld({ world: 'moon' }), game = app.game;
+    game.start({ mission: trial('test-fetch', 'moon', { fetch: 'Tycho', item: '🪨 Moon rock', goal: { stat: 'deliveries', target: 1 } }) });
+    const pops = [], pop = app.sfx.pop.bind(app.sfx);
+    app.sfx.pop = (...args) => { pops.push(args); pop(...args); };
+    try {
+      const run = game.run, pl = game.player, tycho = planet.landmarks.list.find((l) => l.name === 'Tycho');
+      assert.equal(run.cargo, null);
+      assert.equal(run.target(pl.up).text, 'Collect the 🪨 Moon rock at Tycho');
+      pl.up.copy(planet.cities.sites.find((s) => s.c.angleTo(tycho.d) > 0.1).c);
+      pl.alt = planet.surfR(pl.up) + 1;
+      run.update(0.01);
+      run.deliver();
+      assert.equal(run.tally.deliveries, 0);
+      assert.equal(run.collected, false);
+      pl.up.copy(tycho.d);
+      pl.alt = planet.surfR(tycho.d) + 4;
+      run.update(0.01);
+      assert.equal(run.collected, false, 'a high pass picked up the parcel');
+      pl.alt = planet.surfR(tycho.d) + 1;
+      run.update(0.01);
+      assert.equal(run.collected, true);
+      assert.equal(pops.at(-1)[1], 'GOT IT!');
+      assert.equal(pops.at(-1)[3], 'ring');
+      assert.equal(run.tally.deliveries, 0);
+      assert.ok(planet.cities.sites.includes(run.dest), 'the collected parcel has no town destination');
+      pl.up.copy(run.dest.c);
+      pl.alt = planet.surfR(pl.up) + 1;
+      run.update(0.01);
+      assert.ok(game.over);
+      assert.equal(run.tally.deliveries, 1);
+      assert.match(game.results.dom.title.textContent, /complete/);
+    } finally { game.stop(); planet.dispose(); }
+  });
+
+  it('a fetched fragile parcel can only break after it has been collected', async () => {
+    const { app, planet } = await makeWorld({ world: 'moon' }), game = app.game;
+    game.start({ mission: trial('test-fragile-fetch', 'moon', { fetch: 'Tycho', carry: 'fragile', failIf: 'broken' }) });
+    try {
+      const run = game.run, pl = game.player;
+      run.crashed();
+      run.checkEnd();
+      assert.equal(run.tally.broken, 0);
+      assert.ok(!game.over, 'an uncollected parcel broke');
+      pl.up.copy(run.fetchSpot.c);
+      pl.alt = planet.surfR(pl.up) + 1;
+      run.update(0.01);
+      assert.equal(run.cargo.id, 'fragile');
+      run.crashed();
+      run.checkEnd();
+      assert.equal(run.tally.broken, 1);
+      assert.ok(game.over);
+      assert.match(game.results.dom.result.innerHTML, /fragile parcel broke/);
+    } finally { game.stop(); planet.dispose(); }
+  });
+
+  it('sunny missions choose daylight towns and count seconds in Mercury sunshine', async () => {
+    const { app, planet } = await makeWorld({ world: 'mercury' }), game = app.game;
+    game.start({ mission: trial('test-sunny', 'mercury', { sunny: true }) });
+    try {
+      const run = game.run;
+      for (let i = 0; i < 4; i++) {
+        const light = planet.cities.sites.filter((s) => s !== run.from && planet.nightAt(s.c) < 0.5);
+        if (light.length) assert.ok(planet.nightAt(run.dest.c) < 0.5, 'a parcel was sent into darkness');
+        run.deliver();
+      }
+      game.player.up.copy(run.from.c);
+      game.hazards.hot = true;
+      run.update(2.25);
+      assert.equal(run.tally.sun, 2.25);
+      game.hazards.hot = false;
+      run.update(0.25);
+      assert.equal(run.tally.sun, 2.25);
+    } finally { game.stop(); planet.dispose(); }
+  });
+
+  it('Rex starts and levels up on real-world rival missions, including a specified starting level', async () => {
+    const { app, planet } = await makeWorld({ world: 'moon' }), game = app.game;
+    try {
+      for (const level of [0, 6]) {
+        game.start({ mission: trial(`test-rival-${level}`, 'moon', { rival: true, rexLevel: level }) });
+        const run = game.run;
+        assert.ok(run.rival);
+        assert.ok(Math.abs(run.rival.plane.stats.speed - (0.8 + 0.03 * level)) < 1e-8);
+        run.deliver();
+        assert.ok(Math.abs(run.rival.plane.stats.speed - (0.8 + 0.03 * (level + 1))) < 1e-8);
+        game.stop();
+      }
+    } finally { game.stop(); planet.dispose(); }
+  });
+
+  it('a stolen parcel ends a mission with its reason and increments the stolen counter', async () => {
+    const { app, planet } = await makeWorld({ world: 'moon' }), game = app.game;
+    game.start({ mission: trial('test-stolen', 'moon', { rival: true, failIf: 'stolen' }) });
+    try {
+      const run = game.run;
+      run.steal();
+      run.checkEnd();
+      assert.equal(run.tally.stolen, 1);
+      assert.ok(game.over);
+      assert.match(game.results.dom.result.innerHTML, /😈 Rex stole a parcel\./);
+    } finally { game.stop(); planet.dispose(); }
+  });
+
+  it('combo goals count the highest combo and ash progress shows whole seconds', async () => {
+    const { app, planet } = await makeWorld({ world: 'moon' }), game = app.game;
+    try {
+      game.start({ mission: trial('test-combo', 'moon', { goal: { stat: 'combo', target: 3 } }) });
+      const run = game.run;
+      run.deliver();
+      run.deliver();
+      assert.equal(run.tally.combo, 3);
+      run.crashed();
+      assert.equal(run.combo, 1);
+      assert.equal(run.tally.combo, 3, 'a knock lost the best combo');
+      run.checkEnd();
+      assert.ok(game.over);
+      assert.match(game.results.dom.title.textContent, /complete/);
+      game.stop();
+      game.start({ mission: trial('test-ash-goal', 'moon', { goal: { stat: 'ash', target: 3 } }) });
+      game.run.inAsh(2.9);
+      assert.deepEqual(game.run.progress(), { have: 2, need: 3, text: '2 / 3 s in the plume' });
+      game.run.inAsh(0.2);
+      game.run.checkEnd();
+      assert.ok(game.over);
+      assert.match(game.results.dom.title.textContent, /complete/);
+    } finally { game.stop(); planet.dispose(); }
+  });
+
+  it('a ground crash, lightning and ice each add one knock, and only ground crashes add crashes', async () => {
+    const { app, planet } = await makeWorld({ world: 'moon' }), game = app.game;
+    game.start({ mission: trial('test-knocks', 'moon') });
+    try {
+      const run = game.run;
+      run.cargo = { ...run.cargo, fragile: true };
+      run.crashed();
+      assert.equal(run.tally.crashes, 1, 'the crash that broke the parcel was lost');
+      assert.equal(run.tally.broken, 1);
+      run.zapped();
+      run.iced();
+      assert.equal(run.tally.knocks, 3);
+      assert.equal(run.tally.crashes, 1, 'ring ice counted as a ground crash');
+      assert.equal(run.tally.ice, 1);
+      assert.equal(run.tally.zaps, 1);
+      run.crashed();
+      assert.equal(run.tally.crashes, 2);
+      assert.equal(run.tally.knocks, 4);
+      assert.equal(run.tally.broken, 1, 'the same parcel broke twice');
+    } finally { game.stop(); planet.dispose(); }
+  });
+
+  it('a full Hexagon loop counts without unlocking a trophy', async () => {
+    const { app, planet } = await makeWorld({ world: 'saturn' }), game = app.game;
+    game.start({ mission: trial('test-hexagon', 'saturn', { goal: { stat: 'loops', target: 1 } }) });
+    try {
+      const run = game.run, pl = game.player, storm = game.feats.storm, trophies = app.unlocked.length;
+      assert.equal(storm.name, 'The Hexagon');
+      assert.equal(storm.trophy, true);
+      const [u, v] = storm.basis, r = 0.25;
+      for (let i = 0; i <= 160; i++) {
+        const a = (Math.PI * 2 + 0.02) * i / 160;
+        pl.up.copy(storm.d).multiplyScalar(Math.cos(r))
+          .addScaledVector(u, Math.sin(r) * Math.cos(a)).addScaledVector(v, Math.sin(r) * Math.sin(a));
+        game.feats.circle(pl);
+      }
+      assert.equal(run.tally.loops, 1);
+      assert.equal(app.unlocked.length, trophies);
+      assert.equal(worldOf('neptune').landmarks.find((l) => l.name === 'The Great Dark Spot').loop, true);
+    } finally { game.stop(); planet.dispose(); }
+  });
+});

@@ -48,16 +48,17 @@ export class DeliveryRun extends Run {
   get againLabel() { return '✈️ Fly again'; }
 
   /** Each parcel adds less time, down to six seconds. Missions can keep a flat bonus. */
-  deliveryBonus() { return Math.max(6, 20 - this.deliveries); }
+  deliveryBonus() { return this.opts.road === 'van' ? 20 : Math.max(6, 20 - this.deliveries); }
 
-  /** A fast start cannot bank an ever-growing clock. */
-  get clockCap() { return this.stats.startTime + 9; }
+  /** A fast start cannot bank an ever-growing clock; the road courier keeps its existing rules. */
+  get clockCap() { return this.opts.road === 'van' ? Infinity : this.stats.startTime + 9; }
 
   takeoff() {
     const sites = this.planet.cities.sites;
     Object.assign(this, { score: 0, combo: 1, time: this.stats.startTime, deliveries: 0, coins: 0, stolen: 0, rivalStreak: 0 });
     // counters missions are judged on
-    this.tally = { deliveries: 0, standard: 0, urgent: 0, fragile: 0, heavy: 0, broken: 0, rings: 0, refuels: 0, rexStreak: 0, ufo: 0, ash: 0, night: 0, zaps: 0, landmark: 0, ice: 0, loops: 0, threads: 0 };
+    this.tally = { deliveries: 0, standard: 0, urgent: 0, fragile: 0, heavy: 0, broken: 0, rings: 0, refuels: 0, rexStreak: 0, ufo: 0, ash: 0, night: 0, zaps: 0, landmark: 0, ice: 0, loops: 0, threads: 0,
+      crashes: 0, knocks: 0, stolen: 0, combo: 0, visits: 0, sun: 0 };
     this.from = sites[Math.floor(this.rand() * sites.length)];
     this.pickDest(true);
     const heading = new THREE.Vector3().copy(this.dest.c).addScaledVector(this.from.c, -this.dest.c.dot(this.from.c));
@@ -112,13 +113,20 @@ export class DeliveryRun extends Run {
     g.player?.setCargo(this.cargo);
     this.rival?.newLeg(this.from);
     if (g.props) this.markDest();
-    if (!first) this.app.hud.toast(`${this.cargo.icon} New ${this.cargo.name.toLowerCase()} for ${this.dest.name}: ${this.cargo.tip}${seconds === null ? '' : ` (+${Math.round(seconds)} s)`}`);
+    if (!first) this.app.hud.toast(`${this.cargo.icon} New ${this.cargo.name.toLowerCase()} for ${this.dest.name}: ${this.cargo.tip}${seconds === null || this.opts.road === 'van' ? '' : ` (+${Math.round(seconds)} s)`}`);
   }
 
   crashed() {
+    this.tally.crashes++;
+    this.knocked();
+  }
+
+  /** Ground crashes and ring ice share the penalty, but only ground crashes count as crashes. */
+  knocked() {
+    this.tally.knocks++;
     this.time -= CRASH_PENALTY;
     this.combo = 1;
-    if (this.cargo.fragile && !this.broken) {
+    if (this.cargo?.fragile && !this.broken) {
       this.broken = true;
       this.tally.broken++;
       this.app.sfx.pop(this.player.pos.clone(), 'SMASH!', '#9fd8ff', 'crash');
@@ -143,10 +151,10 @@ export class DeliveryRun extends Run {
   /** Rings respawn along the current route so they're worth chasing. */
   placeRing(ring) { this.game.props.alongRoute(ring, this.player.up, this.dest.c); }
 
-  zapped() { this.time -= LIGHTNING_PENALTY; }
+  zapped() { this.time -= LIGHTNING_PENALTY; this.tally.knocks++; }
 
   iced() {
-    super.iced();
+    this.knocked();
     this.tally.ice++;
   }
 
@@ -161,6 +169,7 @@ export class DeliveryRun extends Run {
   update(dt) {
     this.time -= dt;
     this.elapsed += dt;
+    if (this.game.hazards.hot) this.tally.sun += dt;
     const arrived = this.arrived();
     if (arrived) this.deliver();
     if (this.rival?.update(dt, this.dest, this.cargo) && !arrived) this.steal();
@@ -189,6 +198,7 @@ export class DeliveryRun extends Run {
       this.deliveries++;
       const t = this.tally;
       t.deliveries++;
+      t.combo = Math.max(t.combo, this.combo);
       t[cargo.id]++;
       if (this.planet.nightAt(this.dest.c) > 0.5) t.night++;
       this.earn(Math.round(pts / 10));
@@ -225,6 +235,7 @@ export class DeliveryRun extends Run {
   steal() {
     const app = this.app;
     this.stolen++;
+    this.tally.stolen++;
     this.rivalStreak = 0;
     this.combo = 1;
     app.sfx.pop(this.rival.pos.clone(), 'STOLEN!', '#8f5cff', 'crash');

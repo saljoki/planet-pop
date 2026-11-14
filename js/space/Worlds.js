@@ -236,7 +236,7 @@ export const WORLDS = {
     ...stations([[28, -120], [-32, -30], [12, 85], [-18, 165]], { lat: -4, lon: 20 }),
     rings: { inner: 13.2, outer: 21 },
     landmarks: [
-      { name: 'The Hexagon', lat: 78, lon: 0, pin: false, note: 'A six-sided jet stream round Saturn’s north pole: each side is wider than Earth' },
+      { name: 'The Hexagon', lat: 78, lon: 0, pin: false, loop: true, note: 'A six-sided jet stream round Saturn’s north pole: each side is wider than Earth' },
     ],
   },
   uranus: {
@@ -400,7 +400,7 @@ export const WORLDS = {
     ...stations([[28, -95], [-48, -150], [22, 120]], { lat: 5, lon: -25 }),
     wind: 0.5,
     landmarks: [
-      { name: 'The Great Dark Spot', lat: -20, lon: 30, pin: false, note: 'A storm as wide as Earth, found by Voyager 2 in 1989, with white methane clouds round it' },
+      { name: 'The Great Dark Spot', lat: -20, lon: 30, pin: false, loop: true, note: 'A storm as wide as Earth, found by Voyager 2 in 1989, with white methane clouds round it' },
     ],
   },
 };

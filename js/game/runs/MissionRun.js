@@ -16,6 +16,7 @@ export const FAIL_REASON = {
   ash: '🌋 You flew into the ash.',
   zaps: '⚡ Struck by lightning.',
   ice: '🧊 You hit the ring ice.',
+  stolen: '😈 Rex stole a parcel.',
   wrecked: '💥 Wrecked.',
 };
 
@@ -46,10 +47,13 @@ export class MissionRun extends DeliveryRun {
   get clockCap() { return Infinity; }
 
   /** A landmark mission's one parcel has its own name (a flag, a cake). */
-  get what() { return this.spot && this.def.item ? this.def.item : super.what; }
+  get what() {
+    if ((this.spot || this.def.fetch || this.tour) && this.def.item) return this.def.item;
+    return this.cargo ? super.what : '📍';
+  }
 
   /** Rex only races on the made-up planets (or when the mission asks for him). */
-  get hasRival() { return !this.def.planet.world; }
+  get hasRival() { return !this.def.planet.world || !!this.def.rival; }
 
   get intro() { return `${this.def.icon} ${this.def.name}: ${this.def.brief}`; }
 
@@ -75,16 +79,58 @@ export class MissionRun extends DeliveryRun {
     }
     if (d.eruptions) p.volcanoes.forEach((v, i) => Object.assign(v, { state: 'calm', timer: 6 + i * 9 }));
     if (d.landmark) { // the one parcel goes to the landmark: it stands in for a town
-      const l = p.landmarks.list.find((x) => x.name === d.landmark);
-      this.spot = { c: l.d, u: tangentBasis(l.d)[0], name: l.name };
+      this.spot = this.landmark(d.landmark);
       this.dest = this.spot;
       this.par = this.parFor(this.player.up);
     }
-    if (d.carry) {
+    if (d.tour) {
+      this.tour = d.tour.map((name) => this.landmark(name));
+      this.visited = new Set();
+      this.cargo = null;
+      this.player.setCargo(null);
+      this.aimTour(this.player.up);
+    }
+    if (d.fetch) {
+      this.fetchSpot = this.landmark(d.fetch);
+      this.collected = false;
+      this.dest = this.fetchSpot;
+      this.cargo = null;
+      this.player.setCargo(null);
+    }
+    if (d.carry && !d.fetch && !d.tour) {
       this.cargo = CARGO[d.carry];
       this.player.setCargo(this.cargo);
     }
-    if (d.goal.stat === 'rings') this.game.props.rings.forEach((r) => this.placeRing(r)); // along the route, not all over the planet
+    if (d.goal.stat === 'rings' || d.tour || d.fetch) this.game.props.rings.forEach((r) => this.placeRing(r)); // along the route, not all over the planet
+  }
+
+  /** A named landmark can stand in for a delivery town. */
+  landmark(name) {
+    const l = this.planet.landmarks.list.find((x) => x.name === name);
+    return { c: l.d, u: tangentBasis(l.d)[0], name: l.name };
+  }
+
+  /** A tour always points at the nearest place still to visit. */
+  aimTour(from) {
+    const left = this.tour.filter((l) => !this.visited.has(l.name));
+    const next = left.reduce((a, b) => !a || b.c.angleTo(from) < a.c.angleTo(from) ? b : a, null);
+    if (next && next !== this.dest) {
+      this.dest = next;
+      this.par = this.parFor(from);
+      this.markDest();
+      this.game.props.rings.forEach((r) => this.placeRing(r));
+    }
+    return next;
+  }
+
+  arrived() {
+    if (this.tour && !this.aimTour(this.player.up)) return false;
+    return super.arrived();
+  }
+
+  spawnRival() {
+    super.spawnRival();
+    this.rival.setLevel((this.def.rexLevel ?? 0) + this.deliveries);
   }
 
   /** Undo setup changes that outlive the run. */
@@ -96,9 +142,10 @@ export class MissionRun extends DeliveryRun {
 
   /** Night Shift (and Keep to the Shade) only send parcels to cities in darkness (while there are any). */
   destinations(sites) {
-    if (!this.def.night && !this.def.dark) return sites;
-    const dark = sites.filter((s) => this.planet.nightAt(s.c) > 0.5);
-    return dark.length ? dark : sites;
+    const d = this.def;
+    if (!d.night && !d.dark && !d.sunny) return sites;
+    const matching = sites.filter((s) => d.sunny ? this.planet.nightAt(s.c) < 0.5 : this.planet.nightAt(s.c) > 0.5);
+    return matching.length ? matching : sites;
   }
 
   /** Where the arrow should point instead of the parcel's city, with the goal line to show: a runway, the UFO… */
@@ -106,6 +153,11 @@ export class MissionRun extends DeliveryRun {
     const p = this.planet, stat = this.def.goal.stat;
     if (this.check()) return null;
     const pl = this.player, near = (c, alt) => pl.up.angleTo(c) < 0.3 && pl.alt > alt ? ' · fly lower!' : '';
+    if (this.tour) {
+      const l = this.aimTour(from);
+      return l ? { c: l.c, text: `${this.def.item || '📍'} → ${l.name}` } : null;
+    }
+    if (this.fetchSpot && !this.collected) return { c: this.fetchSpot.c, text: `Collect the ${this.def.item || '📦 parcel'} at ${this.fetchSpot.name}` };
     if (stat === 'refuels' && p.airports.list.length) {
       const ap = p.airports.list.reduce((a, b) => (a.c.angleTo(from) < b.c.angleTo(from) ? a : b));
       return { c: ap.c, text: `⛽ Skim the runway at ${ap.name}${near(ap.c, ap.top + 0.9)}` };
@@ -132,7 +184,13 @@ export class MissionRun extends DeliveryRun {
 
   /** Handed over at the landmark (a landmark mission's one parcel), or an ordinary delivery. */
   deliver() {
-    if (!this.spot || this.dest !== this.spot) { super.deliver(); return; }
+    if (this.tour) { this.visit(); return; }
+    if (this.fetchSpot && !this.collected) { this.collect(); return; }
+    if (!this.spot || this.dest !== this.spot) {
+      super.deliver();
+      if (this.rival) this.rival.setLevel((this.def.rexLevel ?? 0) + this.deliveries);
+      return;
+    }
     const pts = Math.round(100 * this.cargo.pay);
     this.score += pts;
     this.earn(Math.round(pts / 10));
@@ -142,6 +200,33 @@ export class MissionRun extends DeliveryRun {
     this.app.haptics?.buzz('deliver');
   }
 
+  /** A low pass takes the photo or drops the survey equipment, with no town parcel. */
+  visit() {
+    if (!this.arrived()) return;
+    const spot = this.dest;
+    this.visited.add(spot.name);
+    this.tally.visits++;
+    this.time += this.deliveryBonus();
+    this.player.repair(0.15);
+    this.app.sfx.pop(this.player.pos.clone(), spot.name, '#2ee59d', 'deliver');
+    this.app.haptics?.buzz('deliver');
+    if (!this.aimTour(this.player.up)) this.game.props.beacon.visible = false;
+  }
+
+  /** The parcel only becomes cargo after a low pass over its pickup landmark. */
+  collect() {
+    if (!this.arrived()) return;
+    this.collected = true;
+    this.from = this.fetchSpot;
+    this.pickDest(true);
+    if (this.def.carry) {
+      this.cargo = CARGO[this.def.carry];
+      this.player.setCargo(this.cargo);
+    }
+    this.game.props.rings.forEach((r) => this.placeRing(r));
+    this.app.sfx.pop(this.player.pos.clone(), 'GOT IT!', '#3fa7ff', 'ring');
+  }
+
   zapped() {
     super.zapped();
     this.tally.zaps++;
@@ -149,7 +234,7 @@ export class MissionRun extends DeliveryRun {
 
   /** e.g. { have: 1, need: 2, text: '1 / 2 urgent' } */
   progress() {
-    const { stat, target } = this.def.goal, have = Math.min(target, this.tally[stat] || 0);
+    const { stat, target } = this.def.goal, have = Math.min(target, Math.floor(this.tally[stat] || 0));
     return { have, need: target, text: `${have} / ${target} ${STAT_LABEL[stat] || stat}` };
   }
 

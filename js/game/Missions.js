@@ -66,6 +66,7 @@ export const placeOf = (m) => (m.planet.world ? worldOf(m.planet.world) : themeO
 export const STAT_LABEL = {
   deliveries: 'parcels', urgent: 'urgent', fragile: 'fragile', heavy: 'heavy', rings: 'rings', refuels: 'refuels',
   rexStreak: 'in a row', night: 'at night', ufo: 'UFO', landmark: 'delivered', loops: 'loop', threads: 'through the ring',
+  combo: 'combo', visits: 'visited', ash: 's in the plume',
 };
 
 export const missionIndex = (id) => MISSIONS.findIndex((m) => m.id === id);
