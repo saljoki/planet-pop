@@ -1,7 +1,7 @@
 // Phones, upright and on their side.
 // One of the screenshot run's scene files (see ../screenshots.mjs); the helpers are described in ../harness.mjs.
 import { PLANET } from '../harness.mjs';
-import { careerFits, stageRankUp, stageTrophy } from './courier.mjs';
+import { careerFits, stageRankUp, stageTrophy, stageToday } from './courier.mjs';
 
 async function phoneSize(page, until, width, height) {
   await page.setViewport({ width, height, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: width > height });
@@ -35,6 +35,15 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
       await frames(2);
       await careerFits(page, '#home');
     });
+    for (const ready of [false, true]) {
+      await scene(`mobile-today${ready ? '-crate' : ''}-${width}`, `Phone (${width} × ${height}): today's jobs${ready ? ' and crate' : ''}`, async () => {
+        await phoneSize(page, until, width, height);
+        await stageToday(page, ready);
+        await frames(2);
+        await careerFits(page, '#today');
+      });
+      await page.evaluate(() => app.game.today.hide());
+    }
     await scene(`mobile-trophy-pay-${width}`, `Phone (${width} × ${height}): a trophy's payout toast`, async () => {
       await phoneSize(page, until, width, height);
       await stageTrophy(page);
@@ -228,6 +237,15 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await frames(1);
   });
   await page.evaluate(() => document.querySelector('#toasts [data-career-toast]')?.remove());
+  for (const ready of [false, true]) {
+    await scene(`landscape-today${ready ? '-crate' : ''}`, `Phone on its side: today's jobs${ready ? ' and crate' : ''}`, async () => {
+      await phoneSize(page, until, 844, 390);
+      await stageToday(page, ready);
+      await frames(2);
+      await careerFits(page, '#today');
+    });
+    await page.evaluate(() => app.game.today.hide());
+  }
   await scene('landscape-pilot-card', 'Phone on its side: the pilot card and every control', async () => {
     await phoneSize(page, until, 844, 390);
     await page.evaluate(() => app.game.pilot.show());

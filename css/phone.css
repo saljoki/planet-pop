@@ -142,3 +142,26 @@
   #game.lesson #gArrow { top: calc(86px + var(--st)); }
   #game.lesson #gPauseBtn, #game.lesson #gMapBtn { top: calc(14px + var(--st)); }
 }
+
+@media (max-width: 700px) {
+  #hoNext { margin-bottom: 10px; }
+  #hoToday { margin-bottom: 10px; font-size: 18px; }
+  #hoCards button { min-height: 90px; }
+  #today .panel { padding: 16px; }
+  .contract > span { font-size: 21px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  #home .panel { display: grid; grid-template-columns: 1fr 220px; column-gap: 12px; }
+  .home-head, #hoPilot, #hoNext, #hoCards { grid-column: 1 / -1; }
+  #hoToday { grid-column: 2; grid-row: 5; margin: 10px 0 0; min-height: 36px; font-size: 16px; }
+  .home-foot { grid-column: 1; grid-row: 5; }
+  #hoCards button { min-height: 64px; }
+  #today .panel { width: 740px; padding: 14px 18px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 12px 20px; }
+  #today h2 { grid-column: 1 / -1; margin: 0; font-size: 27px; }
+  #tdContracts { gap: 8px; }
+  .contract { padding: 8px 10px; gap: 3px 10px; }
+  .contract > span { font-size: 19px; }
+  .contract small { font-size: 13px; }
+  .contract strong { font-size: 17px; }
+  .today-rewards { margin: 0; align-content: center; }
+}

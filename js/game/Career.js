@@ -1,6 +1,8 @@
 import { loadJson, saveJson, forget } from '../core/Store.js';
 import { RANKS, MAX_RANK, XP, TROPHY_COINS, xpForRank, rankFor, rankReward } from './Ranks.js';
 import { REX, REX_LIVERIES } from './Rival.js';
+import { todayKey } from './Daily.js';
+import { CONTRACTS, tierFor, pickContracts, runCounts, crateCoins } from './Contracts.js';
 
 const KEY = 'planetpop.career';
 const fresh = () => ({ xp: 0, paid: [], rex: { you: 0, rex: 0 },
@@ -9,7 +11,8 @@ const fresh = () => ({ xp: 0, paid: [], rex: { you: 0, rex: 0 },
 
 /** Flight-to-flight progress, kept separately from the existing wallet and purchases. */
 export class Career {
-  constructor(app, progress) {
+  constructor(app, progress, date = todayKey) {
+    this.date = date;
     this.app = app;
     this.progress = progress;
     const saved = loadJson(KEY, null), defaults = fresh();
@@ -19,7 +22,7 @@ export class Career {
     this.data.paid = Array.isArray(this.data.paid) ? [...new Set(this.data.paid)] : [];
     this.lines = [];
     progress.onEarn = (n) => this.addXp(n);
-    progress.onStars = (n) => this.addXp(n * XP.star);
+    progress.onStars = (n) => { this.addXp(n * XP.star); this.count('star', n); };
     app.achievements.onUnlock = (id) => this.trophy(id);
     const coins = progress.coins;
     this.migrating = true;
@@ -75,8 +78,62 @@ export class Career {
   runEnded(run) {
     if (!run || run.careerEnded) return;
     run.careerEnded = true;
+    this.counts(runCounts(run));
     const gained = this.xp - this.marked;
     if (gained > 0) this.lines.push(`🎖️ +${gained.toLocaleString('en-GB')} XP`);
+  }
+
+  today() {
+    if (this.data.day.date !== this.date()) {
+      this.data.day = { date: this.date(), tier: tierFor(this.rank), ids: [], counts: {}, done: [], crate: false };
+    }
+    const day = this.data.day;
+    if (day.ids.length !== 3) {
+      day.ids = pickContracts(day.date, day.tier, { stars: this.progress.totalStars });
+      this.save();
+    }
+    return day;
+  }
+
+  get contracts() {
+    const day = this.today();
+    return day.ids.map((id) => {
+      const c = CONTRACTS.find((c) => c.id === id), need = c.need[day.tier];
+      let text = c.text.replace('{n}', need);
+      if (need === 2 && (id === 'mission' || id === 'star')) text = text.replace(id === 'mission' ? 'mission' : 'star', id === 'mission' ? 'missions' : 'stars');
+      return { id, text, have: Math.min(need, day.counts[c.stat] || 0), need, coins: c.coins, done: day.done.includes(id) };
+    });
+  }
+
+  count(stat, n) { this.counts({ [stat]: n }); }
+  counts(values) {
+    const day = this.today();
+    for (const [stat, n] of Object.entries(values)) {
+      const contract = CONTRACTS.find((c) => c.stat === stat);
+      if (!contract || !Number.isFinite(n) || n <= 0) continue;
+      day.counts[stat] = contract.best ? Math.max(day.counts[stat] || 0, n) : (day.counts[stat] || 0) + n;
+    }
+    for (const c of this.contracts) {
+      if (c.done || c.have < c.need) continue;
+      day.done.push(c.id);
+      this.save();
+      this.progress.addCoins(c.coins, false);
+      this.addXp(XP.contract);
+      this.lines.push(`📋 ${c.text}: done! +${c.coins} 🪙`);
+      if (day.done.length === 3) this.lines.push('🎁 All three done: your crate is waiting on Home.');
+    }
+    this.save();
+  }
+
+  get crateReady() { const d = this.today(); return d.done.length === 3 && !d.crate; }
+  openCrate() {
+    if (!this.crateReady) return 0;
+    const day = this.today(), coins = crateCoins(day.date);
+    day.crate = true;
+    this.save();
+    this.progress.addCoins(coins, false);
+    this.addXp(XP.crate);
+    return coins;
   }
 
   save() { saveJson(KEY, this.data); }

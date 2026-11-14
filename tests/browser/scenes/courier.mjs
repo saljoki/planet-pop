@@ -16,6 +16,14 @@ export default async function courier({ page, frames, until, scene }) {
     await frames(2);
     await careerFits(page, '#home');
   });
+  for (const ready of [false, true]) {
+    await scene(ready ? 'today-crate' : 'today', ready ? 'Today: all jobs done and the crate waiting' : 'Today: one contract done', async () => {
+      await stageToday(page, ready);
+      await frames(2);
+      await careerFits(page, '#today');
+    });
+    await page.evaluate(() => app.game.today.hide());
+  }
   await scene('trophy-pay', 'A trophy toast includes its 100-coin reward', async () => {
     await stageTrophy(page);
     await frames(1);
@@ -303,4 +311,15 @@ export async function stageTrophy(page) {
     if (!toast.textContent.includes('+100 🪙') || r.left < 0 || r.right + 4 > innerWidth || r.top < 0 || r.bottom + 4 > innerHeight)
       throw new Error(`Trophy payout toast does not fit ${innerWidth} × ${innerHeight}`);
   });
+}
+
+export async function stageToday(page, ready = false) {
+  await page.evaluate((ready) => {
+    const g = app.game;
+    g.stop(); g.home.hide(); g.pilot.hide(); g.hangar.hide();
+    const day = g.career.today();
+    Object.assign(day, { ids: ['fragile', 'score', 'mission'], tier: 2, counts: {}, done: [], crate: false });
+    g.career.counts({ fragile: 4, ...(ready ? { score: 4000, mission: 2 } : {}) });
+    g.career.news(); g.today.show();
+  }, ready);
 }

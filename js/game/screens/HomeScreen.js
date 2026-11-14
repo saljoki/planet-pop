@@ -8,6 +8,7 @@ export class HomeScreen extends Overlay {
       <header class="home-head"><h2>🏠 Planet Pop</h2><span id="hoCoins"></span></header>
       <button id="hoPilot"><span id="hoPilotText"></span><span id="hoXp" class="xp-bar"><i></i></span></button>
       <button id="hoNext" class="big"></button>
+      <button id="hoToday"></button>
       <div id="hoCards"></div>
       <footer class="home-foot">
         <button id="hoHangar">🛠️ Hangar</button><button id="hoTrophies"></button>
@@ -17,11 +18,12 @@ export class HomeScreen extends Overlay {
     this.game = game;
     const $ = (id) => this.$(id);
     this.dom = {
-      coins: $('hoCoins'), pilot: $('hoPilot'), pilotText: $('hoPilotText'), xp: $('hoXp').firstElementChild, next: $('hoNext'), cards: $('hoCards'),
+      coins: $('hoCoins'), pilot: $('hoPilot'), pilotText: $('hoPilotText'), xp: $('hoXp').firstElementChild, next: $('hoNext'), today: $('hoToday'), cards: $('hoCards'),
       hangar: $('hoHangar'), trophies: $('hoTrophies'), options: $('hoOptions'), explore: $('hoExplore'),
       trophyBox: app.hud.$('trophyBox'),
     };
     this.dom.pilot.addEventListener('click', () => this.pilot());
+    this.dom.today.addEventListener('click', () => this.today());
     this.dom.next.addEventListener('click', () => this.next());
     this.dom.cards.addEventListener('click', (e) => this.pick(e.target.closest?.('button[data-card]')?.dataset.card));
     this.dom.hangar.addEventListener('click', () => this.hangar());
@@ -42,6 +44,7 @@ export class HomeScreen extends Overlay {
     const career = this.game.career, next = career.toNext;
     d.pilotText.textContent = `🎖️ ${career.rank} · ${career.rankName}${this.app.settings.playerName ? ` · ${this.app.settings.playerName}` : ''}`;
     d.xp.style.width = `${next ? next.have / next.need * 100 : 100}%`;
+    d.today.textContent = `📋 ${career.today().done.length} / 3${career.crateReady ? ' · 🎁 Crate!' : ''}`;
     d.next.innerHTML = `<span class="next-title">${offer.icon} ${offer.title}</span><small>${offer.text}</small>`;
     d.cards.innerHTML = HOME_CARDS.map((c) => `<button data-card="${c.id}"><span class="card-icon" aria-hidden="true">${c.icon}</span>
       <span class="card-name">${c.name}</span><small>${cardStat(c.id, p, career) || c.desc}</small></button>`).join('');
@@ -70,6 +73,7 @@ export class HomeScreen extends Overlay {
   }
 
   options() { this.game.options.show(() => { if (this.open) this.render(); }); }
+  today() { this.hide(); this.game.today.show(); }
   pilot() { this.hide(); this.game.pilot.show(); }
   hangar() { this.hide(); this.game.openHangar(); }
   trophies() { this.trophiesShown = true; this.app.hud.showTrophies(this.app.achievements.list()); }

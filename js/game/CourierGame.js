@@ -2,6 +2,7 @@ import { HARM } from './vehicles/Vehicle.js';
 import { Progress } from './Progress.js';
 import { Career } from './Career.js';
 import { PilotCard } from './screens/PilotCard.js';
+import { TodayScreen } from './screens/TodayScreen.js';
 import { dailyParams } from './Daily.js';
 import { LESSON_PLANET } from './Lessons.js';
 import { CourierProps } from './CourierProps.js';
@@ -62,6 +63,7 @@ export class CourierGame {
     this.roads = new RoadBoard(app, (opts) => this.launch(opts));
     this.home = new HomeScreen(app, this);
     this.pilot = new PilotCard(app, this);
+    this.today = new TodayScreen(app, this);
     this.hangar = new Hangar(app, this.progress, {
       onOptions: () => this.options.show(() => this.hangar.show()),
       onClose: () => this.openHome(),
@@ -104,7 +106,7 @@ export class CourierGame {
     if (this.active) return;
     if (!this.app.building) {
       this.app.start?.dismiss();
-      for (const menu of [this.home, this.pilot, this.hangar, this.briefing, this.board, this.roads]) menu.hide();
+      for (const menu of [this.home, this.pilot, this.today, this.hangar, this.briefing, this.board, this.roads]) menu.hide();
     }
     return this.flyOn(LESSON_PLANET, { lesson: true }, '🎓 Getting your plane ready…');
   }

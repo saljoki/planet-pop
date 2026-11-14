@@ -66,3 +66,16 @@
 #game.lesson #gArrow { top: calc(128px + var(--st)); }
 @keyframes coach-tick { from { opacity: 1; scale: 0.6; } 40% { scale: 1.2; } to { opacity: 0; scale: 1; } }
 @keyframes coach-nudge { 50% { box-shadow: 0 0 0 8px var(--yellow); } }
+
+#hoToday { display: block; width: 100%; margin: 0 0 12px; min-height: 42px; font-size: 20px; background: #fff1bc; }
+#today { z-index: 20; padding: 12px; }
+#today .panel { width: 560px; max-width: 100%; padding: 20px; }
+#today h2 { margin: 0 0 16px; }
+#tdContracts { display: grid; gap: 12px; text-align: left; }
+.contract { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; padding: 12px; border: 2px solid var(--ink); background: #fff; }
+.contract > span { grid-column: 1 / -1; font-size: 22px; }
+.contract small { font: 15px/1.4 system-ui, sans-serif; letter-spacing: 0; }
+.contract.done { background: #d3f8e8; }
+.contract strong { font-size: 20px; }
+.today-rewards { display: grid; gap: 14px; margin-top: 18px; }
+.today-rewards button { min-height: 44px; }

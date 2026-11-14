@@ -100,6 +100,8 @@ export class RaceRun extends Run {
   over(won, title = won ? '🏁 You beat Rex!' : '😈 Rex wins!') {
     this.done = true;
     const p = this.game.progress, app = this.app, coins = won ? RACE_COINS.win : RACE_COINS.lose, t = this.time;
+    this.coins = coins;
+    this.won = won;
     p.addCoins(coins);
     let best = '';
     if (won) {
