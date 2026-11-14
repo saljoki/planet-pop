@@ -1,7 +1,7 @@
 /** Each craft trades one strength for another; world-specific styles keep these proportions. */
 export const CRAFTS = [
   { id: 'classic', icon: '✈️', name: 'Classic', good: 'Everything, a little', gives: 'Nothing', rank: 1, cost: 0, mods: {}, shape: { span: 1, girth: 1 } },
-  { id: 'swift', icon: '⚡', name: 'Swift', good: 'Speed', gives: 'Armour', rank: 4, cost: 3000, mods: { speed: 1.06, armour: 1.3 }, shape: { span: 0.8, girth: 0.9 } },
+  { id: 'swift', icon: '⚡', name: 'Swift', good: 'Speed', gives: 'Armour', rank: 4, cost: 3000, mods: { speed: 1.06, armour: 1.6 }, shape: { span: 0.8, girth: 0.9 } },
   { id: 'hummingbird', icon: '🐦', name: 'Hummingbird', good: 'Turning', gives: 'Boost tank', rank: 7, cost: 5000, mods: { turn: 1.35, drain: 1.3 }, shape: { span: 0.65, girth: 0.85 } },
   { id: 'mule', icon: '🐴', name: 'Mule', good: "Heavy parcels don't slow it", gives: 'Top speed', rank: 10, cost: 7000, mods: { hauler: true, speed: 0.94 }, shape: { span: 1.15, girth: 1.25 } },
   { id: 'bulldog', icon: '🐶', name: 'Bulldog', good: 'Armour', gives: 'Turning', rank: 14, cost: 9000, mods: { armour: 0.6, turn: 0.85 }, shape: { span: 0.95, girth: 1.4 } },

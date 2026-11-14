@@ -17,7 +17,7 @@ describe('hangar craft', () => {
   after(() => { game.stop(); planet.dispose(); });
 
   it('applies each craft to a copy, keeping the stock stats intact and armour positive', () => {
-    const mods = [{}, { speed: 1.06, armour: 1.3 }, { turn: 1.35, drain: 1.3 }, { hauler: true, speed: .94 }, { armour: .6, turn: .85 }, { drain: .5, speed: .93 }];
+    const mods = [{}, { speed: 1.06, armour: 1.6 }, { turn: 1.35, drain: 1.3 }, { hauler: true, speed: .94 }, { armour: .6, turn: .85 }, { drain: .5, speed: .93 }];
     CRAFTS.forEach((c, i) => {
       const expected = { ...BASE_STATS };
       for (const [key, value] of Object.entries(mods[i])) expected[key] = key === 'hauler' ? value : BASE_STATS[key] * value;
