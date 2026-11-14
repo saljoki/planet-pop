@@ -82,7 +82,50 @@ export default async function courier({ page, frames, until, scene }) {
     await until(() => app.game.over);
     await frames(2);
   });
+  const missionParams = await page.evaluate(() => ({ ...app.params }));
+  const missionViewport = page.viewport();
   const missionDefs = () => page.evaluate(async () => { window.MISSIONS = (await import('./js/game/Missions.js')).MISSIONS; });
+  const missionStart = async (id) => {
+    await missionDefs();
+    await page.evaluate(async (id) => {
+      const g = app.game, def = MISSIONS.find((m) => m.id === id);
+      if (!def) throw new Error(`No mission named ${id}`);
+      g.stop();
+      g.hangar.hide();
+      g.board.hide();
+      g.briefing.hide();
+      g.options.hide();
+      g.results.hide();
+      if (app.paused) app.togglePause();
+      await g.startMission(def); // build the mission's own world, even in a filtered screenshot run
+      if (g.briefing.open) g.briefing.start();
+      if (!g.active || g.run.def?.id !== id) throw new Error(`Mission ${id} did not start`);
+      app.togglePause(); // let the camera settle without visits, pickups or clock ticks
+      g.pauseMenu.hide();
+      g.hud.update();
+    }, id);
+    await until(() => app.rig.mode === 'game');
+  };
+  const missionStars = async () => {
+    await missionDefs();
+    await page.evaluate(() => {
+      const p = app.game.progress;
+      p.reset();
+      p.completeMission(MISSIONS[0]); // one legacy star, then two for Rush Hour open Earth at three
+    });
+    await missionStart('rush');
+    await page.evaluate(() => {
+      const g = app.game, run = g.run;
+      run.missionElapsed = Math.max(0, run.def.par - 5);
+      run.tally[run.def.goal.stat] = run.def.goal.target;
+      run.tally.knocks = 1;
+      run.endMission('done');
+      const card = g.results.dom.result.textContent;
+      if (!card.includes('⭐⭐☆') || !card.includes('🔓 Earth is open!')) throw new Error(`Missing two-star chapter result: ${card}`);
+      if (g.progress.starsFor('rush') !== 2 || g.progress.totalStars !== 3) throw new Error('Unexpected stars in the results fixture');
+    });
+    await frames(4);
+  };
   await scene('missions', 'The mission board, with the first mission done', async () => {
     await missionDefs();
     await page.evaluate(() => { app.game.stop(); app.game.hangar.hide(); app.game.progress.completeMission(MISSIONS[0]); app.game.board.show(); });
@@ -105,6 +148,48 @@ export default async function courier({ page, frames, until, scene }) {
     await until(() => app.game.over);
     await frames(2);
   });
+  await scene('mission-tour', 'Earth photo tour: the arrow points at the next landmark to photograph', async () => {
+    await missionStart('wonders');
+    await frames(8);
+    await page.evaluate(() => {
+      const g = app.game, run = g.run, aim = run.target(g.player.up);
+      if (app.planet.world?.id !== 'earth' || run.tally.visits !== 0 || !aim) throw new Error('Earth photo tour was not staged');
+      if (!run.def.tour.some((name) => aim.text.includes(name))) throw new Error(`Tour arrow missed its landmark: ${aim.text}`);
+      if (!g.hud.hasGoal || !g.hud.dom.goal.textContent.includes('📷 Photo')) throw new Error('Photo goal or arrow is missing');
+    });
+  });
+  await scene('mission-fetch', 'Moon Rock: fly to Tycho to collect the parcel before delivering it', async () => {
+    await missionStart('moonrock');
+    await frames(8);
+    await page.evaluate(() => {
+      const g = app.game, run = g.run, goal = g.hud.dom.goal.textContent;
+      if (app.planet.world?.id !== 'moon' || run.collected || run.cargo !== null) throw new Error('Moon rock was already collected');
+      if (!/Collect the.*Moon rock at Tycho/.test(goal) || !g.hud.hasGoal) throw new Error(`Pickup goal or arrow is missing: ${goal}`);
+    });
+  });
+  await scene('mission-stars', 'Two mission stars, each goal checked, and Earth opening at three total stars', missionStars);
+  await scene('mission-stars-phone', 'Two-star mission results and the new chapter at 390 × 844', async () => {
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+    await missionStars();
+    await page.evaluate(() => {
+      const box = app.game.results.el.querySelector('.panel').getBoundingClientRect();
+      if (box.left < 0 || box.right > innerWidth || box.top < 0 || box.bottom > innerHeight) throw new Error('Mission result card is outside the phone viewport');
+    });
+  });
+  await page.setViewport(missionViewport);
+  await page.evaluate(async (params) => {
+    const g = app.game;
+    g.stop();
+    g.board.hide();
+    g.briefing.hide();
+    g.results.hide();
+    if (app.paused) app.togglePause();
+    const changed = ['seed', 'land', 'cities', 'theme', 'world'].some((key) => app.params[key] !== params[key]);
+    if (changed) {
+      Object.assign(app.params, params);
+      await app.newPlanet(params.seed, false, params.theme, params.world ?? null);
+    }
+  }, missionParams);
   await scene('free-flight', 'Free flight: no clock or parcels, just the plane and the planet', async () => {
     await page.evaluate(() => { app.game.stop(); app.game.start({ free: true }); });
     await until(() => app.rig.mode === 'game');

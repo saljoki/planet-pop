@@ -42,6 +42,15 @@ export class MissionRun extends DeliveryRun {
     this.missionElapsed = 0; // the whole mission, separate from the current parcel's combo clock
   }
 
+  takeoff() {
+    const start = super.takeoff();
+    // Two-town shuttles need steering: the direct great circle otherwise wins hands-free.
+    if (this.def.planet.world && this.planet.cities.sites.length === 2 && this.def.goal.stat === 'deliveries') {
+      start.heading.applyAxisAngle(start.at, Math.PI / 4);
+    }
+    return start;
+  }
+
   get layout() { return { ...super.layout, badge: 'mission' }; }
 
   /** Missions are timed by their goals, so every delivery keeps its full twenty seconds. */
@@ -285,7 +294,8 @@ export class MissionRun extends DeliveryRun {
   starResult(earned) {
     const def = this.def, goals = starGoals(def), time = this.missionElapsed, bonus = bonusGoal(def);
     const passed = [true, time <= (def.par ?? 120), bonusMet(def, this.tally)];
-    const actual = ['', ` (${flightTime(time)})`, ` (${Math.floor(this.tally[bonus.stat] ?? 0)})`];
+    const value = this.tally[bonus.stat] ?? 0, shown = Number.isInteger(value) ? value : Math.ceil(value * 10) / 10;
+    const actual = ['', ` (${flightTime(time)})`, ` (${shown})`];
     const best = this.game.progress.starsFor(def.id), stars = '⭐'.repeat(earned) + '☆'.repeat(3 - earned);
     return `${stars}<br>${goals.map((goal, i) => `${passed[i] ? '✔' : '✖'} ${goal}${actual[i]}`).join(' · ')}${
       best > earned ? `<br>Best: ${'⭐'.repeat(best)}` : ''}`;

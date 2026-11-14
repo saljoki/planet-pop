@@ -2,14 +2,96 @@ import { describe, it, before, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeWorld } from './helpers/world.mjs';
 import { MISSIONS } from '../js/game/Missions.js';
-import { worldOf } from '../js/space/Worlds.js';
+import { WORLD_IDS, worldOf } from '../js/space/Worlds.js';
 import { Progress } from '../js/game/Progress.js';
 import { readPad } from '../js/game/input/Gamepad.js';
 
 const def = (id) => MISSIONS.find((m) => m.id === id);
 
+// v0.17.0 mission data: additions may not change a previous planet, goal, reward or special condition.
+const ORIGINAL_MISSIONS = [
+  { id: 'first', icon: '📦', name: 'First Flight', brief: 'Deliver 3 parcels.',
+    planet: { seed: 20261014, land: 0.45, cities: 5, theme: 'classic' }, goal: { stat: 'deliveries', target: 3 }, reward: 100 },
+  { id: 'rush', icon: '⚡', name: 'Rush Hour', brief: 'Deliver 2 urgent parcels.',
+    planet: { seed: 777, land: 0.45, cities: 6, theme: 'desert' }, goal: { stat: 'urgent', target: 2 }, reward: 150, cargo: { urgent: 3 } },
+  { id: 'rings', icon: '💍', name: 'Ring Master', brief: 'Fly through 15 blue rings. The arrow shows the nearest.',
+    planet: { seed: 5, land: 0.45, cities: 4, theme: 'candy' }, goal: { stat: 'rings', target: 15 }, reward: 150 },
+  { id: 'care', icon: '🥚', name: 'Handle With Care', brief: 'Deliver 2 fragile parcels. Break one and it’s over.',
+    planet: { seed: 777, land: 0.45, cities: 6, theme: 'ice' }, goal: { stat: 'fragile', target: 2 }, failIf: 'broken', reward: 200, cargo: { fragile: 4 } },
+  { id: 'pitstop', icon: '⛽', name: 'Pit Stop', brief: 'Refuel by skimming an airport runway twice.',
+    planet: { seed: 42, land: 0.25, cities: 2, theme: 'classic' }, goal: { stat: 'refuels', target: 2 }, reward: 200 },
+  { id: 'heavy', icon: '🏋️', name: 'Heavy Lifter', brief: 'Deliver 3 heavy parcels.',
+    planet: { seed: 9001, land: 0.6, cities: 6, theme: 'desert' }, goal: { stat: 'heavy', target: 3 }, reward: 250, cargo: { heavy: 4 } },
+  { id: 'rex', icon: '😈', name: 'Outrun Rex', brief: 'Beat Rival Rex to 3 cities in a row. He’s here from the start.',
+    planet: { seed: 777, land: 0.45, cities: 6, theme: 'classic' }, goal: { stat: 'rexStreak', target: 3 }, reward: 250, rival: true },
+  { id: 'night', icon: '🌙', name: 'Night Shift', brief: 'Deliver 3 parcels to cities in darkness.',
+    planet: { seed: 12345, land: 0.3, cities: 8, theme: 'ice' }, goal: { stat: 'night', target: 3 }, reward: 300, night: true },
+  { id: 'ufo', icon: '🛸', name: 'Close Encounter', brief: 'A UFO is coming. Fly right through it.',
+    planet: { seed: 12345, land: 0.3, cities: 8, theme: 'candy' }, goal: { stat: 'ufo', target: 1 }, reward: 300, ufoIn: 12 },
+  { id: 'ash', icon: '🌋', name: 'Ash Dodger', brief: 'Deliver 4 parcels while the volcanoes erupt. Touch the ash and it’s over.',
+    planet: { seed: 20261014, land: 0.45, cities: 5, theme: 'lava' }, goal: { stat: 'deliveries', target: 4 }, failIf: 'ash', reward: 400, eruptions: true },
+  // on the real worlds
+  { id: 'flag', icon: '🚩', name: 'One Small Step', brief: 'Fly a flag to Tranquility Base, where Apollo 11 landed.',
+    planet: { world: 'moon' }, goal: { stat: 'landmark', target: 1 }, reward: 150, landmark: 'Tranquility Base', item: '🚩 Flag' },
+  { id: 'dust', icon: '🌪️', name: 'Dust Storm Medicine', brief: 'Deliver 3 urgent parcels of medicine while dust storms sweep Mars.',
+    planet: { world: 'mars' }, goal: { stat: 'urgent', target: 3 }, reward: 250, cargo: { urgent: 4 } },
+  { id: 'acid', icon: '⚡', name: 'Acid Rain', brief: 'Deliver 3 parcels between the cloud towns of Venus. Get struck by lightning and it’s over.',
+    planet: { world: 'venus' }, goal: { stat: 'deliveries', target: 3 }, failIf: 'zaps', reward: 300 },
+  { id: 'shade', icon: '🌗', name: 'Keep to the Shade', brief: 'Deliver 3 parcels to towns on Mercury’s night side. The sunshine cooks you.',
+    planet: { world: 'mercury' }, goal: { stat: 'night', target: 3 }, reward: 350, dark: true },
+  { id: 'hotel', icon: '🛎️', name: 'Room Service', brief: 'Fly a birthday cake to the Ice Hotel on Pluto’s heart. Crash and it’s over.',
+    planet: { world: 'pluto' }, goal: { stat: 'landmark', target: 1 }, failIf: 'broken', reward: 400, landmark: 'The Ice Hotel', carry: 'fragile', item: '🎂 Birthday cake' },
+  { id: 'storm', icon: '🌀', name: 'Eye of the Storm', brief: 'Fly a loop round Jupiter’s Great Red Spot, a storm wider than Earth.',
+    planet: { world: 'jupiter' }, goal: { stat: 'loops', target: 1 }, reward: 300 },
+  { id: 'ringrun', icon: '💫', name: 'Ring Run', brief: 'Fly through Saturn’s ring ice 3 times. Touch a chunk and it’s over.',
+    planet: { world: 'saturn' }, goal: { stat: 'threads', target: 3 }, failIf: 'ice', reward: 400 },
+  { id: 'chill', icon: '🧊', name: 'Cold Chain', brief: 'Deliver 2 fragile parcels between Uranus’s weather stations. Break one and it’s over.',
+    planet: { world: 'uranus' }, goal: { stat: 'fragile', target: 2 }, failIf: 'broken', reward: 350, cargo: { fragile: 4 } },
+  { id: 'gale', icon: '💨', name: 'Gale Force', brief: 'Deliver 3 parcels on Neptune, where the wind blows you west all the time.',
+    planet: { world: 'neptune' }, goal: { stat: 'deliveries', target: 3 }, reward: 400 },
+  { id: 'sulphur', icon: '🌋', name: 'Sulphur Run', brief: 'Deliver 3 parcels on Io while its volcanoes erupt. Fly into a plume and it’s over.',
+    planet: { world: 'io' }, goal: { stat: 'deliveries', target: 3 }, failIf: 'ash', reward: 400, eruptions: true },
+  { id: 'sample', icon: '🧪', name: 'Ocean Sample', brief: 'Fly a sample of Europa’s hidden ocean to the scientists at Conamara Chaos. It’s fragile.',
+    planet: { world: 'europa' }, goal: { stat: 'landmark', target: 1 }, failIf: 'broken', reward: 350, landmark: 'Conamara Chaos', carry: 'fragile', item: '🧪 Ocean sample' },
+  { id: 'huygens', icon: '📡', name: 'Battery for Huygens', brief: 'Take a new battery to the Huygens probe, which landed on Titan in 2005.',
+    planet: { world: 'titan' }, goal: { stat: 'landmark', target: 1 }, reward: 300, landmark: 'The Huygens landing site', item: '🔋 A battery' },
+];
+
 describe('missions', () => {
   beforeEach(() => localStorage.clear());
+
+  it('keeps every v0.17.0 mission intact, with unique ids and a par for every mission', () => {
+    assert.equal(MISSIONS.length, 61);
+    assert.equal(new Set(MISSIONS.map((m) => m.id)).size, MISSIONS.length);
+    assert.equal(MISSIONS[0].id, 'first');
+    for (const original of ORIGINAL_MISSIONS) {
+      const current = MISSIONS.find((m) => m.id === original.id);
+      assert.ok(current, `${original.id}: missing legacy mission`);
+      const { par, bonus, ...unchanged } = current;
+      assert.ok(par >= 20 && par <= 240);
+      assert.deepEqual(unchanged, original, `${original.id}: changed legacy mission`);
+      if (['care', 'hotel', 'chill', 'sample'].includes(original.id)) {
+        assert.deepEqual(bonus, { stat: 'rings', min: 3, text: 'Collect 3 rings' });
+      }
+    }
+    for (const mission of MISSIONS) {
+      assert.ok(Number.isInteger(mission.par) && mission.par >= 20 && mission.par <= 240, `${mission.id}: invalid par`);
+      assert.ok(mission.brief.length <= 115, `${mission.id}: brief exceeds 115 characters`);
+    }
+  });
+
+  it('has ten Flight school missions and three distinct missions on every real world', () => {
+    assert.equal(MISSIONS.filter((m) => !m.planet.world).length, 10);
+    const kind = (m) => m.fetch ? 'fetch' : m.tour ? 'tour' : m.goal.stat;
+    for (const id of WORLD_IDS) {
+      const chapter = MISSIONS.filter((m) => m.planet.world === id);
+      assert.equal(chapter.length, 3, `${id}: needs three missions`);
+      for (let i = 1; i < chapter.length; i++) {
+        assert.notEqual(kind(chapter[i]), kind(chapter[i - 1]), `${id}: adjacent missions ask for the same thing`);
+      }
+    }
+  });
+
 
   it('unlock one at a time and pay their reward once', () => {
     const p = new Progress();
@@ -33,14 +115,20 @@ describe('missions', () => {
           cities: planet.cities.sites.length, airports: planet.airports.list.length,
           volcanoes: planet.volcanoes.length, theme: planet.theme.id, storms: planet.weather.storms.length,
           landmarks: planet.landmarks.list.map((l) => l.name), loops: planet.landmarks.list.filter((l) => l.loop).length,
-          ice: planet.rings?.ice.length ?? 0, wind: planet.world?.wind ?? 0,
+          ice: planet.rings?.ice.length ?? 0, wind: planet.world?.wind ?? 0, heat: !!planet.world?.heat,
         });
         planet.dispose();
       }
       const w = seen.get(key);
       assert.ok(w.cities >= 2, `${m.id}: not enough cities`);
       assert.equal(w.theme, m.planet.world ? worldOf(m.planet.world).theme : m.planet.theme);
-      if (m.landmark) assert.ok(w.landmarks.includes(m.landmark), `${m.id}: no ${m.landmark}`);
+      for (const name of [...(m.tour ?? []), m.fetch, m.landmark].filter(Boolean)) {
+        assert.ok(w.landmarks.includes(name), `${m.id}: no ${name}`);
+      }
+      if (m.tour) assert.equal(m.goal.target, m.tour.length, `${m.id}: tour goal differs from the number of landmarks`);
+      if (m.sunny || m.bonus?.stat === 'sun') assert.ok(w.heat, `${m.id}: needs a world with heat`);
+      if (m.goal.stat === 'ash') assert.ok(m.eruptions, `${m.id}: plume goals need eruptions`);
+      if (m.rexLevel !== undefined) assert.ok(m.rival, `${m.id}: a Rex level needs a rival`);
       if (m.failIf === 'zaps' || m.id === 'dust') assert.ok(w.storms >= 2, `${m.id}: only ${w.storms} storms`);
       if (m.goal.stat === 'loops') assert.ok(w.loops, `${m.id}: no storm to fly round`);
       if (m.goal.stat === 'threads') assert.ok(w.ice > 100, `${m.id}: no ring ice`);

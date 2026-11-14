@@ -77,6 +77,18 @@ describe('saved stars and chapters', () => {
     assert.ok(!p.chapterOpen('mars'));
   });
 
+  it('three stars open Earth’s first mission, with later missions opening one at a time', () => {
+    const p = new Progress();
+    p.completeMission(def('first'));
+    p.recordStars('first', 3);
+    assert.ok(p.missionUnlocked(missionIndex('airmail')));
+    assert.ok(!p.missionUnlocked(missionIndex('express')));
+    assert.ok(!p.missionUnlocked(missionIndex('wonders')));
+    p.completeMission(def('airmail'));
+    assert.ok(p.missionUnlocked(missionIndex('express')));
+    assert.ok(!p.missionUnlocked(missionIndex('wonders')));
+  });
+
   it('loads v0.17.0 progress unchanged and preserves every completed mission for replay', () => {
     localStorage.setItem('planetpop.courier', JSON.stringify(legacy));
     const p = new Progress();
@@ -186,6 +198,15 @@ describe('mission star briefing, clock and results', () => {
     assert.equal(game.progress.coins, coins + def('first').reward, 'a result cannot pay twice');
   });
 
+  it('shows enough precision to explain a missed maximum bonus', () => {
+    const mission = { ...def('first'), bonus: { stat: 'sun', max: 15, text: 'Under 15 s in the sunshine' } };
+    game.start({ mission });
+    game.run.tally.sun = 15.01;
+    game.run.endMission('done');
+    assert.equal(game.progress.starsFor('first'), 2);
+    assert.match(game.results.dom.result.innerHTML, /✖ Under 15 s in the sunshine \(15\.1\)/);
+  });
+
   it('keeps the previous best on a worse replay and offers the next mission inside the chapter', () => {
     game.progress.completeMission(def('first'));
     game.progress.recordStars('first', 3);
@@ -199,6 +220,19 @@ describe('mission star briefing, clock and results', () => {
     assert.equal(game.progress.starsFor('first'), 3);
     assert.equal(game.results.nextMission.id, 'rush');
     assert.match(game.results.dom.result.innerHTML, /Already earned/);
+  });
+
+  it('offers the first unfinished mission of the next open chapter and skips completed chapters', () => {
+    const p = game.progress;
+    p.completeMission(def('first'));
+    p.recordStars('first', 3);
+    p.completeMission(def('airmail'));
+    const run = new MissionRun(game, { mission: def('ash') });
+    assert.equal(run.nextMission().id, 'express');
+    p.completeMission(def('express'));
+    p.completeMission(def('wonders'));
+    assert.ok(p.chapterOpen('moon'));
+    assert.equal(run.nextMission().id, 'flag');
   });
 
   it('has no Next offer after a chapter when no later chapter is open', () => {
