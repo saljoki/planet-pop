@@ -93,7 +93,7 @@ test('a first mission pays reward XP and all its new stars; a replay pays neithe
     game.run.tally.deliveries = def.goal.target;
     game.run.endMission('done');
     assert.equal(game.career.xp, def.reward + 3 * XP.star);
-    assert.match(game.results.dom.result.innerHTML, /XP/);
+    assert.match(game.results.dom.news.children.map((span) => span.textContent).join(' '), /XP/);
     const before = game.career.xp;
     game.stop();
     game.start({ mission: def });
@@ -175,4 +175,75 @@ test('legacy stars and three trophies pay 550 back pay in one welcome line, only
   assert.equal(app.game.progress.coins, 1450);
   assert.equal(app.game.career.xp, 1300);
   assert.deepEqual(app.game.career.news(), []);
+});
+
+test('finish renders career news as separate spans, preserves the run HTML and hides empty news', async () => {
+  const { app, planet } = await makeWorld(MISSIONS[0].planet), g = app.game;
+  try {
+    g.start({ free: true });
+    g.career.addXp(300);
+    const card = { title: 'Flight over', html: '<b>The run result</b>' };
+    g.finish(card);
+    assert.equal(card.html, '<b>The run result</b>');
+    assert.deepEqual(card.news, ['🎖️ Rank 2 · Trainee! +100 🪙', '🎖️ +300 XP']);
+    assert.equal(g.results.dom.result.innerHTML, card.html);
+    assert.deepEqual(g.results.dom.news.children.map((span) => [span.tagName, span.textContent]),
+      card.news.map((line) => ['SPAN', line]));
+    assert.equal(g.results.dom.news.classList.contains('hidden'), false);
+    g.stop(); g.start({ free: true });
+    g.results.dom.copy.scrollTop = 100;
+    const plain = { title: 'Flight over', html: 'No career change' };
+    g.finish(plain);
+    assert.equal(plain.html, 'No career change');
+    assert.deepEqual(plain.news, []);
+    assert.equal(g.results.dom.news.children.length, 0);
+    assert.equal(g.results.dom.news.classList.contains('hidden'), true);
+    assert.equal(g.results.dom.copy.scrollTop, 0);
+  } finally { g.stop(); planet.dispose(); }
+});
+
+test('a v0.19 save code replaces an existing career and rebuilds the imported pilot once', async () => {
+  const existing = makeApp({}).game;
+  existing.career.addXp(21300);
+  assert.equal(existing.career.rank, 14);
+  assert.equal(existing.career.xp, 21300);
+  const before = localStorage.getItem('planetpop.career');
+  applySave({ 'planetpop.best': '1200' });
+  assert.equal(localStorage.getItem('planetpop.career'), before, 'a partial best-only import keeps the career');
+  const code = 'PLANETPOP0-' + Buffer.from(JSON.stringify({ v: 1, data: {
+    'planetpop.courier': JSON.stringify(legacy),
+    'planetpop.trophies': JSON.stringify(['courier', 'combo', 'mechanic']),
+  } })).toString('base64url');
+  applySave(await readSaveCode(code));
+  assert.equal(localStorage.getItem('planetpop.career'), null);
+  const loaded = makeApp({}).game;
+  assert.equal(loaded.career.rank, 3);
+  assert.equal(loaded.career.xp, 1300);
+  assert.equal(loaded.progress.coins, 1450);
+  assert.equal(loaded.career.news().length, 1);
+  const again = makeApp({}).game;
+  assert.equal(again.career.xp, 1300);
+  assert.equal(again.progress.coins, 1450);
+  assert.deepEqual(again.career.news(), []);
+});
+
+test('a modern save code replaces an existing career with the career it carries', async () => {
+  const current = makeApp({}).game;
+  current.career.addXp(320);
+  const code = await makeSaveCode();
+  current.career.addXp(xpForRank(14) - current.career.xp);
+  assert.equal(current.career.rank, 14);
+  applySave(await readSaveCode(code));
+  const loaded = makeApp({}).game;
+  assert.equal(loaded.career.rank, 2);
+  assert.equal(loaded.career.xp, 320);
+  assert.equal(loaded.progress.coins, 100);
+});
+
+test('the pilot card formats both Rex scores in British English', () => {
+  const g = makeApp({}).game;
+  g.career.rexScore(1234, 5678);
+  g.pilot.show();
+  assert.match(g.pilot.dom.rex.textContent, /You 1,234 · Rex 5,678/);
+  g.pilot.hide();
 });

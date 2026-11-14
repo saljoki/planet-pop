@@ -9,6 +9,49 @@ async function phoneSize(page, until, width, height) {
   await page.evaluate(() => app.start.dismiss());
 }
 
+async function stageFirstFlightResults(page) {
+  await page.evaluate(async () => {
+    const { MISSIONS } = await import('./js/game/Missions.js'), g = app.game, first = MISSIONS[0];
+    g.stop();
+    for (const menu of [g.home, g.pilot, g.today, g.hangar, g.briefing, g.board, g.roads, g.options]) menu.hide();
+    app.settings.setPlayerName('Ata');
+    g.progress.reset(); g.career.reset();
+    await g.startMission(first);
+    if (g.briefing.open) g.briefing.start();
+    if (!g.active || g.run.def?.id !== first.id || g.progress.missionDone(first.id)) throw new Error('First Flight must be a first completion');
+    g.run.missionElapsed = first.par - 1;
+    g.run.tally[first.goal.stat] = first.goal.target;
+    g.run.tally.knocks = 0;
+    // Hold eight representative career lines while the real mission builds its result and buttons.
+    const news = g.career.news;
+    g.career.news = () => [
+      '🎖️ Rank 2 · Trainee! +100 🪙', '🎖️ Rank 3 · Courier! +150 🪙',
+      '📋 Job done: Deliver 3 parcels. +60 🪙', '📋 Job done: Earn 3 stars. +80 🪙',
+      '🎁 Daily crate: +200 🪙', '🔥 Streak day 7! +150 🪙',
+      '😈 Rex has new paint: Night Shift.', '🎖️ +1,450 XP',
+    ];
+    try { g.run.endMission('done'); } finally { g.career.news = news; }
+    if (g.progress.starsFor(first.id) !== 3) throw new Error('First Flight must award three stars');
+  });
+}
+
+async function resultsFooterStays(page) {
+  await page.$eval('#gOver', (root) => {
+    const copy = root.querySelector('#gCopy'), news = root.querySelector('#gNews');
+    if (news.children.length !== 8 || [...news.children].some((line) => line.tagName !== 'SPAN')) throw new Error('Expected eight news spans');
+    if (!root.querySelector('#gWho').textContent.includes('Ata')) throw new Error('Expected a pilot name');
+    if (copy.querySelector('button')) throw new Error('Results buttons must be outside the scrolling text');
+    const buttons = [...root.querySelectorAll('button')].filter((b) => getComputedStyle(b).display !== 'none');
+    const before = buttons.map((b) => b.getBoundingClientRect());
+    copy.scrollTop = copy.scrollHeight;
+    buttons.forEach((b, i) => {
+      const r = b.getBoundingClientRect();
+      if (r.top !== before[i].top || r.bottom !== before[i].bottom) throw new Error(`${b.id} moves when the results text scrolls`);
+    });
+    copy.scrollTop = 0;
+  });
+}
+
 export default async function phone({ page, frames, until, scene, open, ufoHere, problems }) {
   await scene('mobile', 'Phone-sized screen (390 × 844) with the ?debug stats overlay', async () => {
     await page.evaluate(() => app.game.stop());
@@ -260,6 +303,16 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await careerFits(page, '#gOver');
   });
   await page.evaluate(() => app.game.stop());
+  for (const [width, height] of [[844, 390], [780, 360], [667, 375]]) {
+    await scene(`landscape-results-${width}`, `Phone (${width} × ${height}): first First Flight completion, named pilot, eight career lines and every button`, async () => {
+      await phoneSize(page, until, width, height);
+      await stageFirstFlightResults(page);
+      await frames(2);
+      await careerFits(page, '#gOver');
+      await resultsFooterStays(page);
+    });
+    await page.evaluate(() => app.game.stop());
+  }
   await scene('landscape-panel', 'Phone on its side: the controls come in from the right', async () => {
     await page.evaluate(() => { app.game.stop(); document.getElementById('panel').classList.remove('hidden'); });
     await until(() => app.rig.mode === 'orbit');

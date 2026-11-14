@@ -26,7 +26,7 @@ export class PilotCard extends Overlay {
       .map((r) => `<li>🎖️ ${r} · ${RANKS[r - 1]}<strong>+${rankReward(r).toLocaleString('en-GB')} 🪙</strong></li>`).join('');
     d.name.textContent = `🧑‍✈️ ${this.app.settings.playerName || 'Add your name'}`;
     const paint = liveryFor(c.rank), nextPaint = REX_LIVERIES.find((l) => l.rank > c.rank);
-    d.rex.textContent = `😈 You ${c.rex.you} · Rex ${c.rex.rex} · ${paint.name}\n${nextPaint ? `Next paint: ${nextPaint.name} at rank ${nextPaint.rank}` : 'All Rex paint unlocked'}`;
+    d.rex.textContent = `😈 You ${c.rex.you.toLocaleString('en-GB')} · Rex ${c.rex.rex.toLocaleString('en-GB')} · ${paint.name}\n${nextPaint ? `Next paint: ${nextPaint.name} at rank ${nextPaint.rank}` : 'All Rex paint unlocked'}`;
   }
 
   name() { this.game.options.show(() => this.render()); }

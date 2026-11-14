@@ -181,5 +181,8 @@
   #hoToday { font-size: 14px; padding: 3px; }
   #hoCards button { min-height: 60px; }
   #tdStreak p { font-size: 13px; }
+  #gNews { font: 13px/1.4 system-ui, sans-serif; letter-spacing: 0; }
+  #gNews span { display: inline; }
+  #gNews span + span::before { content: ' · '; }
   .today-rewards { gap: 10px; }
 }

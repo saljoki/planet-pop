@@ -279,8 +279,7 @@ export class CourierGame {
     if (this.over) return;
     this.over = true;
     this.career.runEnded(this.run);
-    const news = this.career.news();
-    if (news.length) card.html += `<br>${news.join('<br>')}`;
+    card.news = this.career.news();
     this.controls.release();
     this.results.show(card);
     this.app.sfx.play(sound);
