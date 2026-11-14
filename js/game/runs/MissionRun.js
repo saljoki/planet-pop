@@ -307,13 +307,13 @@ export class MissionRun extends DeliveryRun {
     if (this.game.over) return;
     const p = this.game.progress, def = this.def, won = result === 'done';
     const closed = won ? CHAPTERS.filter((c) => !p.chapterOpen(c.id)) : [];
-    const reward = won ? p.completeMission(def) : 0;
     let stars = '';
     if (won) {
       const earned = starsEarned(def, { elapsed: this.missionElapsed, tally: this.tally });
       p.recordStars(def.id, earned);
       stars = `${this.starResult(earned)}<br>`;
     }
+    const reward = won ? p.completeMission(def) : 0;
     const opened = closed.filter((c) => p.chapterOpen(c.id)).map((c) => `🔓 ${c.name} is open!`);
     const next = won ? this.nextMission() : null;
     const list = MISSIONS.filter((m) => !m.planet.world === !def.planet.world); // (the made-up planets' or the real worlds')

@@ -27,14 +27,14 @@ test('card stats describe a fresh pilot and remember scores, today and completed
   assert.deepEqual(HOME_CARDS.map((c) => c.id), ['courier', 'daily', 'missions', 'space', 'roads', 'free']);
   assert.equal(cardStat('courier', p), 'Not flown yet');
   assert.equal(cardStat('daily', p), `${dailyPlace()} · not flown today`);
-  assert.equal(cardStat('missions', p), `0 of ${MISSIONS.length} done`);
+  assert.equal(cardStat('missions', p), '⭐ 0 / 183');
   for (const id of ['space', 'roads', 'free']) assert.equal(cardStat(id, p), '');
   p.recordScore(1240);
   p.recordDaily(todayKey(), 938);
   for (const m of MISSIONS.slice(0, 3)) p.completeMission(m);
   assert.equal(cardStat('courier', p), '⭐ Best 1,240');
   assert.equal(cardStat('daily', p), `${dailyPlace()} · ⭐ 938 today`);
-  assert.equal(cardStat('missions', p), `3 of ${MISSIONS.length} done`);
+  assert.equal(cardStat('missions', p), '⭐ 3 / 183');
   p.daily.date = '2000-01-01';
   assert.equal(cardStat('daily', p), `${dailyPlace()} · not flown today`, 'yesterday is not today');
 });
@@ -95,7 +95,7 @@ test('Home renders from cached elements and the hangar only has upgrades and pai
   app.settings.setPlayerName('Ata');
   game.progress.coins = 150;
   home.show();
-  assert.equal(home.dom.name.textContent, '🧑‍✈️ Ata');
+  assert.equal(home.dom.pilotText.textContent, '🎖️ 1 · Cadet · Ata');
   assert.equal(home.dom.coins.textContent, '🪙 150');
   assert.equal(home.dom.hangar.textContent, '🛠️ Hangar · 3 to buy');
   assert.equal(home.dom.trophies.textContent, `🏆 0 / ${app.achievements.list().length}`);

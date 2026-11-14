@@ -14,7 +14,24 @@ export default async function courier({ page, frames, until, scene }) {
   await scene('home', 'Home: next-up, six ways to play and the hangar for upgrades', async () => {
     await page.evaluate(() => { app.game.hangar.hide(); app.game.openHome(); });
     await frames(2);
+    await careerFits(page, '#home');
   });
+  await scene('pilot-card', 'Pilot: rank, XP and the next three rewards', async () => {
+    await page.evaluate(() => {
+      const g = app.game;
+      g.career.addXp(Math.max(0, 1820 - g.career.xp));
+      g.home.hide(); g.pilot.show();
+    });
+    await frames(2);
+    await careerFits(page, '#pilot');
+  });
+  await page.evaluate(() => app.game.pilot.hide());
+  await scene('rank-up', 'Results: two rank rewards and the flight XP', async () => {
+    await stageRankUp(page);
+    await frames(2);
+    await careerFits(page, '#gOver');
+  });
+  await page.evaluate(() => app.game.stop());
   await scene('briefing', 'Short briefing: the goal and Start, with How to play closed', async () => {
     await page.evaluate(() => { app.game.hangar.hide(); app.game.openHome(); });
     await page.click('[data-card="courier"]'); // a real click from Home
@@ -232,4 +249,28 @@ export default async function courier({ page, frames, until, scene }) {
   });
   await page.evaluate(() => { if (app.paused) app.togglePause(); app.game.stop(); });
 
+}
+
+/** A screen fits only if its panel and every control fit, with no hidden scrolling. */
+export async function careerFits(page, selector) {
+  await page.$eval(selector, (root) => {
+    const panel = root.querySelector('.panel'), elements = [panel, ...panel.querySelectorAll('button')];
+    if (panel.scrollHeight > panel.clientHeight + 1 || panel.scrollWidth > panel.clientWidth + 1)
+      throw new Error(`${root.id} needs scrolling at ${innerWidth} × ${innerHeight}`);
+    for (const el of elements) {
+      if (getComputedStyle(el).display === 'none') continue;
+      const r = el.getBoundingClientRect();
+      if (r.top < 0 || r.bottom + 4 > innerHeight || r.left < 0 || r.right + 4 > innerWidth)
+        throw new Error(`${el.id || root.id} is outside ${innerWidth} × ${innerHeight}`);
+    }
+  });
+}
+
+export async function stageRankUp(page) {
+  await page.evaluate(async () => {
+    const { xpForRank } = await import('./js/game/Ranks.js'), g = app.game;
+    g.stop(); g.home.hide(); g.pilot.hide(); g.career.news(); g.start({ free: true });
+    g.career.addXp(xpForRank(Math.min(30, g.career.rank + 2)) - g.career.xp + 85);
+    g.finish({ title: '🎖️ Two ranks up!', html: '✈️ A great flight.' }, 'trophy');
+  });
 }

@@ -4,7 +4,19 @@
 .home-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 #home h2 { margin: 0; text-align: left; }
 #hoCoins { font-size: 24px; white-space: nowrap; }
-#hoName { display: block; margin: 6px 0 14px; background: #fff; font-size: 17px; }
+#hoPilot { display: block; width: 100%; margin: 6px 0 10px; background: #fff; font-size: 19px; text-align: left; }
+.xp-bar { display: block; height: 6px; overflow: hidden; background: #e7ddff; border: 1px solid var(--ink); }
+.xp-bar i { display: block; height: 100%; background: #8f5cff; }
+#hoXp { margin-top: 4px; }
+#pilot { z-index: 20; padding: 12px; }
+#pilot .panel { width: 520px; max-width: 100%; padding: 20px; }
+#pcRank { font-size: 30px; }
+#pcXp, #pcRex { font: 15px/1.35 system-ui, sans-serif; letter-spacing: 0; }
+#pcNext { list-style: none; padding: 0; margin: 16px 0; }
+#pcNext li { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--ink); font-size: 19px; }
+#pcNext strong { white-space: nowrap; }
+.career-actions { display: flex; gap: 10px; justify-content: center; }
+.career-actions button { min-height: 42px; }
 #hoNext { display: block; width: 100%; padding: 14px 16px 10px; margin-bottom: 16px; }
 #hoNext .next-title { display: block; font-size: 30px; }
 #hoNext small { display: block; margin-top: 4px; font: 14px/1.35 system-ui, sans-serif; letter-spacing: 0; text-shadow: none; }

@@ -142,6 +142,7 @@ export class OptionsMenu extends Overlay {
     this.armed = false;
     clearTimeout(this.armT);
     this.game.progress.reset();
+    this.game.career.reset();
     b.textContent = '✔ Progress reset';
     this.app.hud.toast('🗑️ Sky Courier progress reset: a fresh start in the hangar.');
     if (this.game.hangar.open) this.game.hangar.render();

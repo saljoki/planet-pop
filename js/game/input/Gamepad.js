@@ -28,6 +28,8 @@ export class Gamepad {
     const edge = (k) => s[k] && !this.prev[k], { app } = this, game = app.game, hangar = game.hangar;
     if (game.options?.open) {
       if (edge('b') || edge('start')) game.options.hide();
+    } else if (game.pilot?.open) {
+      if (edge('b')) game.pilot.close();
     } else if (app.start?.open) {
       if (!app.start.covered) {
         if (edge('a') || edge('start')) app.start.play();

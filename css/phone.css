@@ -75,7 +75,7 @@
   #home .panel { padding: 14px 16px; }
   #home h2 { font-size: 29px; }
   #hoCoins { font-size: 21px; }
-  #hoName { margin: 6px 0 12px; }
+  #hoPilot { margin: 6px 0 10px; font-size: 17px; }
   #hoNext { padding: 12px 10px 10px; margin-bottom: 12px; }
   #hoNext .next-title { font-size: 28px; }
   #hoCards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -90,8 +90,9 @@
   #home .panel { width: 740px; padding: 10px 16px; position: relative; }
   #home h2 { font-size: 26px; }
   #hoCoins { font-size: 20px; }
-  #hoName { position: absolute; top: 8px; left: 45%; margin: 0; font-size: 15px; }
-  #hoNext { margin: 20px 0 10px; padding: 7px 10px 5px; }
+  #hoPilot { margin: 4px 0 10px; min-height: 34px; padding: 3px 8px 2px; font-size: 16px; }
+  #hoXp { height: 4px; margin-top: 2px; }
+  #hoNext { margin: 0 0 10px; padding: 7px 10px 5px; }
   #hoNext .next-title { font-size: 24px; }
   #hoNext small { margin-top: 1px; font-size: 12px; }
   #hoCards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -101,6 +102,11 @@
   #hoCards small { font-size: 11px; }
   .home-foot { display: flex; margin-top: 10px; gap: 8px; }
   .home-foot button { min-height: 36px; font-size: 16px; }
+  #pilot .panel { padding: 12px 18px; }
+  #pcRank { font-size: 25px; margin: 0 0 8px; }
+  #pcXp, #pcRex { margin: 6px 0; font-size: 13px; }
+  #pcNext { margin: 8px 0; }
+  #pcNext li { padding: 5px 0; font-size: 17px; }
 }
 
 /* PLAY sits above the planet-view hint, clear of the home indicator. */

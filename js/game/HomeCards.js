@@ -18,7 +18,7 @@ export function cardStat(id, progress) {
     const best = progress.dailyBest(todayKey());
     return `${dailyPlace()} · ${best === null ? 'not flown today' : `⭐ ${best.toLocaleString('en-GB')} today`}`;
   }
-  if (id === 'missions') return `${MISSIONS.filter((m) => progress.missionDone(m.id)).length} of ${MISSIONS.length} done`;
+  if (id === 'missions') return `⭐ ${progress.totalStars} / ${MISSIONS.length * 3}`;
   return '';
 }
 

@@ -1,5 +1,7 @@
 import { HARM } from './vehicles/Vehicle.js';
 import { Progress } from './Progress.js';
+import { Career } from './Career.js';
+import { PilotCard } from './screens/PilotCard.js';
 import { dailyParams } from './Daily.js';
 import { LESSON_PLANET } from './Lessons.js';
 import { CourierProps } from './CourierProps.js';
@@ -39,6 +41,7 @@ export class CourierGame {
     this.props = null;  // its CourierProps
     this.respawnT = 0;  // counting down to a fresh vehicle after a wreck
     this.progress = new Progress();
+    this.career = new Career(app, this.progress);
     this.touch = matchMedia('(pointer: coarse)').matches;
     // the game layer, in front of the planet; what's in it is stacked in this order
     this.layer = new Widget({ id: 'game' });
@@ -58,6 +61,7 @@ export class CourierGame {
     this.board = new MissionBoard(app, this.progress, (m) => this.startMission(m));
     this.roads = new RoadBoard(app, (opts) => this.launch(opts));
     this.home = new HomeScreen(app, this);
+    this.pilot = new PilotCard(app, this);
     this.hangar = new Hangar(app, this.progress, {
       onOptions: () => this.options.show(() => this.hangar.show()),
       onClose: () => this.openHome(),
@@ -100,7 +104,7 @@ export class CourierGame {
     if (this.active) return;
     if (!this.app.building) {
       this.app.start?.dismiss();
-      for (const menu of [this.home, this.hangar, this.briefing, this.board, this.roads]) menu.hide();
+      for (const menu of [this.home, this.pilot, this.hangar, this.briefing, this.board, this.roads]) menu.hide();
     }
     return this.flyOn(LESSON_PLANET, { lesson: true }, '🎓 Getting your plane ready…');
   }
@@ -143,6 +147,7 @@ export class CourierGame {
     if (!p || app.building) { app.hud.toast('🌍 The planet is still being built. Try again in a moment.'); return; }
     if (p.cities.sites.length < 2) { app.hud.toast('📦 Sky Courier needs at least 2 cities. Try a new planet!'); return; }
     if (app.paused) app.togglePause();
+    this.career.mark();
     Object.assign(this, { active: true, over: false, planet: p, respawnT: 0 });
     const run = (this.run = new (runClass(opts))(this, opts)), { at, heading } = run.takeoff();
     this.player = run.vehicle(at, heading);
@@ -175,6 +180,7 @@ export class CourierGame {
   stop() {
     if (!this.active) return;
     this.active = false;
+    this.career.runEnded(this.run);
     this.controls.detach();
     this.player.dispose();
     this.player = null;
@@ -268,7 +274,11 @@ export class CourierGame {
 
   /** The run is over: freeze the plane and show its results card (see ResultsScreen.show) with a sound. */
   finish(card, sound = 'gameover') {
+    if (this.over) return;
     this.over = true;
+    this.career.runEnded(this.run);
+    const news = this.career.news();
+    if (news.length) card.html += `<br>${news.join('<br>')}`;
     this.controls.release();
     this.results.show(card);
     this.app.sfx.play(sound);

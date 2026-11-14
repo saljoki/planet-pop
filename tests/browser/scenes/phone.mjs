@@ -1,6 +1,13 @@
 // Phones, upright and on their side.
 // One of the screenshot run's scene files (see ../screenshots.mjs); the helpers are described in ../harness.mjs.
 import { PLANET } from '../harness.mjs';
+import { careerFits, stageRankUp } from './courier.mjs';
+
+async function phoneSize(page, until, width, height) {
+  await page.setViewport({ width, height, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: width > height });
+  await until(() => window.app?.planet && !app.building, 240000);
+  await page.evaluate(() => app.start.dismiss());
+}
 
 export default async function phone({ page, frames, until, scene, open, ufoHere, problems }) {
   await scene('mobile', 'Phone-sized screen (390 × 844) with the ?debug stats overlay', async () => {
@@ -15,10 +22,35 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
   });
   await page.evaluate(() => app.start.dismiss());
   await scene('mobile-home', 'Phone: next-up and all six Home cards without scrolling', async () => {
+    await phoneSize(page, until, 390, 844);
     await page.evaluate(() => app.game.openHome());
     await frames(2);
+    await careerFits(page, '#home');
   });
   await page.evaluate(() => app.game.home.hide());
+  for (const [width, height] of [[390, 844], [360, 780]]) {
+    if (width === 360) await scene('mobile-home-360', 'Small phone: Home and every card without scrolling', async () => {
+      await phoneSize(page, until, width, height);
+      await page.evaluate(() => app.game.openHome());
+      await frames(2);
+      await careerFits(page, '#home');
+    });
+    await scene(`mobile-pilot-card-${width}`, `Phone (${width} × ${height}): the pilot card`, async () => {
+      await phoneSize(page, until, width, height);
+      await page.evaluate(() => { app.game.home.hide(); app.game.pilot.show(); });
+      await frames(2);
+      await careerFits(page, '#pilot');
+    });
+    await page.evaluate(() => app.game.pilot.hide());
+    await scene(`mobile-rank-up-${width}`, `Phone (${width} × ${height}): three news lines and all results buttons`, async () => {
+      await phoneSize(page, until, width, height);
+      await stageRankUp(page);
+      await frames(2);
+      await careerFits(page, '#gOver');
+    });
+    await page.evaluate(() => { app.game.stop(); app.game.home.hide(); });
+  }
+  await phoneSize(page, until, 390, 844);
   await scene('mobile-sheet', 'Phone: the controls slide up from the bottom as a sheet', async () => {
     await page.evaluate(() => document.getElementById('panelToggle').click());
     await frames(2);
@@ -174,14 +206,30 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
   });
   await page.evaluate(() => app.start.dismiss());
   await scene('landscape-home', 'Phone on its side: next-up and all six Home cards', async () => {
+    await phoneSize(page, until, 844, 390);
     await page.evaluate(() => { app.game.stop(); app.game.openHome(); });
     await frames(2);
+    await careerFits(page, '#home');
     const gap = await page.evaluate(() => document.getElementById('hoNext').getBoundingClientRect().top
-      - document.getElementById('hoName').getBoundingClientRect().bottom);
+      - document.getElementById('hoPilot').getBoundingClientRect().bottom);
     // The name button casts a 3 px shadow: leave at least 4 px clear below it.
     if (gap < 7) throw new Error(`Home's name button needs a clear 4 px gap; measured ${gap - 3} px`);
   });
   await page.evaluate(() => app.game.home.hide());
+  await scene('landscape-pilot-card', 'Phone on its side: the pilot card and every control', async () => {
+    await phoneSize(page, until, 844, 390);
+    await page.evaluate(() => app.game.pilot.show());
+    await frames(2);
+    await careerFits(page, '#pilot');
+  });
+  await page.evaluate(() => { app.game.pilot.hide(); app.game.home.hide(); });
+  await scene('landscape-rank-up', 'Phone on its side: three news lines and all results buttons', async () => {
+    await phoneSize(page, until, 844, 390);
+    await stageRankUp(page);
+    await frames(2);
+    await careerFits(page, '#gOver');
+  });
+  await page.evaluate(() => app.game.stop());
   await scene('landscape-panel', 'Phone on its side: the controls come in from the right', async () => {
     await page.evaluate(() => { app.game.stop(); document.getElementById('panel').classList.remove('hidden'); });
     await until(() => app.rig.mode === 'orbit');
