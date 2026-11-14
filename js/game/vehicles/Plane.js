@@ -25,7 +25,7 @@ const BASE_SKIN = { body: '#ffd23f', trim: '#ff4d4d' };
  * there's none at all for wings (the Moon), and a little ship with fins over a giant's clouds. They all fly the same.
  */
 export class Plane extends Vehicle {
-  constructor(planet, startDir, heading, stats, skin = BASE_SKIN) {
+  constructor(planet, startDir, heading, stats, skin = BASE_SKIN, shape = { span: 1, girth: 1 }) {
     super(planet, stats);
     this.place(startDir, heading);
     this.alt = planet.groundR(this.up) + 1.6;
@@ -38,12 +38,12 @@ export class Plane extends Vehicle {
 
     this.style = styleFor(planet);
     const g = this.group, body = toon(skin.body), trim = toon(skin.trim);
-    addMesh(g, new THREE.CapsuleGeometry(0.08, 0.4, 4, 12).rotateX(Math.PI / 2), body, 0.012);
+    addMesh(g, new THREE.CapsuleGeometry(0.08 * shape.girth, 0.4, 4, 12).rotateX(Math.PI / 2), body, 0.012);
     addMesh(g, new THREE.SphereGeometry(0.06, 12, 8).scale(1, 0.8, 1.4).translate(0, 0.065, 0.06), toon('#2d2a5a'), 0.006);
     this.crateMat = toon('#c98a4b');
     addMesh(g, new THREE.BoxGeometry(0.09, 0.07, 0.09).translate(0, 0.11, -0.08), this.crateMat, 0.006); // the parcel
     if (this.style === 'hopper' || this.style === 'ship') this.buildHopper(trim, this.style === 'hopper');
-    else this.buildWings(trim, this.style === 'glider' ? 1.5 : 1);
+    else this.buildWings(trim, (this.style === 'glider' ? 1.5 : 1) * shape.span);
     if (this.style === 'ship') this.buildFins(trim);
     this.trail = new Trails(planet.root, { max: 200, color: this.style === 'plane' || this.style === 'glider' ? '#fff4c2' : '#ffd8a8', life: 1.6, grow: 2, drag: 0.4 });
     this.trailT = 0;
@@ -94,8 +94,8 @@ export class Plane extends Vehicle {
   /** Heavy cargo slows the plane down; the crate on top takes the cargo's colour. */
   setCargo(cargo) {
     if (!cargo) return;
-    this.cargoSpeed = cargo.speed ?? 1;
-    this.cargoClimb = cargo.climb ?? 1;
+    this.cargoSpeed = this.stats.hauler ? 1 : cargo.speed ?? 1;
+    this.cargoClimb = this.stats.hauler ? 1 : cargo.climb ?? 1;
     this.crateMat.color.set(cargo.color);
   }
 

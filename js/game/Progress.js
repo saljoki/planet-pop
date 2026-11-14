@@ -1,3 +1,4 @@
+import { CRAFTS, craftStats } from './Crafts.js';
 import { MISSIONS } from './Missions.js';
 import { CHAPTERS, chapterOf, missionsIn } from './Chapters.js';
 import { LESSON_COINS } from './Lessons.js';
@@ -50,6 +51,8 @@ export class Progress {
     this.levels = { ...(s.levels || {}) };
     this.owned = new Set(s.owned || ['classic']);
     this.skin = this.owned.has(s.skin) ? s.skin : 'classic';
+    this.crafts = new Set(['classic', ...(s.crafts || []).filter((id) => CRAFTS.some((c) => c.id === id))]);
+    this.craft = this.crafts.has(s.craft) ? s.craft : 'classic';
     this.daily = s.daily || null; // { date, best } for the most recent daily challenge played
     this.missions = new Set(s.missions || []); // ids of completed missions
     this.bests = { ...(s.bests || {}) };       // the road trips' bests: taxi and van scores, the race's fastest time
@@ -60,6 +63,7 @@ export class Progress {
   save() {
     const data = { coins: this.coins, best: this.best, levels: this.levels, owned: [...this.owned], skin: this.skin, daily: this.daily,
       missions: [...this.missions], bests: this.bests, lesson: this.lesson, stars: this.stars };
+    if (this.craft !== 'classic' || this.crafts.size > 1) Object.assign(data, { craft: this.craft, crafts: [...this.crafts] });
     saveJson(KEY, data);
   }
 
@@ -106,6 +110,27 @@ export class Progress {
     return true;
   }
 
+  get craftDef() { return CRAFTS.find((c) => c.id === this.craft) || CRAFTS[0]; }
+
+  craftState(craft, rank) {
+    if (this.craft === craft.id) return 'flying';
+    if (this.crafts.has(craft.id)) return 'owned';
+    return rank < craft.rank ? 'locked' : 'buy';
+  }
+
+  /** Buy once, then switch freely between owned craft. */
+  chooseCraft(id, rank) {
+    const craft = CRAFTS.find((c) => c.id === id);
+    if (!craft) return false;
+    const state = this.craftState(craft, rank);
+    if (state === 'locked' || (state === 'buy' && this.coins < craft.cost)) return false;
+    if (state === 'buy') this.coins -= craft.cost;
+    this.crafts.add(id);
+    this.craft = id;
+    this.save();
+    return true;
+  }
+
   addCoins(n) { this.coins += n; this.save(); }
 
   /** Existing pilots keep going where they left off; only an empty save needs the lesson. */
@@ -129,7 +154,7 @@ export class Progress {
   reset() {
     forget(KEY);
     forget(OLD_BEST_KEY);
-    Object.assign(this, { coins: 0, best: 0, levels: {}, owned: new Set(['classic']), skin: 'classic', daily: null, missions: new Set(), bests: {}, lesson: false, stars: {} });
+    Object.assign(this, { coins: 0, best: 0, levels: {}, owned: new Set(['classic']), skin: 'classic', daily: null, missions: new Set(), bests: {}, lesson: false, stars: {}, craft: 'classic', crafts: new Set(['classic']) });
     this.save();
   }
 
@@ -206,5 +231,5 @@ export class Progress {
   get skinDef() { return SKINS.find((s) => s.id === this.skin) || SKINS[0]; }
 
   /** Multipliers and values the player plane and the game use. */
-  get stats() { return statsFor((id) => this.level(id)); }
+  get stats() { return craftStats(statsFor((id) => this.level(id)), this.craftDef); }
 }

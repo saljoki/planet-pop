@@ -26,7 +26,7 @@ export const COURIER_TIPS = [
 export class DeliveryRun extends Run {
   static briefing() {
     return { icon: '📦', title: 'Courier run', goal: 'Deliver as many parcels as you can before the clock runs out.',
-      tips: [...COURIER_TIPS, 'Coins from deliveries and rings buy upgrades in the hangar.'] };
+      tips: [...COURIER_TIPS, '⏱️ A courier flight lasts up to eight minutes.', 'Coins from deliveries and rings buy upgrades in the hangar.'] };
   }
 
   constructor(game, opts) {
@@ -51,12 +51,18 @@ export class DeliveryRun extends Run {
   deliveryBonus() { return Math.max(6, 20 - this.deliveries); }
 
   /** A fast start cannot bank an ever-growing clock. */
-  get clockCap() { return this.stats.startTime + 9; }
+  get clockCap() {
+    const cap = this.stats.startTime + 9;
+    // Five-level magnets can collect enough rings to sustain even a stock-speed craft forever.
+    // Let a plain courier's remaining clock wind down naturally before eight minutes.
+    return this.constructor === DeliveryRun ? Math.min(cap, Math.max(0, 479 - this.flightElapsed)) : cap;
+  }
 
   /** The optional time-gained suffix on the next parcel's toast. */
   deliveryTimeText(seconds) { return seconds === null ? '' : ` (+${Math.round(seconds)} s)`; }
 
   takeoff() {
+    this.flightElapsed = 0;
     const sites = this.planet.cities.sites;
     Object.assign(this, { score: 0, combo: 1, time: this.stats.startTime, deliveries: 0, coins: 0, stolen: 0, rivalStreak: 0 });
     // counters missions are judged on
@@ -173,7 +179,8 @@ export class DeliveryRun extends Run {
   inAsh(dt) { this.tally.ash += dt; }
 
   update(dt) {
-    this.time -= dt;
+    this.flightElapsed += dt;
+    this.time = Math.min(this.clockCap, this.time - dt);
     this.elapsed += dt;
     if (this.game.hazards.hot) this.tally.sun += dt;
     const arrived = this.arrived();

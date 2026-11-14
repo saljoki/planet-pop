@@ -1,3 +1,5 @@
+import { BASE_STATS } from '../Progress.js';
+import { CRAFTS } from '../Crafts.js';
 import { Plane } from '../vehicles/Plane.js';
 
 /**
@@ -42,8 +44,11 @@ export class Run {
   /** Set up the run before the plane exists. Returns where it takes off: { at, heading } (unit vectors). */
   takeoff() { throw new Error(`${this.constructor.name} must say where the plane takes off`); }
 
+  /** A stock-stat run also keeps the Classic silhouette, independently of the hangar. */
+  get craft() { return this.stats === BASE_STATS ? CRAFTS[0] : this.game.progress.craftDef; }
+
   /** What the player drives (a Vehicle), starting at `at` facing `heading`. The courier plane unless a run says otherwise. */
-  vehicle(at, heading) { return new Plane(this.planet, at, heading, this.stats, this.game.progress.skinDef); }
+  vehicle(at, heading) { return new Plane(this.planet, at, heading, this.stats, this.game.progress.skinDef, this.craft.shape); }
 
   /** The plane and props now exist: place things, set up special conditions, say hello. */
   begin() {}
