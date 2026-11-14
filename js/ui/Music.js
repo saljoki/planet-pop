@@ -24,7 +24,7 @@ export class Music {
     if (app.map?.open || app.trip?.active) return 'space';
     if (g?.active && !g.over) return 'flight';
     // Options can replace a menu temporarily; keep its soundtrack while it is on top.
-    if ([app.start, g?.home, g?.hangar, g?.board, g?.roads, g?.briefing, g?.results, g?.options, app.spaceCourier?.board].some((m) => m?.open)) return 'menu';
+    if ([app.start, g?.home, g?.pilot, g?.today, g?.hangar, g?.board, g?.roads, g?.briefing, g?.results, g?.options, app.spaceCourier?.board].some((m) => m?.open)) return 'menu';
     return null;
   }
 

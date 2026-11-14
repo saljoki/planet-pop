@@ -26,6 +26,7 @@ export class DailyRun extends DeliveryRun {
   }
 
   get layout() { return { ...super.layout, badge: 'daily' }; }
+  get rexRank() { return 1; }
 
   get intro() { return '📅 Daily challenge: stock plane, same route as everyone today. Good luck!'; }
 

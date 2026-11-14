@@ -7,9 +7,10 @@ system you can fly round.
 
 - **Repo:** https://github.com/Saljoki/planet-pop
 - **Live:** https://saljoki.github.io/planet-pop/ (GitHub Pages, deploys on every push to `main`)
-- **Current version:** v0.19.0. Phases A and B1 are merged into `main`, and there's no open branch.
+- **Current version:** v0.20.0 on `phase-b2-career`, ready for review and not merged. Main remains v0.19.0
+  at the B2 base `48ad274`; A and B1 are merged. B3 is being built separately on `phase-b3-hangar`.
 - **Design and specs:** [DESIGN.md](DESIGN.md) is the game's design and decisions log. [PHASE_A.md](PHASE_A.md) and
-  [PHASE_B1.md](PHASE_B1.md) are done; each new phase gets its own spec in `docs/`.
+  [PHASE_B1.md](PHASE_B1.md) are merged; [PHASE_B2.md](PHASE_B2.md) defines this branch.
 - **Keep this file current.** At the end of each phase, update "Where things stand", the version, and any new gotchas.
 
 ## How Ata works
@@ -20,8 +21,8 @@ system you can fly round.
   `https://github.com/Saljoki/planet-pop/compare/main...<branch>?expand=1`. Merge into `main` only when he says so.
 - **Checking the deploy.** After a merge, wait for the "pages build and deployment" run to succeed:
   `gh run list -R Saljoki/planet-pop`.
-- **CI.** The CI workflow fails within about 3 seconds because of a GitHub billing lock, not the code. Ignore it, and
-  run the checks locally instead.
+- **CI.** GitHub CI is switched off. Run lint, tests and the required screenshot scenes locally; never overlap
+  tests or flight simulations with the browser screenshot run.
 - **Phases.** He works in phases. He asks "What's next?", picks options, and you build them as one phase on one branch.
 - **Testing.** He plays on his phone afterwards and reports back.
 - **Version.** Bump it at the end of each phase in `package.json`, `package-lock.json` (lines 3 and 9) and
@@ -39,6 +40,7 @@ system you can fly round.
 
 - **Fewer screenshot scenes.** `SCENES=name1,name2` runs only the scenes whose names contain those words. Scenes build
   on earlier ones in the same area file (`tests/browser/scenes/*.mjs`), so include the scene that opens the world.
+  `SCENES_EXACT=home,today` matches whole labels, avoiding unrelated areas that share a word such as courier.
 - **Full screenshot runs.** Run the full set in the background with a timeout over 100 minutes. Don't run `npm test`
   at the same time: the browser has crashed when the two ran together.
 - **What to look at.** Look at the screenshots yourself (read the PNGs) for anything visible. The run ending with
@@ -73,6 +75,9 @@ system you can fly round.
     ring returns ahead at the plane's height. The previous day length is restored when the lesson ends.
     `Progress` keeps the optional `lesson` flag and pays 50
     coins on first completion; skipping marks it done without coins.
+  - **Career:** `Career.js` owns `planetpop.career`, XP, rank/trophy receipts, Rex score, UTC contracts, crate,
+    daily streak and gift. `Ranks.js` owns names/thresholds/rewards, `Economy.js` run pay, `Contracts.js` jobs and
+    real-run counters. `screens/PilotCard.js` and `TodayScreen.js` are reached from the rank/Today rows on Home.
   - **Runs:** `runs/*Run.js` are the game modes. `Run.js` documents the hooks and `modes.js` picks the run.
   - **Hazards and moves:** `FlightHazards` (storms, dust, heat, ring ice, wind) and `Feats` (long jumps, loops round
     a storm, threading Saturn's ring).
@@ -86,8 +91,8 @@ system you can fly round.
   - `TrophyWatch.js` holds the "follow a …" trophy rules.
 - `js/net/`: friends. `PROTOCOL = 2`, and worlds are checked against `WORLD_IDS`.
 - **Saves:** `js/core/Store.js` and `SaveCode.js`. `SAVED_KEYS` lists the progress keys, including
-  `planetpop.visited` and `planetpop.courier` (with its optional `lesson` flag). New progress keys go there; device
-  settings such as `planetpop.ambience` and `planetpop.music` stay out. Existing key formats never change.
+  `planetpop.visited`, `planetpop.courier` (with its optional `lesson` flag) and `planetpop.career`.
+  New progress keys go there; device settings such as `planetpop.ambience` and `planetpop.music` stay out. Existing key formats never change.
 
 ## Kinds of world (all in `Worlds.js` and `WorldThemes.js`)
 
@@ -167,10 +172,20 @@ system you can fly round.
   star gates. The game's design and decisions are in [DESIGN.md](DESIGN.md); the spec is [PHASE_B1.md](PHASE_B1.md).
 - **Music still needs Ata's ear.** Audio scheduling, states and persistence are tested; the tunes themselves are
   his to judge. It has its own volume slider in Options.
-- **Next: Phase B2** (pilot rank, the Rex ladder, craft, supplies, contracts, streak, passport, coin retune), then
-  C (mobile wrapper). See the phases table in DESIGN.md. Carried over from the reviews: ✕ on the Missions, Road
-  trips and Space boards should return to Home; the daily's rings and UFO should come from the route's seed before
-  there is a leaderboard.
+- **Phase B2 is implemented on `phase-b2-career` (v0.20.0), not merged.** Coins use points ÷ 25, rank reaches
+  Sky Marshal at 89,900 XP, trophies back-pay once, and Rex has a speed/paint ladder and running score. Contracts,
+  crate, streak and gift use UTC dates and travel in save codes. Home, Pilot and Today fit 390 × 844, 360 × 780
+  and 844 × 390. The PR contains four-pilot income, all sixteen Rex cases, first-session and old-save evidence.
+- **B2 gotchas:** all reward coins must use `addCoins(n, false)`; contract income reads the run, not the wallet.
+  Record mission stars before `completeMission` so the implicit legacy first star cannot suppress new-star XP.
+  Options keeps trophies, so reset retains their payment receipts. New career fields default when absent.
+  The continuous first-session check reaches rank 6 (4,176 XP) rather than the target 4–5 because live
+  camera/world trophies also pay XP; the reference-helper batch reaches rank 5. Reward constants stay as specified.
+  Rex's measured `rankStep` is 0.0025 (initial 0.004 failed the ace limit); daily/mission speed remains rank 1.
+  Boards close through callbacks; selecting a flight only hides. `Briefing.back` is B3-owned and needs its Home
+  callback added by Claude during integration. B3's reserved files and branch were not touched.
+- **Next:** B3 craft, upgrade levels, paint, trails and supplies is in parallel; B4 adds the passport. The daily's
+  rings and UFO must be seeded from the route before a leaderboard (D). Claude reviews; Ata decides merges.
 - **The solar system plan is complete.** Ata's design doc, "Planet Pop: Solar System design" (a Claude Docs artifact
   at https://claude.ai/code/artifact/b60ea4c9-576b-422d-bcd5-7832d0323c2f), had four phases: Earth, Moon and Mars; the
   space courier; Venus, Mercury and Pluto; and the giants with their moons. All four shipped, plus a fifth phase:

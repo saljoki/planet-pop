@@ -1,6 +1,56 @@
 // Phones, upright and on their side.
 // One of the screenshot run's scene files (see ../screenshots.mjs); the helpers are described in ../harness.mjs.
 import { PLANET } from '../harness.mjs';
+import { careerFits, stageRankUp, stageTrophy, stageToday } from './courier.mjs';
+
+async function phoneSize(page, until, width, height) {
+  await page.setViewport({ width, height, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: width > height });
+  await until(() => window.app?.planet && !app.building, 240000);
+  await page.evaluate(() => app.start.dismiss());
+}
+
+async function stageFirstFlightResults(page) {
+  await page.evaluate(async () => {
+    const { MISSIONS } = await import('./js/game/Missions.js'), g = app.game, first = MISSIONS[0];
+    g.stop();
+    for (const menu of [g.home, g.pilot, g.today, g.hangar, g.briefing, g.board, g.roads, g.options]) menu.hide();
+    app.settings.setPlayerName('Ata');
+    g.progress.reset(); g.career.reset();
+    await g.startMission(first);
+    if (g.briefing.open) g.briefing.start();
+    if (!g.active || g.run.def?.id !== first.id || g.progress.missionDone(first.id)) throw new Error('First Flight must be a first completion');
+    g.run.missionElapsed = first.par - 1;
+    g.run.tally[first.goal.stat] = first.goal.target;
+    g.run.tally.knocks = 0;
+    // Hold eight representative career lines while the real mission builds its result and buttons.
+    const news = g.career.news;
+    g.career.news = () => [
+      '🎖️ Rank 2 · Trainee! +100 🪙', '🎖️ Rank 3 · Courier! +150 🪙',
+      '📋 Job done: Deliver 3 parcels. +60 🪙', '📋 Job done: Earn 3 stars. +80 🪙',
+      '🎁 Daily crate: +200 🪙', '🔥 Streak day 7! +150 🪙',
+      '😈 Rex has new paint: Night Shift.', '🎖️ +1,450 XP',
+    ];
+    try { g.run.endMission('done'); } finally { g.career.news = news; }
+    if (g.progress.starsFor(first.id) !== 3) throw new Error('First Flight must award three stars');
+  });
+}
+
+async function resultsFooterStays(page) {
+  await page.$eval('#gOver', (root) => {
+    const copy = root.querySelector('#gCopy'), news = root.querySelector('#gNews');
+    if (news.children.length !== 8 || [...news.children].some((line) => line.tagName !== 'SPAN')) throw new Error('Expected eight news spans');
+    if (!root.querySelector('#gWho').textContent.includes('Ata')) throw new Error('Expected a pilot name');
+    if (copy.querySelector('button')) throw new Error('Results buttons must be outside the scrolling text');
+    const buttons = [...root.querySelectorAll('button')].filter((b) => getComputedStyle(b).display !== 'none');
+    const before = buttons.map((b) => b.getBoundingClientRect());
+    copy.scrollTop = copy.scrollHeight;
+    buttons.forEach((b, i) => {
+      const r = b.getBoundingClientRect();
+      if (r.top !== before[i].top || r.bottom !== before[i].bottom) throw new Error(`${b.id} moves when the results text scrolls`);
+    });
+    copy.scrollTop = 0;
+  });
+}
 
 export default async function phone({ page, frames, until, scene, open, ufoHere, problems }) {
   await scene('mobile', 'Phone-sized screen (390 × 844) with the ?debug stats overlay', async () => {
@@ -15,10 +65,50 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
   });
   await page.evaluate(() => app.start.dismiss());
   await scene('mobile-home', 'Phone: next-up and all six Home cards without scrolling', async () => {
+    await phoneSize(page, until, 390, 844);
     await page.evaluate(() => app.game.openHome());
     await frames(2);
+    await careerFits(page, '#home');
   });
   await page.evaluate(() => app.game.home.hide());
+  for (const [width, height] of [[390, 844], [360, 780]]) {
+    if (width === 360) await scene('mobile-home-360', 'Small phone: Home and every card without scrolling', async () => {
+      await phoneSize(page, until, width, height);
+      await page.evaluate(() => app.game.openHome());
+      await frames(2);
+      await careerFits(page, '#home');
+    });
+    for (const ready of [false, true]) {
+      await scene(`mobile-today${ready ? '-crate' : ''}-${width}`, `Phone (${width} × ${height}): today's jobs${ready ? ' and crate' : ''}`, async () => {
+        await phoneSize(page, until, width, height);
+        await stageToday(page, ready);
+        await frames(2);
+        await careerFits(page, '#today');
+      });
+      await page.evaluate(() => app.game.today.hide());
+    }
+    await scene(`mobile-trophy-pay-${width}`, `Phone (${width} × ${height}): a trophy's payout toast`, async () => {
+      await phoneSize(page, until, width, height);
+      await stageTrophy(page);
+      await frames(1);
+    });
+    await page.evaluate(() => document.querySelector('#toasts [data-career-toast]')?.remove());
+    await scene(`mobile-pilot-card-${width}`, `Phone (${width} × ${height}): the pilot card`, async () => {
+      await phoneSize(page, until, width, height);
+      await page.evaluate(() => { app.game.home.hide(); app.game.pilot.show(); });
+      await frames(2);
+      await careerFits(page, '#pilot');
+    });
+    await page.evaluate(() => app.game.pilot.hide());
+    await scene(`mobile-rank-up-${width}`, `Phone (${width} × ${height}): three news lines and all results buttons`, async () => {
+      await phoneSize(page, until, width, height);
+      await stageRankUp(page);
+      await frames(2);
+      await careerFits(page, '#gOver');
+    });
+    await page.evaluate(() => { app.game.stop(); app.game.home.hide(); });
+  }
+  await phoneSize(page, until, 390, 844);
   await scene('mobile-sheet', 'Phone: the controls slide up from the bottom as a sheet', async () => {
     await page.evaluate(() => document.getElementById('panelToggle').click());
     await frames(2);
@@ -174,14 +264,55 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
   });
   await page.evaluate(() => app.start.dismiss());
   await scene('landscape-home', 'Phone on its side: next-up and all six Home cards', async () => {
+    await phoneSize(page, until, 844, 390);
     await page.evaluate(() => { app.game.stop(); app.game.openHome(); });
     await frames(2);
+    await careerFits(page, '#home');
     const gap = await page.evaluate(() => document.getElementById('hoNext').getBoundingClientRect().top
-      - document.getElementById('hoName').getBoundingClientRect().bottom);
+      - document.getElementById('hoPilot').getBoundingClientRect().bottom);
     // The name button casts a 3 px shadow: leave at least 4 px clear below it.
     if (gap < 7) throw new Error(`Home's name button needs a clear 4 px gap; measured ${gap - 3} px`);
   });
   await page.evaluate(() => app.game.home.hide());
+  await scene('landscape-trophy-pay', 'Phone on its side: a trophy payout toast', async () => {
+    await phoneSize(page, until, 844, 390);
+    await stageTrophy(page);
+    await frames(1);
+  });
+  await page.evaluate(() => document.querySelector('#toasts [data-career-toast]')?.remove());
+  for (const ready of [false, true]) {
+    await scene(`landscape-today${ready ? '-crate' : ''}`, `Phone on its side: today's jobs${ready ? ' and crate' : ''}`, async () => {
+      await phoneSize(page, until, 844, 390);
+      await stageToday(page, ready);
+      await frames(2);
+      await careerFits(page, '#today');
+    });
+    await page.evaluate(() => app.game.today.hide());
+  }
+  await scene('landscape-pilot-card', 'Phone on its side: the pilot card and every control', async () => {
+    await phoneSize(page, until, 844, 390);
+    await page.evaluate(() => app.game.pilot.show());
+    await frames(2);
+    await careerFits(page, '#pilot');
+  });
+  await page.evaluate(() => { app.game.pilot.hide(); app.game.home.hide(); });
+  await scene('landscape-rank-up', 'Phone on its side: three news lines and all results buttons', async () => {
+    await phoneSize(page, until, 844, 390);
+    await stageRankUp(page);
+    await frames(2);
+    await careerFits(page, '#gOver');
+  });
+  await page.evaluate(() => app.game.stop());
+  for (const [width, height] of [[844, 390], [780, 360], [667, 375]]) {
+    await scene(`landscape-results-${width}`, `Phone (${width} × ${height}): first First Flight completion, named pilot, eight career lines and every button`, async () => {
+      await phoneSize(page, until, width, height);
+      await stageFirstFlightResults(page);
+      await frames(2);
+      await careerFits(page, '#gOver');
+      await resultsFooterStays(page);
+    });
+    await page.evaluate(() => app.game.stop());
+  }
   await scene('landscape-panel', 'Phone on its side: the controls come in from the right', async () => {
     await page.evaluate(() => { app.game.stop(); document.getElementById('panel').classList.remove('hidden'); });
     await until(() => app.rig.mode === 'orbit');

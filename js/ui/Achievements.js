@@ -1,5 +1,6 @@
 import { loadJson, saveJson } from '../core/Store.js';
 import { WORLD_IDS } from '../space/Worlds.js';
+import { TROPHY_COINS } from '../game/Ranks.js';
 
 const DEFS = [
   ['newworld', '🌍', 'World Builder', 'Generate a new planet'],
@@ -84,7 +85,8 @@ export class Achievements {
     if (!def || this.done.has(id)) return;
     this.done.add(id);
     saveJson(KEY, [...this.done]);
-    this.hud.toast(`🏆 ${def[1]} ${def[2]} — ${def[3]}`);
+    this.onUnlock?.(id);
+    this.hud.toast(`🏆 ${def[1]} ${def[2]} — ${def[3]} · +${TROPHY_COINS} 🪙`);
     this.hud.app.sfx?.play('trophy');
     this.hud.panel.updateTrophies(this.done.size, DEFS.length);
     if (this.done.size === DEFS.length - 1) this.unlock('completionist');

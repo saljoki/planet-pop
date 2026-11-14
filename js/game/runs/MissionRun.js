@@ -3,6 +3,7 @@ import { tangentBasis } from '../../core/Geo.js';
 import { mulberry32 } from '../../core/Noise.js';
 import { dailySeed } from '../Daily.js';
 import { CARGO } from '../Cargo.js';
+import { coinsFor } from '../Economy.js';
 import { MISSIONS, STAT_LABEL, placeOf } from '../Missions.js';
 import { CHAPTERS, chapterOf, missionsIn } from '../Chapters.js';
 import { starGoals, starsEarned, bonusGoal, bonusMet, flightTime } from '../Stars.js';
@@ -52,6 +53,7 @@ export class MissionRun extends DeliveryRun {
   }
 
   get layout() { return { ...super.layout, badge: 'mission' }; }
+  get rexRank() { return 1; }
 
   /** Missions are timed by their goals, so every delivery keeps its full twenty seconds. */
   deliveryBonus() { return 20; }
@@ -205,7 +207,7 @@ export class MissionRun extends DeliveryRun {
     }
     const pts = Math.round(100 * this.cargo.pay);
     this.score += pts;
-    this.earn(Math.round(pts / 10));
+    this.earn(coinsFor(pts));
     this.tally.deliveries++;
     this.tally.landmark++;
     this.app.sfx.pop(this.player.pos.clone(), `${this.def.icon} ${this.spot.name}!`, '#2ee59d', 'deliver');
@@ -306,13 +308,13 @@ export class MissionRun extends DeliveryRun {
     if (this.game.over) return;
     const p = this.game.progress, def = this.def, won = result === 'done';
     const closed = won ? CHAPTERS.filter((c) => !p.chapterOpen(c.id)) : [];
-    const reward = won ? p.completeMission(def) : 0;
     let stars = '';
     if (won) {
       const earned = starsEarned(def, { elapsed: this.missionElapsed, tally: this.tally });
       p.recordStars(def.id, earned);
       stars = `${this.starResult(earned)}<br>`;
     }
+    const reward = won ? p.completeMission(def) : 0;
     const opened = closed.filter((c) => p.chapterOpen(c.id)).map((c) => `🔓 ${c.name} is open!`);
     const next = won ? this.nextMission() : null;
     const list = MISSIONS.filter((m) => !m.planet.world === !def.planet.world); // (the made-up planets' or the real worlds')

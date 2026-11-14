@@ -2,6 +2,7 @@ import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { makeWorld, run } from './helpers/world.mjs';
+import { rewardCoins } from './helpers/rewards.mjs';
 import { stickAxes } from '../js/game/input/TouchStick.js';
 import { tiltAngles, tiltAxes } from '../js/game/input/TiltSteer.js';
 import { Gestures } from '../js/camera/Gestures.js';
@@ -213,6 +214,7 @@ describe('phone modes on a planet', () => {
 
   it('free flight: no clock, no parcels, no coins; rings refill boost; quitting works', () => {
     const g = app.game, coins = g.progress.coins;
+    const rewards = rewardCoins(g.progress, () => {
     g.start({ free: true });
     assert.ok(g.active && g.run.opts.free && !g.run.dest && !g.props.beacon.visible);
     assert.ok(app.wakeLock.reasons.has('game'));
@@ -223,7 +225,8 @@ describe('phone modes on a planet', () => {
     g.props.rings[0].position.copy(g.player.pos);
     run(app, 0.05, { game: true });
     assert.ok(g.player.boost > 0.9, 'ring did not refill the boost');
-    assert.equal(g.progress.coins, coins, 'free flight paid coins');
+    });
+    assert.equal(g.progress.coins, coins + rewards, 'only career rewards pay during free flight');
     assert.ok(!g.run.rival, 'Rex turned up in free flight');
     g.run.time = 119.99;
     run(app, 0.05, { game: true });

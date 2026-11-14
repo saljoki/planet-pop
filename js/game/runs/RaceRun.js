@@ -4,12 +4,12 @@ import { LANE } from '../../world/Roads.js';
 import { Car } from '../vehicles/Car.js';
 import { Ground } from '../vehicles/Ground.js';
 import { RoadRival } from '../RoadRival.js';
+import { RACE_COINS } from '../Economy.js';
 import { Run } from './Run.js';
 
 const GATES = 8;          // checkpoints round the world (the last is the finish, back where you started)
 const THROUGH = 0.26;     // how close (units) to a checkpoint's middle counts as through it
 const COUNTDOWN = 3.2;    // seconds of 3, 2, 1 before GO
-const WIN_COINS = 150, LOSE_COINS = 30;
 const _p = new THREE.Vector3();
 
 /**
@@ -21,7 +21,7 @@ export class RaceRun extends Run {
     return { icon: '🏁', title: 'Round the world', goal: 'Race Rex once round the planet on the highway, through all 8 checkpoints, back to the start.',
       tips: ['Wait for GO! Then follow the arrow through each yellow arch; the pink one is the finish.',
         'Traffic doesn’t move over for you: pull out to overtake (traffic keeps left here). Rex runs red lights, so you can too.',
-        `Win for 🪙 ${WIN_COINS} coins (${LOSE_COINS} for taking part). Your fastest win is kept.`] };
+        `Win for 🪙 ${RACE_COINS.win} coins (${RACE_COINS.lose} for taking part). Your fastest win is kept.`] };
   }
 
   static vehicleKind() { return 'car'; }
@@ -99,7 +99,9 @@ export class RaceRun extends Run {
   /** The race is over: won if the player got round first. */
   over(won, title = won ? '🏁 You beat Rex!' : '😈 Rex wins!') {
     this.done = true;
-    const p = this.game.progress, app = this.app, coins = won ? WIN_COINS : LOSE_COINS, t = this.time;
+    const p = this.game.progress, app = this.app, coins = won ? RACE_COINS.win : RACE_COINS.lose, t = this.time;
+    this.coins = coins;
+    this.won = won;
     p.addCoins(coins);
     let best = '';
     if (won) {

@@ -70,12 +70,13 @@ export async function start() {
     shots.push({ name, note });
     console.log(`  📸 ${name}: ${note}`);
   };
+  const EXACT = process.env.SCENES_EXACT?.split(','); // Exact labels avoid including unrelated areas with shared words.
   const ONLY = process.env.SCENES?.split(','); // e.g. SCENES=airport,harbour renders just those (quick iteration)
   let sceneNo = 0;
   /** Scenes are numbered in the order they run (skipped ones keep their number, so file names stay stable). */
   const scene = async (label, note, steps) => {
     const name = `${String(++sceneNo).padStart(2, '0')}-${label}`;
-    if (ONLY && !ONLY.some((k) => label.includes(k))) return;
+    if (EXACT ? !EXACT.includes(label) : ONLY && !ONLY.some((k) => label.includes(k))) return;
     try {
       await steps();
       await shot(name, note);

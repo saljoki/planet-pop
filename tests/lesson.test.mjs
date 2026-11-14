@@ -1,6 +1,7 @@
 import { describe, it, before, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeWorld, run } from './helpers/world.mjs';
+import { rewardCoins } from './helpers/rewards.mjs';
 import { Progress } from '../js/game/Progress.js';
 import { MISSIONS } from '../js/game/Missions.js';
 import { LESSON_PLANET, LESSON_COINS, LESSONS, LESSON_TEXT, lessonPrompt } from '../js/game/Lessons.js';
@@ -82,6 +83,7 @@ describe('the flying lesson', () => {
     assert.ok(planet.nightAt(game.player.up) < 0.1, 'the lesson should begin in daylight');
     const seen = new Set(), dt = 1 / 60;
     let seconds = 0;
+    const rewards = rewardCoins(game.progress, () => {
     for (; seconds < 45 && !game.over; seconds += dt) {
       const lesson = game.run, pl = game.player, id = LESSONS[lesson.step].id;
       seen.add(id);
@@ -104,11 +106,13 @@ describe('the flying lesson', () => {
       game.update(dt);
       assert.ok(planet.nightAt(game.player.up) < 0.1, `night during ${id} at ${seconds.toFixed(2)} s`);
     }
+    });
     assert.deepEqual([...seen], LESSONS.map((step) => step.id));
     assert.ok(game.over, `still on ${LESSONS[game.run.step].id} after ${seconds.toFixed(1)} seconds`);
     assert.ok(seconds < 45, `first parcel took ${seconds.toFixed(1)} seconds`);
     assert.equal(game.results.dom.title.textContent, LESSON_TEXT.title);
-    assert.equal(game.progress.coins, LESSON_COINS, 'practice rings must not pay extra coins');
+    assert.equal(game.progress.coins, LESSON_COINS + rewards, 'only the lesson and career rewards pay');
+    assert.equal(game.run.coins, 0, 'practice rings must not pay extra coins');
     assert.equal(game.progress.lesson, true);
     game.stop();
     assert.equal(sky.dayLength, dayLength, 'stopping restores the previous day length');
@@ -118,6 +122,7 @@ describe('the flying lesson', () => {
     game.start({ lesson: true });
     const lesson = game.run, dt = 1 / 60;
     let ringSeconds = 0, reachedRing = false;
+    const rewards = rewardCoins(game.progress, () => {
     for (let seconds = 0; seconds < 25 && lesson.step < 4 && ringSeconds < 15; seconds += dt) {
       const pl = game.player, id = LESSONS[lesson.step].id;
       release(pl);
@@ -132,21 +137,22 @@ describe('the flying lesson', () => {
       planet.update(dt, app.simTime);
       game.update(dt);
     }
+    });
     assert.ok(reachedRing, 'the first three steps must be flown with their inputs');
     assert.equal(lesson.step, 4, `the level pilot is still chasing the ring after ${ringSeconds.toFixed(1)} s`);
     assert.ok(ringSeconds < 15);
-    assert.equal(game.progress.coins, 0, 'a returned practice ring pays no coins');
+    assert.equal(game.progress.coins, rewards, 'a returned practice ring pays no coins');
   });
 
   it('has no clock or Rex and stays active through 200 idle seconds', () => {
     game.start({ lesson: true });
     const lesson = game.run, clock = lesson.time;
-    run(app, 200, { dt: 1 / 20, game: true });
+    const rewards = rewardCoins(game.progress, () => run(app, 200, { dt: 1 / 20, game: true }));
     assert.ok(game.active && !game.over);
     assert.equal(lesson.step, 0);
     assert.equal(lesson.time, clock);
     assert.equal(lesson.rival, null);
-    assert.equal(game.progress.coins, 0);
+    assert.equal(game.progress.coins, rewards);
     assert.ok(lesson.coach.el.classList.contains('nudged'));
     assert.ok(game.hud.dom.stats.every((el) => el.classList.contains('hidden')));
     assert.equal(game.hud.dom.goal.textContent, '');
@@ -172,9 +178,8 @@ describe('the flying lesson', () => {
     for (const paid of [LESSON_COINS, 0]) {
       game.start({ lesson: true });
       const before = game.progress.coins;
-      game.run.enter(4);
-      game.run.deliver();
-      assert.equal(game.progress.coins - before, paid);
+      const rewards = rewardCoins(game.progress, () => { game.run.enter(4); game.run.deliver(); });
+      assert.equal(game.progress.coins - before, paid + rewards);
       assert.ok(game.progress.lesson);
       assert.ok(new Progress().lesson, 'the completion flag was not saved');
       assert.equal(game.results.nextMission, MISSIONS[0]);

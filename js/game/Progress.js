@@ -180,7 +180,7 @@ export class Progress {
     return true;
   }
 
-  addCoins(n) { this.coins += n; this.save(); }
+  addCoins(n, earned = true) { this.coins += n; this.save(); if (earned) this.onEarn?.(n); }
 
   /** Existing pilots keep going where they left off; only an empty save needs the lesson. */
   get needsLesson() {
@@ -194,6 +194,7 @@ export class Progress {
     this.lesson = true;
     this.coins += LESSON_COINS;
     this.save();
+    this.onEarn?.(LESSON_COINS);
     return LESSON_COINS;
   }
 
@@ -247,9 +248,11 @@ export class Progress {
 
   /** Keep the best result; returns true only when it improves the saved stars. */
   recordStars(id, n) {
-    if (!Number.isInteger(n) || n < 1 || n > 3 || n <= this.starsFor(id)) return false;
+    const before = this.starsFor(id);
+    if (!Number.isInteger(n) || n < 1 || n > 3 || n <= before) return false;
     this.stars[id] = n;
     this.save();
+    this.onStars?.(n - before);
     return true;
   }
 
@@ -274,6 +277,7 @@ export class Progress {
     this.missions.add(def.id);
     this.coins += def.reward;
     this.save();
+    this.onEarn?.(def.reward);
     return def.reward;
   }
 

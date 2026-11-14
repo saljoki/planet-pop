@@ -18,8 +18,8 @@ export class ParcelBoard extends Overlay {
       <div id="pList"></div>` });
     this.app = app;
     this.courier = courier;
-    this.dom = { job: this.$('pJob'), list: this.$('pList') };
-    this.on('pClose', 'click', () => this.hide());
+    this.dom = { job: this.$('pJob'), list: this.$('pList'), close: this.$('pClose') };
+    this.dom.close.addEventListener('click', () => this.close());
     this.el.addEventListener('click', (e) => {
       const b = e.target.closest?.('button[data-act]');
       if (!b || b.disabled) return;
@@ -27,10 +27,14 @@ export class ParcelBoard extends Overlay {
     });
   }
 
-  show() {
+  show(onClose) {
+    this.onClose = onClose;
     this.render();
     super.show();
   }
+
+  close() { const callback = this.onClose; this.onClose = null; this.hide(); callback?.(); }
+  escape() { this.close(); }
 
   act(what, i) {
     const c = this.courier, app = this.app;

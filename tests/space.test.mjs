@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeWorld, run, assertFiniteInstances } from './helpers/world.mjs';
+import { rewardCoins } from './helpers/rewards.mjs';
 import * as THREE from 'three';
 import { WORLDS, WORLD_IDS } from '../js/space/Worlds.js';
 import { styleFor } from '../js/game/vehicles/Plane.js';
@@ -194,6 +195,8 @@ describe('trips', () => {
   it('Earth to the Moon: board, lift off, cruise, land', async () => {
     const app = await travelApp('earth');
     const coins = app.game.progress.coins;
+    let c;
+    const rewards = await rewardCoins(app.game.progress, async () => {
     assert.equal(app.trip.go('moon'), true);
     assert.equal(app.trip.state, 'countdown');
     assert.equal(app.planet.space.state, 'boarding', 'the rocket waits for us');
@@ -202,7 +205,7 @@ describe('trips', () => {
     assert.equal(app.trip.state, 'cruise');
     assert.equal(app.map.state, 'cruise');
     assert.equal(app.rig.view, app.map.cruiser, 'drags steer the ship');
-    const c = app.map.cruiser;
+    c = app.map.cruiser;
     c.items.push({ star: true, s: c.s + 0.01, x: c.x, y: c.y, size: 0.13 });
     await fly(app, 0.2);
     assert.ok(c.stars >= 1, 'caught a fuel star');
@@ -218,7 +221,8 @@ describe('trips', () => {
     await fly(app, 10, () => !app.trip.active);
     assert.equal(app.trip.state, 'idle');
     assert.equal(app.planet.space.state, 'countdown', 'landed, and back to its own launches');
-    assert.equal(app.game.progress.coins, coins + c.stars, 'a coin a star');
+    });
+    assert.equal(app.game.progress.coins, coins + c.stars + rewards, 'a coin a star, plus career rewards');
     assert.ok(app.trip.card.open, 'welcome, and what to do next');
     app.game.start({ drive: 'car', from: 'pad' });
     assert.ok(app.game.player.up.angleTo(app.planet.space.site.d) < 0.12, 'the rover waits by the pad');

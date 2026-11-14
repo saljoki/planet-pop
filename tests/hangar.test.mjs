@@ -1,12 +1,13 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeApp } from './helpers/world.mjs';
+import { setRank } from './helpers/rank.mjs';
 
 beforeEach(() => localStorage.clear());
 
 test('an empty rank-one hangar has four sections, five locked craft and thirty upgrade pips', () => {
   const g = makeApp({}).game, h = g.hangar;
-  g.career = { rank: 1 };
+  setRank(g, 1);
   h.show();
   assert.equal((h.el.innerHTML.match(/<details /g) || []).length, 4);
   assert.equal((h.dom.crafts.innerHTML.match(/class="craft-card locked"/g) || []).length, 5);
@@ -21,7 +22,7 @@ test('an empty rank-one hangar has four sections, five locked craft and thirty u
 
 test('at rank thirty and 50,000 coins all five craft can be bought', () => {
   const g = makeApp({}).game, h = g.hangar;
-  g.career = { rank: 30 }; g.progress.addCoins(50000); h.show();
+  setRank(g, 30); g.progress.addCoins(50000, false); h.show();
   assert.equal((h.dom.crafts.innerHTML.match(/class="craft-card buy"/g) || []).length, 5);
   assert.deepEqual([...h.dom.crafts.innerHTML.matchAll(/data-craft="([^"]+)"/g)].map((m) => m[1]), ['classic', 'bulldog', 'hummingbird', 'mule', 'swift', 'comet']);
   assert.match(h.dom.crafts.innerHTML, /data-craft="bulldog"[^>]*>🪙 3,000/);
@@ -33,7 +34,7 @@ test('at rank thirty and 50,000 coins all five craft can be bought', () => {
 
 test('the delegated purchase flies Bulldog, refreshes the header and pays only once', () => {
   const g = makeApp({}).game, h = g.hangar;
-  g.career = { rank: 4 }; g.progress.addCoins(50000); h.show();
+  setRank(g, 4); g.progress.addCoins(50000, false); h.show();
   h.click({ target: { closest: () => ({ dataset: { craft: 'bulldog' } }) } });
   assert.equal(g.progress.craft, 'bulldog');
   assert.equal(g.progress.coins, 47000);

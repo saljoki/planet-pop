@@ -139,6 +139,11 @@ describe('briefing, options and invert Y in Sky Courier', () => {
     assert.ok(game.board.open && !game.briefing.open, 'B returns to the mission board');
     game.board.hide();
     game.openHome();
+    for (const id of ['missions', 'roads']) {
+      game.home.pick(id);
+      press(1);
+      assert.ok(game.home.open && !game.board.open && !game.roads.open, `B on ${id} opened from Home returns Home`);
+    }
     press(0);
     press(0);
     assert.ok(game.active, 'A on the briefing takes off');

@@ -16,6 +16,7 @@ export function fakeEl(tag = 'div') {
     },
     addEventListener() {}, dispatchEvent() {}, setPointerCapture() {}, prepend() {}, insertAdjacentHTML(at, html) { this.innerHTML += html; },
     append(c) { c.parent = this; this.children.push(c); },
+    replaceChildren(...items) { for (const c of [...this.children]) c.remove(); for (const c of items) this.append(c); },
     remove() { if (this.parent) { this.parent.children = this.parent.children.filter((x) => x !== this); this.parent = null; } },
     querySelector: () => fakeEl(), querySelectorAll: () => [], _first: null,
     get firstElementChild() { return this.children[0] ?? (this._first ??= fakeEl()); },

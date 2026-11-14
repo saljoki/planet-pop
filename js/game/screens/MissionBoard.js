@@ -16,16 +16,20 @@ export class MissionBoard extends Overlay {
     this.progress = progress;
     this.onPlay = onPlay;
     this.dom = { close: this.$('mClose'), header: this.$('mHead'), stars: this.$('mStars'), list: this.$('mList'), panel: this.el.firstElementChild };
-    this.dom.close.addEventListener('click', () => this.hide());
+    this.dom.close.addEventListener('click', () => this.close());
     this.el.addEventListener('click', (e) => this.play(e.target.closest?.('button[data-play]')?.dataset.play));
   }
 
-  show() {
+  show(onClose) {
+    this.onClose = onClose;
     this.render();
     this.dom.panel.scrollTop = 0;
     super.show();
     this.revealCurrentChapter();
   }
+
+  close() { const callback = this.onClose; this.onClose = null; this.hide(); callback?.(); }
+  escape() { this.close(); }
 
   /** Keep a three-flight chapter and the next gate in view, including near the end of the journey. */
   revealCurrentChapter() {

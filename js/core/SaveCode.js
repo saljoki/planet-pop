@@ -1,7 +1,7 @@
-import { loadText, saveText } from './Store.js';
+import { forget, loadText, saveText } from './Store.js';
 
 /** What a save carries: progress, trophies and options (not this device's quality, tilt or volume settings). */
-export const SAVED_KEYS = ['planetpop.courier', 'planetpop.best', 'planetpop.trophies', 'planetpop.worlds', 'planetpop.settings', 'planetpop.visited'];
+export const SAVED_KEYS = ['planetpop.courier', 'planetpop.best', 'planetpop.trophies', 'planetpop.worlds', 'planetpop.settings', 'planetpop.visited', 'planetpop.career'];
 const PACKED = 'PLANETPOP1-', PLAIN = 'PLANETPOP0-'; // compressed, and plain for browsers without CompressionStream
 const MAX = 200000; // characters: far more than any real save
 
@@ -51,6 +51,7 @@ export async function readSaveCode(code) {
 
 /** Replace what's saved here with a save's values (the page then reloads to pick them up). */
 export function applySave(data) {
+  if (Object.hasOwn(data, 'planetpop.courier') && !Object.hasOwn(data, 'planetpop.career')) forget('planetpop.career');
   for (const [key, text] of Object.entries(data)) if (SAVED_KEYS.includes(key)) saveText(key, text);
 }
 

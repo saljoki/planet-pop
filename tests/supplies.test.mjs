@@ -1,6 +1,7 @@
 import { describe, it, before, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeWorld } from './helpers/world.mjs';
+import { setRank } from './helpers/rank.mjs';
 import { SUPPLIES, slotsFor, suppliesAllowed } from '../js/game/Supplies.js';
 import { MISSIONS } from '../js/game/Missions.js';
 import { CARGO } from '../js/game/Cargo.js';
@@ -9,7 +10,7 @@ import { HARM } from '../js/game/vehicles/Vehicle.js';
 describe('one-flight supplies', () => {
   let app, planet, game;
   before(async () => { localStorage.clear(); ({ app, planet } = await makeWorld({ seed: 20261014, land: .45, cities: 5 })); game = app.game; });
-  beforeEach(() => { game.stop(); game.briefing.hide(); localStorage.clear(); game.progress.reset(); delete game.career; app.settings.set('briefing', true); });
+  beforeEach(() => { game.stop(); game.briefing.hide(); localStorage.clear(); game.progress.reset(); game.career.reset(); setRank(game, 30); app.settings.set('briefing', true); });
   after(() => { game.stop(); planet.dispose(); });
 
   it('opens slots at ranks 3, 8 and 13', () => {
@@ -22,7 +23,7 @@ describe('one-flight supplies', () => {
   });
 
   it('pays 150 once through the briefing; Fly again removes every supply and costs nothing', () => {
-    game.progress.addCoins(500);
+    game.progress.addCoins(500, false);
     game.briefing.show({});
     for (const s of SUPPLIES) assert.ok(game.briefing.toggleSupply(s.id));
     assert.equal(game.progress.coins, 500);
@@ -43,8 +44,8 @@ describe('one-flight supplies', () => {
   });
 
   it('enforces slots and wallet, resets choices, and a short wallet starts without taking anything', () => {
-    game.career = { rank: 8 };
-    game.progress.addCoins(150);
+    setRank(game, 8);
+    game.progress.addCoins(150, false);
     game.briefing.show({});
     assert.ok(game.briefing.toggleSupply('shield'));
     assert.ok(game.briefing.toggleSupply('tank'));
@@ -68,14 +69,14 @@ describe('one-flight supplies', () => {
   });
 
   it('hides below rank 3 and strips injected supplies from every forbidden route', () => {
-    game.career = { rank: 2 };
+    setRank(game, 2);
     game.briefing.show({});
     assert.ok(game.briefing.dom.supplies.classList.contains('hidden'));
     assert.equal(game.briefing.toggleSupply('shield'), false);
     game.start({ supplies: ['shield', 'tank', 'clock'] });
     assert.equal(game.run.supplies.size, 0);
     game.stop();
-    delete game.career;
+    setRank(game, 30);
     for (const opts of [{ daily: true }, { mission: MISSIONS[0] }, { lesson: true }, { free: true }, { road: 'van' }]) {
       game.briefing.show({ ...opts, supplies: ['shield', 'tank', 'clock'] });
       assert.ok(game.briefing.dom.supplies.classList.contains('hidden'));

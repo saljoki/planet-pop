@@ -1,6 +1,12 @@
 // Hangar and supplies: independent setup in every scene, including phone sizes.
 export default async function hangar({ page, frames, until, scene }) {
   const viewport = page.viewport();
+  const xpBefore = await page.evaluate(() => app.game.career.xp);
+  /** Put the pilot at a rank without paying rank rewards or queueing news. */
+  const rank = (r, xp = null) => page.evaluate(async (r, xp) => {
+    const { xpForRank } = await import('./js/game/Ranks.js'), c = app.game.career;
+    c.data.xp = xp ?? xpForRank(r); c.save(); c.news();
+  }, r, xp);
   const closeMenus = () => page.evaluate(() => {
     const g = app.game;
     g.stop();
@@ -11,9 +17,10 @@ export default async function hangar({ page, frames, until, scene }) {
   });
   const shop = async (section) => {
     await closeMenus();
+    await rank(30);
     await page.evaluate((section) => {
       const g = app.game, p = g.progress;
-      p.reset(); p.addCoins(50000); g.career = { rank: 30 };
+      p.reset(); p.addCoins(50000, false);
       p.chooseCraft('bulldog', 30); p.chooseSkin('sky', app.achievements.done);
       for (const id of ['engine', 'engine', 'wings', 'wings', 'tank', 'clock', 'armour']) p.buy(id);
       g.openHangar(); g.hangar.openSection(section);
@@ -25,9 +32,10 @@ export default async function hangar({ page, frames, until, scene }) {
   };
   const briefing = async () => {
     await closeMenus();
+    await rank(13);
     await page.evaluate(() => {
       const g = app.game;
-      g.career = { rank: 13 }; g.progress.coins = 5000;
+      g.progress.coins = 5000;
       g.briefing.show({});
     });
     for (const id of ['shield', 'tank', 'clock']) await page.click(`[data-supply="${id}"]`);
@@ -54,9 +62,10 @@ export default async function hangar({ page, frames, until, scene }) {
   };
   const flight = async (craft, trail, showTrail = false) => {
     await closeMenus();
+    await rank(30);
     await page.evaluate(({ craft, trail, showTrail }) => {
       const g = app.game, p = g.progress;
-      g.career = { rank: 30 }; p.coins = 50000; p.levels = {};
+      p.coins = 50000; p.levels = {};
       p.chooseCraft(craft, 30); p.chooseTrail(trail);
       g.start();
       const pl = g.player;
@@ -77,9 +86,10 @@ export default async function hangar({ page, frames, until, scene }) {
   await scene('briefing-supplies', 'Three one-flight supplies selected, 150 coins at take-off', briefing);
   await scene('briefing-empty-wallet', 'An empty wallet explains why supplies cannot be selected', async () => {
     await closeMenus();
+    await rank(13);
     await page.evaluate(() => {
       const g = app.game;
-      g.career = { rank: 13 }; g.progress.coins = 0; g.briefing.show({});
+      g.progress.coins = 0; g.briefing.show({});
       if (g.briefing.dom.supplyNote.textContent !== 'Not enough coins') throw new Error('Missing wallet explanation');
       if (![...g.briefing.dom.supplyButtons.querySelectorAll('button')].every((b) => b.disabled)) throw new Error('Unaffordable supply is enabled');
     });
@@ -94,9 +104,10 @@ export default async function hangar({ page, frames, until, scene }) {
   await scene('supply-shield', 'A bought shield absorbs a knock: SHIELD!, full health and combo intact', async () => {
     await flight('classic', 'classic');
     await closeMenus();
+    await rank(30);
     await page.evaluate(() => {
       const g = app.game;
-      g.progress.coins = 5000; g.career = { rank: 30 };
+      g.progress.coins = 5000;
       g.briefing.show({}); g.briefing.toggleSupply('shield'); g.briefing.start(); g.player.invuln = Infinity;
     });
     await frames(24);
@@ -139,5 +150,6 @@ export default async function hangar({ page, frames, until, scene }) {
   }
   await closeMenus();
   await page.setViewport(viewport);
-  await page.evaluate(() => { delete app.game.career; app.game.progress.reset(); });
+  await rank(1, xpBefore);
+  await page.evaluate(() => app.game.progress.reset());
 }

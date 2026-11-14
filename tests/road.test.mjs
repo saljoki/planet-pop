@@ -1,6 +1,7 @@
 import { describe, it, before, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeWorld } from './helpers/world.mjs';
+import { rewardCoins } from './helpers/rewards.mjs';
 import { R } from '../js/core/Geo.js';
 import { briefingFor, controlsFor } from '../js/game/screens/Briefing.js';
 import { ROAD_TRIPS } from '../js/game/screens/RoadBoard.js';
@@ -94,10 +95,10 @@ describe('road trips', () => {
     const skipped = run.gates[2];
     parkAt(game, skipped.at);
     assert.equal(run.next, 0, 'a checkpoint out of order should not count');
-    for (const gate of run.gates) parkAt(game, gate.at);
+    const rewards = rewardCoins(game.progress, () => { for (const gate of run.gates) parkAt(game, gate.at); });
     assert.ok(game.over && run.next === run.gates.length, 'the race should be over at the finish');
     assert.match(game.results.dom.title.textContent, /beat Rex/);
-    assert.equal(game.progress.coins, coins + 150);
+    assert.equal(game.progress.coins, coins + 60 + rewards);
     assert.ok(app.unlocked.includes('racer'));
     assert.ok(game.progress.bests.race > 0);
   });

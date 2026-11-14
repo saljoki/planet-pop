@@ -167,6 +167,36 @@ factor and par (`--json` prints data). The reference pilot in `tests/helpers/pil
 rings, refuels, UFOs, loops, ring crossings, plumes and combo goals use scripted controls through the same game
 detectors. Par is the measured time times the chapter's factor, rounded up to five seconds (at least 20 seconds).
 
+## Add a contract, rank reward or Rex livery
+
+- **Contract:** add a row to `CONTRACTS` in `js/game/Contracts.js`: unique id, group A/B/C, emoji-led text with
+  `{n}`, stat, three tier targets and coins. Mark a per-run maximum `best: true`; other stats accumulate.
+  Extend `runCounts` for a run stat or call `career.count(stat, n)` for an outside event. Keep score contracts
+  limited to plain courier runs and skip unavailable jobs in `pickContracts` (including a two-star job when
+  only one star remains). Show singular/plural text correctly,
+  verify determinism and once-only payment, and demonstrate the tier-2 target with a live reference or scripted flight.
+- **Rank reward:** `Ranks.js` owns the 30 names, quadratic XP thresholds, `rankReward` and the XP constants.
+  Change the reward function there, test every crossed boundary and a multi-rank jump in `career.test.mjs`, and
+  check the next-three-rewards pilot card. Existing career saves retain XP and derive rank from it; avoid moving
+  thresholds casually. Rank 30 is the cap.
+- **Rex livery:** append a threshold row to `REX_LIVERIES` in `Rival.js`, keeping ascending ranks, with name,
+  body and trim. `liveryFor` chooses the latest threshold and Career announces it. Courier uses the pilot rank;
+  daily/missions use rank 1 for physics and the pilot rank for paint. Road and space behaviour stays separate.
+  Test the boundary and capture the paint. Tune speed/boost only with the four-pilot, four-rank ten-run table;
+  rank-30 theft must stay at most 35% for good and 15% for ace.
+
+All career rewards use `progress.addCoins(n, false)`. Earned flying/driving coins and first mission/lesson
+rewards feed XP; career systems add their specified XP separately. Reward deposits cannot recursively grant XP
+or satisfy flying-coins contracts. Keep `run.coins`
+separate from the wallet. Use the seeded UTC date for contracts, crate, streak and gift; save receipts before
+paying, and test reload/save-code round trips. The only B2 saved key is `planetpop.career`; existing formats stay.
+Options keeps trophies on reset, so Career keeps their paid receipts while resetting XP/rank.
+
+The Pilot and Today overlays cache controls in `this.dom`, join Music's menu route, block idle TourMode, and
+close to Home on Escape/controller B. Boards remember an optional close callback: Home and the results Missions
+button pass `openHome`; selecting a flight calls `hide` without the callback. `Briefing.back` belongs to B3's
+integration and is deliberately unchanged on this branch.
+
 ## Add an option
 
 1. Add it with its default to `DEFAULTS` in `js/game/Settings.js` (the type of the default is checked when loading).
@@ -276,5 +306,7 @@ rules, last so they win).
   area, run in order) and saves pictures and a report to `screenshots/`. `SCENES=hangar,courier` runs only the
   scenes whose names contain those words; scenes carry on from earlier ones, so include the ones a scene builds on.
 - `npm run lint`: ESLint.
+- `SCENES_EXACT=home,today` selects whole labels; the existing `SCENES` filter still matches substrings. Include
+  each area’s prerequisite scenes when selecting a subset.
 - Run tests and screenshots separately. Read the resulting PNGs at desktop, portrait phone and landscape phone sizes.
-  See [PHASE_A.md](PHASE_A.md) for this phase's required scenes and checks.
+  See [PHASE_B2.md](PHASE_B2.md) section 9 for this phase's required scenes and checks.

@@ -1,4 +1,5 @@
 import { R } from '../../core/Geo.js';
+import { coinsFor } from '../Economy.js';
 import { Car } from '../vehicles/Car.js';
 import { Ground } from '../vehicles/Ground.js';
 import { Run } from './Run.js';
@@ -84,7 +85,7 @@ export class TaxiRun extends Run {
     const pay = Math.round((FARE * this.combo + Math.max(0, (f.par - f.elapsed) * TIP)) * f.comfort);
     this.score += pay;
     this.fares++;
-    this.earn(Math.round(pay / 10));
+    this.earn(coinsFor(pay));
     this.time += SHIFT_BONUS;
     this.player.repair(REPAIR);
     app.sfx.pop(this.player.pos.clone(), fast && this.combo > 1 ? `+${pay}! x${this.combo}` : `+${pay}!`, '#2ee59d', 'deliver');

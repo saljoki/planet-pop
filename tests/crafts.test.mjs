@@ -13,7 +13,7 @@ const fixture = { coins: 900, best: 2400, levels: { engine: 4, armour: 3 }, owne
 describe('hangar craft', () => {
   let app, planet, game;
   before(async () => { localStorage.clear(); ({ app, planet } = await makeWorld({ seed: 20261014, land: .45, cities: 5 })); game = app.game; });
-  beforeEach(() => { game.stop(); localStorage.clear(); game.progress.reset(); });
+  beforeEach(() => { game.stop(); localStorage.clear(); game.progress.reset(); game.career.reset(); });
   after(() => { game.stop(); planet.dispose(); });
 
   it('applies each craft to a copy, keeping the stock stats intact and armour positive', () => {
@@ -48,7 +48,7 @@ describe('hangar craft', () => {
     for (const { id, rank, cost } of [{ id: 'bulldog', rank: 4, cost: 3000 }, { id: 'swift', rank: 14, cost: 9000 }]) {
       const p = new Progress(), craft = CRAFTS.find((c) => c.id === id);
       p.reset();
-      p.addCoins(cost + 5000);
+      p.addCoins(cost + 5000, false);
       assert.equal(p.chooseCraft(id, rank - 1), false);
       assert.equal(p.coins, cost + 5000);
       assert.equal(p.chooseCraft(id, rank), true);
@@ -95,10 +95,9 @@ describe('hangar craft', () => {
 
   it('reads career only through the rank adapter', () => {
     assert.equal(pilotRank(), 30);
-    assert.equal(pilotRank(game), 30);
-    game.career = { rank: 7 };
-    assert.equal(pilotRank(game), 7);
-    delete game.career;
+    assert.equal(pilotRank({}), 30);
+    assert.equal(pilotRank({ career: { rank: 7 } }), 7);
+    assert.equal(pilotRank(game), game.career.rank);
   });
 
   it('the ace in a fully upgraded Swift still runs out of time before eight minutes', (t) => {
@@ -143,7 +142,7 @@ describe('hangar craft', () => {
     assert.equal(p.trail, 'classic');
     assert.deepEqual([...p.trails], ['classic']);
     assert.equal(p.chooseTrail('snow'), false);
-    p.addCoins(1000);
+    p.addCoins(1000, false);
     assert.equal(p.chooseTrail('snow'), true);
     assert.equal(p.coins, 500);
     assert.equal(p.chooseTrail('classic'), true);

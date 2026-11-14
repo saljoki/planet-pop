@@ -50,9 +50,9 @@ export class SpaceCourier {
   /** The body we're on: a real world's id, or 'away' for a made-up planet. */
   get here() { return this.app.planet?.world?.id ?? 'away'; }
 
-  openBoard() {
+  openBoard(onClose) {
     this.board ??= new ParcelBoard(this.app, this);
-    this.board.show();
+    this.board.show(onClose);
   }
 
   /** Three parcels from here to other worlds (the same until one is taken or delivered). */
@@ -127,6 +127,7 @@ export class SpaceCourier {
     const coins = job.broken ? 0 : Math.round(job.pay * (onTime ? bonus : 0.5));
     if (coins) app.game.progress.addCoins(coins);
     app.achievements.unlock('spacecourier');
+    if (!job.broken) app.game.career.count('space', 1);
     if (job.rex && !job.broken) app.achievements.unlock('spacerace');
     this.job = null;
     this.offers = null;

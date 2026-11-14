@@ -28,6 +28,16 @@ export class Gamepad {
     const edge = (k) => s[k] && !this.prev[k], { app } = this, game = app.game, hangar = game.hangar;
     if (game.options?.open) {
       if (edge('b') || edge('start')) game.options.hide();
+    } else if (game.today?.open) {
+      if (edge('b')) game.today.close();
+    } else if (game.pilot?.open) {
+      if (edge('b')) game.pilot.close();
+    } else if (game.board?.open) {
+      if (edge('b')) game.board.close();
+    } else if (game.roads?.open) {
+      if (edge('b')) game.roads.close();
+    } else if (app.spaceCourier?.board?.open) {
+      if (edge('b')) app.spaceCourier.board.close();
     } else if (app.start?.open) {
       if (!app.start.covered) {
         if (edge('a') || edge('start')) app.start.play();
@@ -49,8 +59,6 @@ export class Gamepad {
     } else if (game.home?.open) {
       if (edge('a')) game.home.next();
       else if (edge('b')) game.home.hide();
-    } else if (game.roads?.open) {
-      if (edge('b')) { game.roads.hide(); game.openHome(); }
     } else if (edge('start') && !app.building && !game.board.open) game.openHome();
     this.prev = s;
   }
