@@ -1,6 +1,7 @@
 import { HARM } from './vehicles/Vehicle.js';
 import { Progress } from './Progress.js';
 import { dailyParams } from './Daily.js';
+import { LESSON_PLANET } from './Lessons.js';
 import { CourierProps } from './CourierProps.js';
 import { FlightHazards } from './FlightHazards.js';
 import { Feats } from './Feats.js';
@@ -85,7 +86,7 @@ export class CourierGame {
   /** The briefing first (unless switched off in Options), then the run. */
   launch(opts = {}) {
     if (this.active) return;
-    if (this.app.settings?.get('briefing') === false) this.start(opts);
+    if (opts.lesson || this.app.settings?.get('briefing') === false) this.start(opts);
     else this.briefing.show(opts);
   }
 
@@ -93,6 +94,16 @@ export class CourierGame {
 
   /** Today's challenge: build today's planet if needed, then fly the stock plane on the shared route. */
   startDaily() { return this.flyOn(dailyParams(), { daily: true }, "📅 Building today's planet…"); }
+
+  /** The first flight, with the coach instead of a briefing, clock or rival. */
+  startLesson() {
+    if (this.active) return;
+    if (!this.app.building) {
+      this.app.start?.dismiss();
+      for (const menu of [this.home, this.hangar, this.briefing, this.board, this.roads]) menu.hide();
+    }
+    return this.flyOn(LESSON_PLANET, { lesson: true }, '🎓 Getting your plane ready…');
+  }
 
   openHangar() {
     if (this.active) return;
@@ -106,7 +117,11 @@ export class CourierGame {
   }
 
   /** The main Play button, from the title screen or Explore. */
-  play() { this.openHome(); }
+  play() {
+    if (this.active) return;
+    if (this.progress.needsLesson) this.startLesson();
+    else this.openHome();
+  }
 
   /** Take over a car or boat from the planet (its info card's Drive button) and drive it about. */
   driveThis(e) {
@@ -149,8 +164,10 @@ export class CourierGame {
     run.begin();
     app.renderer.compileAsync?.(this.props.group, app.camera, app.scene)?.catch(() => {}); // new props: compile now, not mid-flight
     const flying = this.player.kind === 'plane', tilt = this.controls.tilt.supported ? ' ⏸ has tilt steering.' : '';
-    if (this.touch) app.hud.toast(flying ? `👆 Drag on the left to steer and climb, hold BOOST to speed up.${tilt}` : `👆 Drag on the left: sideways to steer, up to go, down to brake.${tilt}`);
-    else if (flying && p.airports?.list.length) app.hud.toast('✈️ Tip: skim low along an airport runway to refuel your boost and patch up the plane.');
+    if (!run.coached) {
+      if (this.touch) app.hud.toast(flying ? `👆 Drag on the left to steer and climb, hold BOOST to speed up.${tilt}` : `👆 Drag on the left: sideways to steer, up to go, down to brake.${tilt}`);
+      else if (flying && p.airports?.list.length) app.hud.toast('✈️ Tip: skim low along an airport runway to refuel your boost and patch up the plane.');
+    }
     this.hud.update();
   }
 

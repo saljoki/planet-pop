@@ -122,3 +122,15 @@ test('Enter and Space play, Escape explores, and menus above Start own their inp
   assert.equal(start.open, false);
   assert.equal(played, 2, 'Escape explores without playing');
 });
+
+test('PLAY sends a fresh pilot straight to the flying lesson', () => {
+  const app = titleScreen(), start = app.start;
+  let lesson = false;
+  app.game.startLesson = () => { lesson = true; };
+  start.ready();
+  start.show();
+  start.play();
+  assert.equal(lesson, true);
+  assert.equal(start.open, false);
+  assert.equal(app.game.home.open, false);
+});

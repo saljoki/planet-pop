@@ -41,6 +41,19 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await frames(3);
   });
   await page.evaluate(() => app.tour.stop());
+  await scene('mobile-lesson', 'Phone: the flying coach clears a thumb on the stick and BOOST', async () => {
+    await page.evaluate(() => app.game.start({ lesson: true }));
+    await until(() => app.rig.mode === 'game');
+    await page.touchscreen.touchStart(110, 640);
+    await page.touchscreen.touchMove(150, 600);
+    await frames(4);
+  });
+  await page.touchscreen.touchEnd().catch(() => {});
+  await scene('mobile-lesson-deliver', 'Phone: the delivery prompt, arrow and buttons stay clear of each other', async () => {
+    await page.evaluate(() => { app.game.run.enter(4); app.game.hud.update(); });
+    await frames(2);
+  });
+  await page.evaluate(() => app.game.stop());
   await scene('mobile-courier', 'Daily challenge on a phone, a thumb on the stick', async () => {
     await page.evaluate(() => { app.game.start({ daily: true }); app.game.run.deliver(); });
     await until(() => app.rig.mode === 'game');
@@ -90,6 +103,15 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true });
     await frames(5);
   });
+  await scene('landscape-lesson', 'Phone on its side: the coach clears the map, arrow, buttons and thumb', async () => {
+    await page.evaluate(() => { app.game.stop(); app.game.start({ lesson: true }); app.game.run.enter(4); app.game.hud.update(); });
+    await until(() => app.rig.mode === 'game');
+    await page.touchscreen.touchStart(110, 270);
+    await page.touchscreen.touchMove(145, 250);
+    await frames(3);
+  });
+  await page.touchscreen.touchEnd().catch(() => {});
+  await page.evaluate(() => app.game.stop());
   await scene('landscape-start', 'Phone on its side: the start screen and reachable PLAY', async () => {
     await page.evaluate(() => { app.game.stop(); app.start.show(); });
     await frames(2);

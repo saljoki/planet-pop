@@ -1,4 +1,5 @@
 import { MISSIONS } from './Missions.js';
+import { LESSON_COINS } from './Lessons.js';
 import { loadJson, saveJson, loadNumber, forget } from '../core/Store.js';
 
 const KEY = 'planetpop.courier', OLD_BEST_KEY = 'planetpop.best';
@@ -51,11 +52,12 @@ export class Progress {
     this.daily = s.daily || null; // { date, best } for the most recent daily challenge played
     this.missions = new Set(s.missions || []); // ids of completed missions
     this.bests = { ...(s.bests || {}) };       // the road trips' bests: taxi and van scores, the race's fastest time
+    this.lesson = s.lesson === true;          // optional since v0.18.0: completed or deliberately skipped
   }
 
   save() {
     const data = { coins: this.coins, best: this.best, levels: this.levels, owned: [...this.owned], skin: this.skin, daily: this.daily,
-      missions: [...this.missions], bests: this.bests };
+      missions: [...this.missions], bests: this.bests, lesson: this.lesson };
     saveJson(KEY, data);
   }
 
@@ -104,11 +106,28 @@ export class Progress {
 
   addCoins(n) { this.coins += n; this.save(); }
 
+  /** Existing pilots keep going where they left off; only an empty save needs the lesson. */
+  get needsLesson() {
+    return !this.lesson && !this.coins && !this.best && !this.missions.size
+      && !Object.values(this.levels).some((n) => n > 0) && !Object.keys(this.bests).length;
+  }
+
+  /** The lesson's reward is paid once, independently of First Flight. */
+  finishLesson() {
+    if (this.lesson) return 0;
+    this.lesson = true;
+    this.coins += LESSON_COINS;
+    this.save();
+    return LESSON_COINS;
+  }
+
+  skipLesson() { this.lesson = true; this.save(); }
+
   /** Back to a brand-new pilot: no coins, upgrades, paint jobs, missions or best scores. */
   reset() {
     forget(KEY);
     forget(OLD_BEST_KEY);
-    Object.assign(this, { coins: 0, best: 0, levels: {}, owned: new Set(['classic']), skin: 'classic', daily: null, missions: new Set(), bests: {} });
+    Object.assign(this, { coins: 0, best: 0, levels: {}, owned: new Set(['classic']), skin: 'classic', daily: null, missions: new Set(), bests: {}, lesson: false });
     this.save();
   }
 

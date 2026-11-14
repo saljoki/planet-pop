@@ -111,3 +111,16 @@
   #stExplore { min-height: 38px; font-size: 18px; }
   #homeBtn { bottom: calc(16px + var(--sb)); min-height: 48px; }
 }
+
+/* A lesson leaves the left thumb, boost and mini-map clear. */
+@media (max-width: 700px) {
+  #gCoach { width: calc(100vw - 32px - var(--sl) - var(--sr)); font-size: 22px; line-height: 1.2; padding: 8px 10px 6px; }
+  #game.lesson #gPauseBtn, #game.lesson #gMapBtn { top: calc(124px + var(--st)); }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  #gCoach { top: calc(4px + var(--st)); width: calc(100vw - 290px - var(--sl) - var(--sr)); font-size: 22px; line-height: 1.1;
+    padding: 5px 8px 4px; }
+  #gCoachDots { margin-top: 4px; }
+  #game.lesson #gArrow { top: calc(86px + var(--st)); }
+  #game.lesson #gPauseBtn, #game.lesson #gMapBtn { top: calc(14px + var(--st)); }
+}

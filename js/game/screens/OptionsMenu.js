@@ -27,6 +27,7 @@ export class OptionsMenu extends Overlay {
       <label class="opt slider"><span>Effects volume <b id="oSfxVal"></b></span><input id="oSfx" type="range" min="0" max="100" step="5"></label>
       <label class="opt slider"><span>Ambience <b id="oAmbVal"></b></span><input id="oAmb" type="range" min="0" max="100" step="5"></label>
       <h3>Game</h3>
+      <button id="oLesson">🎓 Flying lesson</button>
       <label class="opt"><input id="oBrief" type="checkbox"><span>Show the briefing before each run</span></label>
       <label class="opt"><input id="oMap" type="checkbox"><span>Mini-map<small>The little map of where you are and where to go (🗺️ or M shows and hides it)</small></span></label>
       <h3>💾 Your progress</h3>
@@ -37,6 +38,8 @@ export class OptionsMenu extends Overlay {
       <button id="oAbout" class="about">ℹ️ About Planet Pop · v${VERSION}</button>` });
     this.app = app;
     this.game = game;
+    this.dom = { lesson: this.$('oLesson') };
+    this.dom.lesson.addEventListener('click', () => this.lesson());
     this.saves = new SaveBox(app, this.$('oSaves'));
     const $ = (id) => this.$(id), pct = (v) => `${Math.round(v)}%`;
     this.bind('oInvert', 'change', (e) => s.set('invertY', e.target.checked));
@@ -65,6 +68,12 @@ export class OptionsMenu extends Overlay {
 
   bind(id, ev, fn) { this.on(id, ev, fn); }
 
+  lesson() {
+    if (this.game.active) return;
+    this.hide();
+    this.game.startLesson();
+  }
+
   /** `onClose` runs when the menu is closed (e.g. back to the briefing). */
   show(onClose = null) {
     this.onClose = onClose;
@@ -85,6 +94,7 @@ export class OptionsMenu extends Overlay {
   render() {
     this.saves.disarm();
     const s = this.app.settings, $ = (id) => this.$(id), app = this.app;
+    this.dom.lesson.classList.toggle('hidden', this.game.active);
     $('oInvert').checked = s.get('invertY');
     $('oSens').value = Math.round(s.get('sensitivity') * 100);
     $('oSensVal').textContent = `${$('oSens').value}%`;

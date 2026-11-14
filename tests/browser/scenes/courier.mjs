@@ -130,4 +130,20 @@ export default async function courier({ page, frames, until, scene }) {
     if (await page.evaluate(() => app.paused)) throw new Error('Resume did not respond to a click');
   });
   await page.evaluate(() => { if (app.paused) app.togglePause(); app.game.stop(); });
+  await scene('lesson-steer', 'Flying lesson: one steering prompt and five progress dots', async () => {
+    await page.evaluate(() => { app.game.briefing.hide(); app.game.home.hide(); app.game.start({ lesson: true }); });
+    await until(() => app.rig.mode === 'game');
+    await page.evaluate(() => { app.togglePause(); app.game.pauseMenu.hide(); });
+    await frames(2);
+  });
+  await scene('lesson-ring', 'Flying lesson: the blue ring ahead and the arrow, with no clock or Rex', async () => {
+    await page.evaluate(() => { app.game.run.enter(3); app.game.hud.update(); });
+    await frames(2);
+  });
+  await scene('lesson-done', 'First parcel delivered: 50 coins, First Flight next, or Home', async () => {
+    await page.evaluate(() => { app.game.run.enter(4); app.game.run.deliver(); });
+    await frames(2);
+  });
+  await page.evaluate(() => { if (app.paused) app.togglePause(); app.game.stop(); });
+
 }

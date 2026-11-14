@@ -37,3 +37,19 @@
 #stOptions { position: absolute; top: calc(18px + var(--st)); right: calc(20px + var(--sr)); min-width: 46px; min-height: 44px; background: #fff; }
 #stVersion { position: absolute; bottom: calc(16px + var(--sb)); left: calc(20px + var(--sl)); color: #fff; font-size: 15px; text-shadow: 1px 1px 0 var(--ink); }
 #homeBtn { background: var(--pink); color: #fff; text-shadow: 1px 1px 0 var(--ink); }
+
+/* The coach is the only instruction during the lesson. It never takes pointer input. */
+#gCoach { top: calc(12px + var(--st)); left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px - var(--sl) - var(--sr));
+  width: max-content; padding: 8px 18px 6px; text-align: center; font-size: 26px; pointer-events: none; }
+#gCoachText { display: block; }
+#gCoachDots { display: flex; justify-content: center; gap: 8px; margin-top: 5px; }
+#gCoachDots span { width: 9px; height: 9px; border: 2px solid var(--ink); border-radius: 50%; background: #fff; }
+#gCoachDots .done { background: #2ee59d; }
+#gCoachDots .current { background: var(--pink); }
+#gCoach.ticked::after { content: '✔'; position: absolute; right: -12px; top: -12px; background: #2ee59d; border: 3px solid var(--ink);
+  border-radius: 50%; padding: 2px 6px; animation: coach-tick 0.6s ease-out forwards; }
+#gCoach.nudged { animation: coach-nudge 0.6s ease-in-out 2; }
+#game.lesson #gGoal, #game.lesson #gHelp, #game.lesson #gStick .ghost { display: none; }
+#game.lesson #gArrow { top: calc(128px + var(--st)); }
+@keyframes coach-tick { from { opacity: 1; scale: 0.6; } 40% { scale: 1.2; } to { opacity: 0; scale: 1; } }
+@keyframes coach-nudge { 50% { box-shadow: 0 0 0 8px var(--yellow); } }
