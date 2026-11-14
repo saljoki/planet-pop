@@ -97,7 +97,7 @@ describe('road trips', () => {
     for (const gate of run.gates) parkAt(game, gate.at);
     assert.ok(game.over && run.next === run.gates.length, 'the race should be over at the finish');
     assert.match(game.results.dom.title.textContent, /beat Rex/);
-    assert.equal(game.progress.coins, coins + 150);
+    assert.equal(game.progress.coins, coins + 60);
     assert.ok(app.unlocked.includes('racer'));
     assert.ok(game.progress.bests.race > 0);
   });

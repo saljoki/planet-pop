@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import { R } from '../../core/Geo.js';
 import { SPEED } from '../vehicles/Plane.js';
 import { rollCargo } from '../Cargo.js';
+import { coinsFor, RING_COINS, UFO_COINS } from '../Economy.js';
 import { Rival, RIVAL } from '../Rival.js';
 import { Run } from './Run.js';
 
-const RING_BONUS = 5, RING_COINS = 5, CRASH_PENALTY = 8, LIGHTNING_PENALTY = 5;
-const UFO_BONUS = 300, UFO_COINS = 30, ACE = 1500, REPAIR = 0.15;
+const RING_BONUS = 5, CRASH_PENALTY = 8, LIGHTNING_PENALTY = 5;
+const UFO_BONUS = 300, ACE = 1500, REPAIR = 0.15;
 const _v = new THREE.Vector3(), _t = new THREE.Vector3(), _s = new THREE.Vector3();
 
 /** Briefing tips for every flavour of courier run. */
@@ -207,7 +208,7 @@ export class DeliveryRun extends Run {
       t.combo = Math.max(t.combo, this.combo);
       t[cargo.id]++;
       if (this.planet.nightAt(this.dest.c) > 0.5) t.night++;
-      this.earn(Math.round(pts / 10));
+      this.earn(coinsFor(pts));
       app.sfx.pop(this.player.pos.clone(), fast && this.combo > 1 ? `+${pts}! x${this.combo}` : `+${pts}!`, '#2ee59d', 'deliver');
       app.haptics?.buzz('deliver');
       app.achievements.unlock('courier');

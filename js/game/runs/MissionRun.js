@@ -3,6 +3,7 @@ import { tangentBasis } from '../../core/Geo.js';
 import { mulberry32 } from '../../core/Noise.js';
 import { dailySeed } from '../Daily.js';
 import { CARGO } from '../Cargo.js';
+import { coinsFor } from '../Economy.js';
 import { MISSIONS, STAT_LABEL, placeOf } from '../Missions.js';
 import { CHAPTERS, chapterOf, missionsIn } from '../Chapters.js';
 import { starGoals, starsEarned, bonusGoal, bonusMet, flightTime } from '../Stars.js';
@@ -205,7 +206,7 @@ export class MissionRun extends DeliveryRun {
     }
     const pts = Math.round(100 * this.cargo.pay);
     this.score += pts;
-    this.earn(Math.round(pts / 10));
+    this.earn(coinsFor(pts));
     this.tally.deliveries++;
     this.tally.landmark++;
     this.app.sfx.pop(this.player.pos.clone(), `${this.def.icon} ${this.spot.name}!`, '#2ee59d', 'deliver');
