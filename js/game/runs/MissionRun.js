@@ -40,6 +40,11 @@ export class MissionRun extends DeliveryRun {
 
   get layout() { return { ...super.layout, badge: 'mission' }; }
 
+  /** Missions are timed by their goals, so every delivery keeps its full twenty seconds. */
+  deliveryBonus() { return 20; }
+
+  get clockCap() { return Infinity; }
+
   /** A landmark mission's one parcel has its own name (a flag, a cake). */
   get what() { return this.spot && this.def.item ? this.def.item : super.what; }
 

@@ -5,7 +5,7 @@ import { rollCargo } from '../Cargo.js';
 import { Rival, RIVAL } from '../Rival.js';
 import { Run } from './Run.js';
 
-const DELIVERY_BONUS = 20, RING_BONUS = 5, RING_COINS = 5, CRASH_PENALTY = 8, LIGHTNING_PENALTY = 5;
+const RING_BONUS = 5, RING_COINS = 5, CRASH_PENALTY = 8, LIGHTNING_PENALTY = 5;
 const UFO_BONUS = 300, UFO_COINS = 30, ACE = 1500, REPAIR = 0.15;
 const _v = new THREE.Vector3(), _t = new THREE.Vector3(), _s = new THREE.Vector3();
 
@@ -15,6 +15,7 @@ export const COURIER_TIPS = [
   'Deliver fast to build a combo, up to x5. Blue rings add 5 seconds and refill your boost.',
   'Crashing costs 8 seconds and some health. Lightning hurts too; skim a runway or deliver a parcel to patch up.',
   'After your first delivery, Rival Rex races you for every parcel.',
+  'Each delivery adds a little less time than the last, so make every second count.',
 ];
 
 /**
@@ -45,6 +46,12 @@ export class DeliveryRun extends Run {
 
   /** The results card's play-again button. */
   get againLabel() { return '✈️ Fly again'; }
+
+  /** Each parcel adds less time, down to six seconds. Missions can keep a flat bonus. */
+  deliveryBonus() { return Math.max(6, 20 - this.deliveries); }
+
+  /** A fast start cannot bank an ever-growing clock. */
+  get clockCap() { return this.stats.startTime + 9; }
 
   takeoff() {
     const sites = this.planet.cities.sites;
@@ -94,7 +101,7 @@ export class DeliveryRun extends Run {
   target() { return null; }
 
   /** Next destination and a fresh parcel for it. */
-  pickDest(first = false) {
+  pickDest(first = false, seconds = null) {
     const g = this.game, others = this.destinations(this.planet.cities.sites.filter((s) => s !== this.from));
     this.dest = others[Math.floor(this.rand() * others.length)];
     this.cargo = rollCargo(first, this.rand, this.cargoBias);
@@ -105,7 +112,7 @@ export class DeliveryRun extends Run {
     g.player?.setCargo(this.cargo);
     this.rival?.newLeg(this.from);
     if (g.props) this.markDest();
-    if (!first) this.app.hud.toast(`${this.cargo.icon} New ${this.cargo.name.toLowerCase()} for ${this.dest.name}: ${this.cargo.tip}`);
+    if (!first) this.app.hud.toast(`${this.cargo.icon} New ${this.cargo.name.toLowerCase()} for ${this.dest.name}: ${this.cargo.tip}${seconds === null ? '' : ` (+${Math.round(seconds)} s)`}`);
   }
 
   crashed() {
@@ -126,7 +133,7 @@ export class DeliveryRun extends Run {
   }
 
   ring(ring) {
-    this.time += RING_BONUS;
+    this.time = Math.min(this.clockCap, this.time + RING_BONUS);
     this.score += 50;
     this.earn(RING_COINS);
     this.tally.rings++;
@@ -167,7 +174,9 @@ export class DeliveryRun extends Run {
 
   deliver() {
     const app = this.app, cargo = this.cargo;
-    this.time += DELIVERY_BONUS;
+    const before = this.time;
+    this.time = Math.min(this.clockCap, this.time + this.deliveryBonus());
+    const seconds = Math.max(0, this.time - before);
     if (this.broken) { // the fragile parcel arrived in pieces: no pay, no combo
       this.combo = 1;
       app.sfx.pop(this.player.pos.clone(), 'OOPS!', '#9fd8ff', 'crash');
@@ -192,7 +201,7 @@ export class DeliveryRun extends Run {
     if (this.rival && ++this.rivalStreak >= RIVAL.streak) app.achievements.unlock('outrun');
     this.tally.rexStreak = Math.max(this.tally.rexStreak, this.rival ? this.rivalStreak : 0);
     this.from = this.dest;
-    this.pickDest();
+    this.pickDest(false, seconds);
     if (this.hasRival) {
       if (!this.rival) this.spawnRival();
       this.rival.setLevel(this.deliveries);
