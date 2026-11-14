@@ -60,9 +60,9 @@ export class HomeScreen extends Overlay {
     const g = this.game;
     if (id === 'courier') g.launch();
     else if (id === 'daily') g.startDaily();
-    else if (id === 'missions') g.board.show();
-    else if (id === 'space') this.app.spaceCourier?.openBoard();
-    else if (id === 'roads') g.roads.show();
+    else if (id === 'missions') g.board.show(() => g.openHome());
+    else if (id === 'space') this.app.spaceCourier?.openBoard(() => g.openHome());
+    else if (id === 'roads') g.roads.show(() => g.openHome());
     else if (id === 'free') g.launch({ free: true });
   }
 

@@ -28,12 +28,13 @@ export class ResultsScreen extends Overlay {
       fn();
     });
     this.on('gNext', 'click', () => { const next = this.nextMission; game.stop(); game.startMission(next); });
-    this.on('gBoard', 'click', () => { game.stop(); game.board.show(); });
+    this.on('gBoard', 'click', () => this.board());
     this.on('gShare', 'click', () => game.run?.share());
     this.on('gHome', 'click', () => this.home());
     this.on('gExit', 'click', () => game.stop());
   }
 
+  board() { this.game.stop(); this.game.board.show(() => this.game.openHome()); }
   home() { this.game.stop(); this.game.openHome(); }
 
   /**

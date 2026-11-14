@@ -18,25 +18,30 @@ export class RoadBoard extends Overlay {
       <p class="note">Your hangar upgrades work on the road too.</p>
       <div id="rList"></div>` });
     this.app = app;
-    this.list = this.$('rList');
-    this.on('rClose', 'click', () => this.hide());
-    this.el.addEventListener('click', (e) => {
-      const b = e.target.closest?.('button[data-trip]');
-      if (!b) return;
-      this.hide();
-      onPlay(ROAD_TRIPS.find((t) => t.id === b.dataset.trip).opts);
-    });
+    this.onPlay = onPlay;
+    this.dom = { list: this.$('rList'), close: this.$('rClose') };
+    this.list = this.dom.list; // Keep the existing public list handle as well as the cached controls.
+    this.dom.close.addEventListener('click', () => this.close());
+    this.el.addEventListener('click', (e) => this.play(e.target.closest?.('button[data-trip]')?.dataset.trip));
   }
 
-  show() { this.render(); super.show(); }
+  show(onClose) { this.onClose = onClose; this.render(); super.show(); }
+  close() { const callback = this.onClose; this.onClose = null; this.hide(); callback?.(); }
+  escape() { this.close(); }
+  play(id) {
+    const trip = ROAD_TRIPS.find((t) => t.id === id);
+    if (!trip) return false;
+    this.hide(); this.onPlay(trip.opts);
+    return true;
+  }
 
   render() {
     const sea = !!this.app.planet?.theme.sea.boats, world = this.app.planet?.world;
     if (world?.giant) { // (nothing to drive on)
-      this.list.innerHTML = `<p class="note">🌫️ ${world.name} has no ground at all, so there are no roads. Fly to a world with ground for a road trip.</p>`;
+      this.dom.list.innerHTML = `<p class="note">🌫️ ${world.name} has no ground at all, so there are no roads. Fly to a world with ground for a road trip.</p>`;
       return;
     }
-    this.list.innerHTML = ROAD_TRIPS.filter((t) => t.needs !== 'sea' || sea).map((t) => `<div class="mission"><span class="icon">${t.icon}</span>
+    this.dom.list.innerHTML = ROAD_TRIPS.filter((t) => t.needs !== 'sea' || sea).map((t) => `<div class="mission"><span class="icon">${t.icon}</span>
       <div class="info">${t.name}<small>${t.desc}</small></div><button data-trip="${t.id}" class="big">▶ Go</button></div>`).join('');
   }
 }

@@ -16,6 +16,23 @@ export default async function courier({ page, frames, until, scene }) {
     await frames(2);
     await careerFits(page, '#home');
   });
+  await scene('boards-return-home', 'All three Home boards return with their close button and Escape', async () => {
+    await page.evaluate(() => {
+      const g = app.game; g.stop();
+      for (const menu of [g.hangar, g.pilot, g.today, g.board, g.roads, g.briefing, g.options, app.spaceCourier.board]) menu?.hide();
+      g.openHome();
+    });
+    for (const [id, close] of [['missions', '#mClose'], ['roads', '#rClose'], ['space', '#pClose']]) {
+      await page.click(`[data-card="${id}"]`);
+      await page.click(close);
+      await until(() => app.game.home.open);
+      await page.click(`[data-card="${id}"]`);
+      await page.keyboard.press('Escape');
+      await until(() => app.game.home.open);
+    }
+    await frames(2);
+    await careerFits(page, '#home');
+  });
   for (const ready of [false, true]) {
     await scene(ready ? 'today-crate' : 'today', ready ? 'Today: all jobs done and the crate waiting' : 'Today: one contract done', async () => {
       await stageToday(page, ready);

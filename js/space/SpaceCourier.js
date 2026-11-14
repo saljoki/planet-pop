@@ -50,9 +50,9 @@ export class SpaceCourier {
   /** The body we're on: a real world's id, or 'away' for a made-up planet. */
   get here() { return this.app.planet?.world?.id ?? 'away'; }
 
-  openBoard() {
+  openBoard(onClose) {
     this.board ??= new ParcelBoard(this.app, this);
-    this.board.show();
+    this.board.show(onClose);
   }
 
   /** Three parcels from here to other worlds (the same until one is taken or delivered). */
