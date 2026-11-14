@@ -118,6 +118,31 @@ button.free { background: var(--blue); }
 .mission.job { background: rgba(255, 217, 61, 0.35); border-radius: 8px; padding: 7px 6px; }
 .mission.job .drive { background: #ff8c42; }
 #parcels .mission button { min-width: 0; }
+#missions .panel { padding: 0; }
+#missions .mission-header { position: sticky; top: 0; z-index: 1; padding: 18px 26px 8px; background: #fff; border-bottom: 2px solid rgba(27, 21, 48, 0.2); }
+#missions .coins { margin-bottom: 0; }
+#missions #mList { padding: 0 26px 18px; }
+#missions .chapter { border-top: 2px solid rgba(27, 21, 48, 0.2); }
+#missions .chapter > summary { cursor: pointer; font-size: 20px; padding: 9px 0 7px; }
+#missions .chapter > summary::marker { color: var(--pink); }
+#missions .chapter[data-state="closed"] > summary { color: #6c617c; }
+#missions .chapter[data-state="done"] > summary { color: #17734f; }
+#missions .mission .info { min-width: 0; }
+#missions .mission-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+#missions .mission-stars { color: #966700; font-family: system-ui, sans-serif; font-size: 15px; letter-spacing: 0; white-space: nowrap; }
+#missions .mission small { line-height: 1.3; }
+#missions .mission .reward { margin-top: 3px; opacity: 1; }
+@media (max-width: 640px) {
+  #missions .mission-header { padding: 14px 16px 8px; }
+  #missions #mList { padding: 0 16px 14px; }
+  #missions h2 { font-size: 29px; margin-bottom: 4px; }
+  #missions .coins { font-size: 18px; }
+  #missions .chapter > summary { font-size: 18px; padding: 8px 0 6px; }
+  #missions .mission { display: grid; grid-template-columns: 25px minmax(0, 1fr) 74px; gap: 8px; font-size: 18px; padding: 8px 0; }
+  #missions .mission .icon { width: 25px; font-size: 23px; }
+  #missions .mission small { font-size: 11px; }
+  #missions .mission button { width: 74px; min-width: 0; min-height: 42px; font-size: 15px; padding: 5px 4px 2px; }
+}
 /* the take-off buttons stay in view while the upgrade list scrolls */
 .hfoot { position: sticky; bottom: 0; margin: 14px -26px 0; padding: 0 26px 14px; background: #fff; border-top: 3px solid var(--ink); }
 #hangar .note { margin: 8px 0 0; text-align: center; font-family: system-ui, sans-serif; font-size: 13px; letter-spacing: 0; opacity: 0.75; }

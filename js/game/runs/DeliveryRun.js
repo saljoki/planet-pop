@@ -5,7 +5,7 @@ import { rollCargo } from '../Cargo.js';
 import { Rival, RIVAL } from '../Rival.js';
 import { Run } from './Run.js';
 
-const DELIVERY_BONUS = 20, RING_BONUS = 5, RING_COINS = 5, CRASH_PENALTY = 8, LIGHTNING_PENALTY = 5;
+const RING_BONUS = 5, RING_COINS = 5, CRASH_PENALTY = 8, LIGHTNING_PENALTY = 5;
 const UFO_BONUS = 300, UFO_COINS = 30, ACE = 1500, REPAIR = 0.15;
 const _v = new THREE.Vector3(), _t = new THREE.Vector3(), _s = new THREE.Vector3();
 
@@ -15,6 +15,7 @@ export const COURIER_TIPS = [
   'Deliver fast to build a combo, up to x5. Blue rings add 5 seconds and refill your boost.',
   'Crashing costs 8 seconds and some health. Lightning hurts too; skim a runway or deliver a parcel to patch up.',
   'After your first delivery, Rival Rex races you for every parcel.',
+  'Each delivery adds a little less time than the last, so make every second count.',
 ];
 
 /**
@@ -46,11 +47,21 @@ export class DeliveryRun extends Run {
   /** The results card's play-again button. */
   get againLabel() { return '✈️ Fly again'; }
 
+  /** Each parcel adds less time, down to six seconds. Missions can keep a flat bonus. */
+  deliveryBonus() { return Math.max(6, 20 - this.deliveries); }
+
+  /** A fast start cannot bank an ever-growing clock. */
+  get clockCap() { return this.stats.startTime + 9; }
+
+  /** The optional time-gained suffix on the next parcel's toast. */
+  deliveryTimeText(seconds) { return seconds === null ? '' : ` (+${Math.round(seconds)} s)`; }
+
   takeoff() {
     const sites = this.planet.cities.sites;
     Object.assign(this, { score: 0, combo: 1, time: this.stats.startTime, deliveries: 0, coins: 0, stolen: 0, rivalStreak: 0 });
     // counters missions are judged on
-    this.tally = { deliveries: 0, standard: 0, urgent: 0, fragile: 0, heavy: 0, broken: 0, rings: 0, refuels: 0, rexStreak: 0, ufo: 0, ash: 0, night: 0, zaps: 0, landmark: 0, ice: 0, loops: 0, threads: 0 };
+    this.tally = { deliveries: 0, standard: 0, urgent: 0, fragile: 0, heavy: 0, broken: 0, rings: 0, refuels: 0, rexStreak: 0, ufo: 0, ash: 0, night: 0, zaps: 0, landmark: 0, ice: 0, loops: 0, threads: 0,
+      crashes: 0, knocks: 0, stolen: 0, combo: 0, visits: 0, sun: 0 };
     this.from = sites[Math.floor(this.rand() * sites.length)];
     this.pickDest(true);
     const heading = new THREE.Vector3().copy(this.dest.c).addScaledVector(this.from.c, -this.dest.c.dot(this.from.c));
@@ -65,6 +76,9 @@ export class DeliveryRun extends Run {
 
   /** Whether Rex turns up after the first delivery. */
   get hasRival() { return true; }
+
+  /** What to do after Rex steals a parcel, unless the route has ended. */
+  get stolenHint() { return ' Grab the next one!'; }
 
   /** What the goal line says once the destination is close. */
   get arriveHint() { return `swoop down over ${this.dest.name}!`; }
@@ -94,7 +108,7 @@ export class DeliveryRun extends Run {
   target() { return null; }
 
   /** Next destination and a fresh parcel for it. */
-  pickDest(first = false) {
+  pickDest(first = false, seconds = null) {
     const g = this.game, others = this.destinations(this.planet.cities.sites.filter((s) => s !== this.from));
     this.dest = others[Math.floor(this.rand() * others.length)];
     this.cargo = rollCargo(first, this.rand, this.cargoBias);
@@ -105,13 +119,20 @@ export class DeliveryRun extends Run {
     g.player?.setCargo(this.cargo);
     this.rival?.newLeg(this.from);
     if (g.props) this.markDest();
-    if (!first) this.app.hud.toast(`${this.cargo.icon} New ${this.cargo.name.toLowerCase()} for ${this.dest.name}: ${this.cargo.tip}`);
+    if (!first) this.app.hud.toast(`${this.cargo.icon} New ${this.cargo.name.toLowerCase()} for ${this.dest.name}: ${this.cargo.tip}${this.deliveryTimeText(seconds)}`);
   }
 
   crashed() {
+    this.tally.crashes++;
+    this.knocked();
+  }
+
+  /** Ground crashes and ring ice share the penalty, but only ground crashes count as crashes. */
+  knocked() {
+    this.tally.knocks++;
     this.time -= CRASH_PENALTY;
     this.combo = 1;
-    if (this.cargo.fragile && !this.broken) {
+    if (this.cargo?.fragile && !this.broken) {
       this.broken = true;
       this.tally.broken++;
       this.app.sfx.pop(this.player.pos.clone(), 'SMASH!', '#9fd8ff', 'crash');
@@ -126,7 +147,7 @@ export class DeliveryRun extends Run {
   }
 
   ring(ring) {
-    this.time += RING_BONUS;
+    this.time = Math.min(this.clockCap, this.time + RING_BONUS);
     this.score += 50;
     this.earn(RING_COINS);
     this.tally.rings++;
@@ -136,10 +157,10 @@ export class DeliveryRun extends Run {
   /** Rings respawn along the current route so they're worth chasing. */
   placeRing(ring) { this.game.props.alongRoute(ring, this.player.up, this.dest.c); }
 
-  zapped() { this.time -= LIGHTNING_PENALTY; }
+  zapped() { this.time -= LIGHTNING_PENALTY; this.tally.knocks++; }
 
   iced() {
-    super.iced();
+    this.knocked();
     this.tally.ice++;
   }
 
@@ -154,6 +175,7 @@ export class DeliveryRun extends Run {
   update(dt) {
     this.time -= dt;
     this.elapsed += dt;
+    if (this.game.hazards.hot) this.tally.sun += dt;
     const arrived = this.arrived();
     if (arrived) this.deliver();
     if (this.rival?.update(dt, this.dest, this.cargo) && !arrived) this.steal();
@@ -167,7 +189,9 @@ export class DeliveryRun extends Run {
 
   deliver() {
     const app = this.app, cargo = this.cargo;
-    this.time += DELIVERY_BONUS;
+    const before = this.time;
+    this.time = Math.min(this.clockCap, this.time + this.deliveryBonus());
+    const seconds = Math.max(0, this.time - before);
     if (this.broken) { // the fragile parcel arrived in pieces: no pay, no combo
       this.combo = 1;
       app.sfx.pop(this.player.pos.clone(), 'OOPS!', '#9fd8ff', 'crash');
@@ -180,6 +204,7 @@ export class DeliveryRun extends Run {
       this.deliveries++;
       const t = this.tally;
       t.deliveries++;
+      t.combo = Math.max(t.combo, this.combo);
       t[cargo.id]++;
       if (this.planet.nightAt(this.dest.c) > 0.5) t.night++;
       this.earn(Math.round(pts / 10));
@@ -192,7 +217,7 @@ export class DeliveryRun extends Run {
     if (this.rival && ++this.rivalStreak >= RIVAL.streak) app.achievements.unlock('outrun');
     this.tally.rexStreak = Math.max(this.tally.rexStreak, this.rival ? this.rivalStreak : 0);
     this.from = this.dest;
-    this.pickDest();
+    this.pickDest(false, seconds);
     if (this.hasRival) {
       if (!this.rival) this.spawnRival();
       this.rival.setLevel(this.deliveries);
@@ -216,10 +241,11 @@ export class DeliveryRun extends Run {
   steal() {
     const app = this.app;
     this.stolen++;
+    this.tally.stolen++;
     this.rivalStreak = 0;
     this.combo = 1;
     app.sfx.pop(this.rival.pos.clone(), 'STOLEN!', '#8f5cff', 'crash');
-    app.hud.toast(`😈 ${RIVAL.name} delivered to ${this.dest.name} first. Grab the next one!`);
+    app.hud.toast(`😈 ${RIVAL.name} delivered to ${this.dest.name} first.${this.stolenHint}`);
     this.rival.gloat(this.dest);
     this.from = this.dest;
     this.pickDest();

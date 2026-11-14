@@ -41,7 +41,7 @@ export class Feats {
     if (Math.abs(this.turned) < TAU) return;
     this.turned = 0;
     g.app.sfx.pop(pl.pos.clone(), 'ROUND THE STORM!', '#ff8c42', 'ring');
-    g.app.achievements.unlock(s.trophy);
+    if (typeof s.trophy === 'string') g.app.achievements.unlock(s.trophy);
     g.run.looped();
   }
 

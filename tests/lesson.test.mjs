@@ -199,6 +199,7 @@ describe('the flying lesson', () => {
     p.save();
     const saved = loadJson('planetpop.courier', {});
     delete saved.lesson;
+    delete saved.stars; // Phase B1's optional field: saved alongside, nothing else added
     assert.deepEqual(saved, old);
     for (const progress of [{ coins: 1 }, { best: 1 }, { levels: { wings: 1 } }, { missions: ['first'] }, { bests: { taxi: 0 } },
       { owned: ['classic', 'sky'] }, { daily: { date: '2026-11-13', best: 0 } }]) {

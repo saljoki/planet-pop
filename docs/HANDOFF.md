@@ -7,9 +7,9 @@ system you can fly round.
 
 - **Repo:** https://github.com/Saljoki/planet-pop
 - **Live:** https://saljoki.github.io/planet-pop/ (GitHub Pages, deploys on every push to `main`)
-- **Current branch version:** v0.18.0 on `phase-a-first-five-minutes`, based on v0.17.0 (`878b636`).
-  Phase A is awaiting review and has not been merged into `main`.
-- **Current spec:** [PHASE_A.md](PHASE_A.md), the first-five-minutes flow, packages A0–A6 and the PR template.
+- **Current version:** v0.19.0. Phases A and B1 are merged into `main`, and there's no open branch.
+- **Design and specs:** [DESIGN.md](DESIGN.md) is the game's design and decisions log. [PHASE_A.md](PHASE_A.md) and
+  [PHASE_B1.md](PHASE_B1.md) are done; each new phase gets its own spec in `docs/`.
 - **Keep this file current.** At the end of each phase, update "Where things stand", the version, and any new gotchas.
 
 ## How Ata works
@@ -76,7 +76,8 @@ system you can fly round.
   - **Runs:** `runs/*Run.js` are the game modes. `Run.js` documents the hooks and `modes.js` picks the run.
   - **Hazards and moves:** `FlightHazards` (storms, dust, heat, ring ice, wind) and `Feats` (long jumps, loops round
     a storm, threading Saturn's ring).
-  - **Data:** `Missions.js` (22 missions, in two lists) and `Daily.js` (the world of the day).
+  - **Data:** `Missions.js` (61 missions in 18 chapters), `Chapters.js` (chapter order and gates),
+    `Stars.js` (three-star goals) and `Daily.js` (the world of the day).
 - `js/ui/StartScreen.js`: a transparent `Widget` over the first planet build, with PLAY, Explore and Options.
   `Hud.setStartMode()` hides and restores the planet-view furniture. Invite and daily links bypass the title.
 - `js/ui/Music.js` and `Tunes.js`: menu, flight and space loops synthesised on the effects AudioContext. Music
@@ -157,16 +158,19 @@ system you can fly round.
 
 ## Where things stand
 
-- **Phase A is implemented on `phase-a-first-five-minutes` for v0.18.0.** The first launch shows PLAY while the
-  planet builds; a new pilot flies the five-step lesson, and returning pilots go to Home. Modes moved from the
-  hangar to Home, the hangar keeps upgrades and paint, briefings open short, and menu/flight/space music has its
-  own Options slider. Existing progress and First Flight stay intact. The full scope and package order are in
-  [PHASE_A.md](PHASE_A.md); see the PR for final check results and any deviations.
-- **A7 review fixes** keep the lesson in daylight and bring missed rings ahead, recognise paint-only and daily-only
-  pilots, label paused time Resume, avoid a duplicate welcome, and give Home and flight badges room on phones.
-  Version stays v0.18.0; the branch is still awaiting review and has not been merged.
-- **Music is ready for Ata's ear.** Audio scheduling, states and persistence are tested. Ata must listen and say yes
-  before the music package is accepted. Claude reviews the phase; Ata decides when the branch merges.
+- **Phase A is merged (v0.18.0).** The first launch shows PLAY while the planet builds; a new pilot flies the
+  five-step lesson (always in daylight; a missed ring comes back in front), and returning pilots go to Home. Modes
+  moved from the hangar to Home, the hangar keeps upgrades and paint, briefings open short, the flight badges wrap
+  on an upright phone, and menu/flight/space music has its own Options slider. Spec: [PHASE_A.md](PHASE_A.md).
+- **Phase B1 is merged (v0.19.0).** The courier clock tapers (20 s falling to 6 s a delivery, capped at start + 9 s),
+  the daily is ten parcels with a finish bonus, and there are 61 missions in 18 chapters with three stars each and
+  star gates. The game's design and decisions are in [DESIGN.md](DESIGN.md); the spec is [PHASE_B1.md](PHASE_B1.md).
+- **Music still needs Ata's ear.** Audio scheduling, states and persistence are tested; the tunes themselves are
+  his to judge. It has its own volume slider in Options.
+- **Next: Phase B2** (pilot rank, the Rex ladder, craft, supplies, contracts, streak, passport, coin retune), then
+  C (mobile wrapper). See the phases table in DESIGN.md. Carried over from the reviews: ✕ on the Missions, Road
+  trips and Space boards should return to Home; the daily's rings and UFO should come from the route's seed before
+  there is a leaderboard.
 - **The solar system plan is complete.** Ata's design doc, "Planet Pop: Solar System design" (a Claude Docs artifact
   at https://claude.ai/code/artifact/b60ea4c9-576b-422d-bcd5-7832d0323c2f), had four phases: Earth, Moon and Mars; the
   space courier; Venus, Mercury and Pluto; and the giants with their moons. All four shipped, plus a fifth phase:

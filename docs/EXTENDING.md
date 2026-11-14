@@ -139,12 +139,33 @@ settings such as `planetpop.ambience` and `planetpop.music` stay out of `SAVED_K
 
 ## Add a mission
 
-Add an entry to `MISSIONS` in `js/game/Missions.js`. `goal.stat` names one of the counters in
-`DeliveryRun.tally` (deliveries, urgent, fragile, heavy, broken, rings, refuels, rexStreak, ufo, ash, night, zaps,
-landmark, ice, loops, threads); `failIf` names one that ends the mission when it goes above zero. Setup flags (`rival`, `night`, `dark`,
-`ufoIn`, `eruptions`, `cargo`, `landmark`, `carry`, `item`) are applied in `MissionRun.setup()`; a new one goes there. Pick a
-planet that has what the mission needs; `tests/missions.test.mjs` checks that. `planet: { world: 'mars' }` flies it on
-a real world: those missions are a list of their own on the board, opening up in order after the first.
+Add an entry to `MISSIONS` in `js/game/Missions.js`, in chapter order. Keep existing ids, planets, goals, rewards
+and flags intact: old saves refer to those ids. Flight school is the ten made-up-planet missions; every real world
+has three. `js/game/Chapters.js` defines chapter order and total-star gates; missions open in order inside an open
+chapter, and completed missions always remain playable. Travel in Explore stays open.
+
+`goal.stat` names a counter in `DeliveryRun.tally`: deliveries, urgent, fragile, heavy, broken, rings, refuels,
+rexStreak, ufo, ash, night, zaps, landmark, ice, loops, threads, crashes, knocks, stolen, combo, visits or sun.
+`combo` is the highest combo; `ash` and `sun` count seconds. A ground crash, lightning strike or ring-ice hit adds
+one knock; only a ground crash adds a crash. `failIf` ends the mission when that counter goes above zero.
+
+Mission flags are handled by `MissionRun`: `rival`, `rexLevel` (Rex's starting level), `night` (hold the Sun still),
+`dark` or `sunny` (prefer towns in darkness or daylight), `ufoIn`, `eruptions`, `cargo` (kind weights), `landmark`
+(the parcel goes there), `carry` (its kind), and `item` (its name). `tour: [names]` visits landmarks in any order
+with no parcels; `fetch: name` collects a parcel at a landmark before delivering it to a town. Both use a low pass
+within 0.07 radians and below the surface plus 3.2. Two-town real-world delivery missions start with a 45-degree
+heading offset, so they need steering rather than a hands-free great circle. Pick a planet that has what the flags
+need; the mission tests check the landmarks, storms, eruptions, heat and loops.
+
+Every mission has `par` in seconds (20–240) and may have a bonus `{ stat, min, text }` or `{ stat, max, text }`.
+`js/game/Stars.js` awards one star for finishing, one for finishing within par, and one for the bonus (by default
+no knocks). Best stars are saved through `Progress` in the optional `stars` field of `planetpop.courier`; completed
+missions from old saves count as one star. Stars pay no coins; mission rewards still pay only once.
+
+Run `node scripts/pars.mjs` to fly every mission in the stock plane and print its measured time, source, chapter
+factor and par (`--json` prints data). The reference pilot in `tests/helpers/pilot.mjs` follows the run's target;
+rings, refuels, UFOs, loops, ring crossings, plumes and combo goals use scripted controls through the same game
+detectors. Par is the measured time times the chapter's factor, rounded up to five seconds (at least 20 seconds).
 
 ## Add an option
 

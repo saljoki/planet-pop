@@ -11,8 +11,8 @@ classic, ice, desert, candy and lava, and there are seventeen real worlds to vis
 cloud stations, and the moons **Io**, **Europa**, **Ganymede**, **Titan**, **Enceladus**, **Triton** and **Charon**, on a 🪐
 **map of the solar system** with every planet
 where it really is today, and **rocket trips** between them, with a 🚀 **space courier** taking parcels from world to
-world. Plus the **Sky Courier** mini-game with twenty-two missions (twelve on the real worlds), a daily challenge (on a
-real world about every other day) and free flight, **road trips** (drive any car or steer any boat, taxi, van courier and a race round
+world. Plus the **Sky Courier** mini-game with 61 missions in 18 chapters (51 on the real worlds), three stars to earn on every mission, a ten-parcel
+daily challenge (on a real world about every other day) and free flight, **road trips** (drive any car or steer any boat, taxi, van courier and a race round
 the world) with a 🗺️ mini-map, 👥 playing with friends on the same planet, a 📍 Find menu, a hands-free 📺 tour, a
 photo mode and 55 trophies (in groups). It's built for
 phones as much as laptops (touch gestures, a thumbstick, tilt steering), installs as an app and works offline.
@@ -196,7 +196,9 @@ and A / B answer the end-of-run screen.
   and mini-map switches, **🎓 Flying lesson** between runs, **💾 Your progress** (copy a save code or save a file,
   and load one on another phone or browser), and a two-tap **Reset Sky Courier progress** (trophies stay).
   Options are remembered.
-- **📦 Courier run:** the classic timed game below. **🕊️ Free flight:** no clock, no parcels, no Rex, no coins:
+- **📦 Courier run:** the classic timed game below. Each delivery adds a second less time than the last, from 20
+  seconds down to 6, and the clock is capped at its starting time plus 9 seconds, so every run builds to a finish.
+  **🕊️ Free flight:** no clock, no parcels, no Rex, no coins:
   fly anywhere you like. Rings refill your boost and runways still refuel.
 - **Health ❤️:** hitting the ground costs a quarter of your health and makes the engine splutter; lightning hurts
   too. Out of health is a wreck: KABOOM, and the run's over (free flight, free drive and the lesson put a fresh
@@ -215,14 +217,11 @@ and A / B answer the end-of-run screen.
 - **🛠️ Hangar** (from Home): coins from deliveries and rings buy engine, wings, boost tank, ring magnet, head-start
   and armour upgrades, plus paint jobs. The hangar is for improving and painting your vehicle. Progress is saved
   in your browser (and the browser is asked to keep it); a save code in Options moves it to another one.
-- **🎯 Missions** (on Home): ten goals played in order, each on its own planet: First Flight, Rush
-  Hour, Ring Master, Handle With Care, Pit Stop, Heavy Lifter, Outrun Rex, Night Shift, Close Encounter
-  and Ash Dodger. Twelve more on the real worlds open up in their own order: One Small Step (a flag to Tranquility
-  Base), Dust Storm Medicine on Mars, Acid Rain on Venus (one lightning strike and it's over), Keep to the Shade on
-  Mercury, Room Service at Pluto's ice hotel, Eye of the Storm (a loop round the Great Red Spot), Ring Run (through
-  Saturn's ring ice without touching any), Cold Chain on Uranus, Gale Force on Neptune, Sulphur Run on Io, Ocean
-  Sample on Europa and a battery for Huygens on Titan. The arrow points where a mission needs you (a runway, the next
-  ring, the UFO, a landmark, the storm, the ring), and each pays coins the first time you complete it.
+- **🎯 Missions** (on Home): ten Flight school missions, then three on each of the 17 real worlds: 61 in 18
+  chapters. Finish, beat the par time and meet a bonus goal for three stars. Your best stars open the chapters;
+  missions open in order inside each chapter, and completed missions stay replayable. Tours visit landmarks, and
+  fetch missions collect a parcel before delivering it. The arrow points where a mission needs you (a runway, the
+  next ring, the UFO, a landmark, the storm, the ring). Coins pay on the first completion only; stars pay no coins.
 - **🚗 Road trips** (on Home), in a car on the ground: ↑ / W to go, ↓ / S to brake and reverse (on phones,
   drag up and down on the left). Highways and town streets are quickest (two main streets cross in the middle of
   every town); grass, sand and snow are slower and hills slow you going up, and you get a little air over crests.
@@ -235,10 +234,12 @@ and A / B answer the end-of-run screen.
   - **🚐 Van courier:** the courier run by road, to a pad at one of the two nearest towns.
   - **🏁 Round the world:** race Rex once round the planet on a highway through 8 checkpoints, after a 3-2-1-GO.
     He keeps left, overtakes traffic and runs red lights. Your fastest win is kept.
-- **📅 Daily challenge** (on Home): today's planet and parcel route, the same for everyone and
-  changing at midnight UTC, flown in the stock plane so upgrades don't count. About every other day the planet is
-  one of the real worlds; the Home card says which. Your best daily score is
-  kept separately, and **Share result** copies your score with a `?daily` link that opens the challenge.
+- **📅 Daily challenge** (on Home): ten parcels on today's planet and route, the same for everyone and changing
+  at midnight UTC, flown in the stock plane so upgrades don't count. It ends when ten parcels have been delivered
+  or stolen (a broken parcel handed over uses its place too), or when the clock runs out. Finish the route and every
+  whole second left pays 10 points. About every other day the planet is one of the real worlds; the Home card says
+  which. Your best daily score is kept separately, and **Share result** copies your score with a `?daily` link that
+  opens the challenge.
 
 ## Structure
 
@@ -283,7 +284,7 @@ planet-pop/
 │  └─ game/                   CourierGame (runs the show), Rival + RoadRival (Rex in the air and on the road), Cargo,
 │     │                       CourierProps (beacon, rings, pads, race arches), FlightHazards (storms, runways, ash, heat,
 │     │                       ring ice, wind), Feats (trophy moves: long jumps, loops round a storm, threading the ring),
-│     │                       Progress, Settings, Daily, Missions, HomeCards (cards and next flight), Lessons (coach text)
+│     │                       Progress, Settings, Daily, Missions, Chapters, Stars, HomeCards (cards and next flight), Lessons (coach text)
 │     ├─ vehicles/            Vehicle (health, boost, smoke), Plane, GroundVehicle, Car, Boat, Ground (what's under a
 │     │                       car or boat: roads, water, buildings, mountains, where to start and stop)
 │     ├─ runs/                Run (the hooks), modes.js (which run for which options), DeliveryRun (courier run),
@@ -300,7 +301,7 @@ planet-pop/
 ├─ tests/
 │  ├─ *.test.mjs              node:test suites: world (3 full planets simulated, camera, trophies), courier (Sky
 │  │                          Courier and the daily on the same planets), health, drive (cars, boats, traffic), road
-│  │                          (taxi, van, race), quality, progress, daily, ambience, music, home, start, lesson, themes,
+│  │                          (taxi, van, race), quality, progress, daily, clock, stars, pilot, ambience, music, home, start, lesson, themes,
 │  │                          missions + controller, touch (gestures, stick, tilt, Find, tour, free flight), options
 │  │                          (briefing, Invert Y, sensitivity, reset, your name), saves (save codes), friends (two
 │  │                          players in a room), space (real orbits, the real worlds, the map, trips, rovers and
