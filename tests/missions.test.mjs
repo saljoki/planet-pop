@@ -18,8 +18,9 @@ describe('missions', () => {
     assert.equal(p.completeMission(MISSIONS[0]), 0, 'paid twice');
     assert.ok(p.missionUnlocked(1) && !p.missionUnlocked(2));
     assert.equal(new Progress().coins, MISSIONS[0].reward, 'reward not saved');
-    const first = MISSIONS.findIndex((m) => m.planet.world);
-    assert.ok(first > 1 && p.missionUnlocked(first) && !p.missionUnlocked(first + 1), 'the real worlds’ missions are a list of their own');
+    assert.ok(!p.chapterOpen('earth'), 'one completion alone does not meet Earth’s star gate');
+    p.recordStars('first', 3);
+    assert.ok(p.chapterOpen('earth'), 'three stars open Earth');
   });
 
   it('each mission planet has what its mission needs', async () => {

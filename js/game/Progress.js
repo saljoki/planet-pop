@@ -1,4 +1,5 @@
 import { MISSIONS } from './Missions.js';
+import { CHAPTERS, chapterOf, missionsIn } from './Chapters.js';
 import { loadJson, saveJson, loadNumber, forget } from '../core/Store.js';
 
 const KEY = 'planetpop.courier', OLD_BEST_KEY = 'planetpop.best';
@@ -51,11 +52,12 @@ export class Progress {
     this.daily = s.daily || null; // { date, best } for the most recent daily challenge played
     this.missions = new Set(s.missions || []); // ids of completed missions
     this.bests = { ...(s.bests || {}) };       // the road trips' bests: taxi and van scores, the race's fastest time
+    this.stars = { ...(s.stars || {}) };       // best stars per mission; old completed missions count as one
   }
 
   save() {
     const data = { coins: this.coins, best: this.best, levels: this.levels, owned: [...this.owned], skin: this.skin, daily: this.daily,
-      missions: [...this.missions], bests: this.bests };
+      missions: [...this.missions], bests: this.bests, stars: this.stars };
     saveJson(KEY, data);
   }
 
@@ -102,7 +104,7 @@ export class Progress {
   reset() {
     forget(KEY);
     forget(OLD_BEST_KEY);
-    Object.assign(this, { coins: 0, best: 0, levels: {}, owned: new Set(['classic']), skin: 'classic', daily: null, missions: new Set(), bests: {} });
+    Object.assign(this, { coins: 0, best: 0, levels: {}, owned: new Set(['classic']), skin: 'classic', daily: null, missions: new Set(), bests: {}, stars: {} });
     this.save();
   }
 
@@ -139,10 +141,32 @@ export class Progress {
 
   missionDone(id) { return this.missions.has(id); }
 
-  /** Missions open up one at a time in two lists, the made-up planets' and the real worlds': each list's first, then each one after a completed one. */
+  /** Old saves keep one star for every completed mission, until the pilot improves it. */
+  starsFor(id) { return this.stars[id] ?? (this.missionDone(id) ? 1 : 0); }
+
+  get totalStars() { return MISSIONS.reduce((n, m) => n + this.starsFor(m.id), 0); }
+
+  /** Keep the best result; returns true only when it improves the saved stars. */
+  recordStars(id, n) {
+    if (!Number.isInteger(n) || n < 1 || n > 3 || n <= this.starsFor(id)) return false;
+    this.stars[id] = n;
+    this.save();
+    return true;
+  }
+
+  /** Completed missions keep their chapter open, even on a save from before star gates. */
+  chapterOpen(chapterId) {
+    const chapter = CHAPTERS.find((c) => c.id === chapterId);
+    return !!chapter && (this.totalStars >= chapter.gate || missionsIn(chapterId).some((m) => this.missionDone(m.id)));
+  }
+
+  /** Within an open chapter, each completed mission opens the next; replays always stay open. */
   missionUnlocked(i) {
-    const prev = MISSIONS[i - 1];
-    return !prev || !prev.planet.world !== !MISSIONS[i].planet.world || this.missions.has(prev.id);
+    const mission = MISSIONS[i];
+    if (!mission) return false;
+    if (this.missionDone(mission.id)) return true;
+    const chapter = chapterOf(mission), list = missionsIn(chapter), at = list.indexOf(mission);
+    return this.chapterOpen(chapter) && (at === 0 || this.missionDone(list[at - 1].id));
   }
 
   /** Marks a mission complete. Returns the coin reward: paid the first time only. */

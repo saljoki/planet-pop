@@ -3,7 +3,9 @@ import { tangentBasis } from '../../core/Geo.js';
 import { mulberry32 } from '../../core/Noise.js';
 import { dailySeed } from '../Daily.js';
 import { CARGO } from '../Cargo.js';
-import { MISSIONS, STAT_LABEL, missionIndex, placeOf } from '../Missions.js';
+import { MISSIONS, STAT_LABEL, placeOf } from '../Missions.js';
+import { CHAPTERS, chapterOf, missionsIn } from '../Chapters.js';
+import { starGoals, starsEarned, bonusGoal, bonusMet, flightTime } from '../Stars.js';
 import { aKindOf } from '../../world/Themes.js';
 import { DeliveryRun } from './DeliveryRun.js';
 
@@ -28,7 +30,7 @@ export class MissionRun extends DeliveryRun {
   static briefing({ mission }) {
     const world = placeOf(mission), where = mission.planet.world ? world.name : aKindOf(world);
     return { icon: mission.icon, title: mission.name, goal: mission.brief,
-      tips: [`🪙 ${mission.reward} coins the first time you complete it.`, `Flown on ${where} (${world.icon}), the same every time.`,
+      tips: [starGoals(mission).map((goal) => `⭐ ${goal}`).join(' · '), `🪙 ${mission.reward} coins the first time you complete it.`, `Flown on ${where} (${world.icon}), the same every time.`,
         mission.failIf ? 'One slip ends the mission, so take it steady.' : 'Run out of time and you can try again straight away.'] };
   }
 
@@ -37,6 +39,7 @@ export class MissionRun extends DeliveryRun {
     this.def = opts.mission;
     this.rand = mulberry32(dailySeed(`mission:${this.def.id}`));
     this.cargoBias = this.def.cargo || null;
+    this.missionElapsed = 0; // the whole mission, separate from the current parcel's combo clock
   }
 
   get layout() { return { ...super.layout, badge: 'mission' }; }
@@ -245,6 +248,12 @@ export class MissionRun extends DeliveryRun {
     return (t[d.goal.stat] || 0) >= d.goal.target ? 'done' : null;
   }
 
+  update(dt) {
+    if (!this.game.active || this.game.over || this.app.paused || dt <= 0) return;
+    this.missionElapsed += dt;
+    super.update(dt);
+  }
+
   checkEnd() {
     const result = this.check();
     if (result) this.endMission(result);
@@ -258,18 +267,53 @@ export class MissionRun extends DeliveryRun {
 
   wrecked() { this.endMission('wrecked'); }
 
+  /** The next job stays inside the chapter, then moves to the next open, unfinished chapter. */
+  nextMission() {
+    const chapter = chapterOf(this.def), list = missionsIn(chapter), at = list.findIndex((m) => m.id === this.def.id);
+    if (at < 0) return null;
+    if (list[at + 1]) return list[at + 1];
+    const chapters = CHAPTERS.slice(CHAPTERS.findIndex((c) => c.id === chapter) + 1);
+    for (const c of chapters) {
+      if (!this.game.progress.chapterOpen(c.id)) continue;
+      const next = missionsIn(c.id).find((m) => !this.game.progress.missionDone(m.id));
+      if (next) return next;
+    }
+    return null;
+  }
+
+  /** Stars earned this flight, each goal's outcome, and a previous best when it was better. */
+  starResult(earned) {
+    const def = this.def, goals = starGoals(def), time = this.missionElapsed, bonus = bonusGoal(def);
+    const passed = [true, time <= (def.par ?? 120), bonusMet(def, this.tally)];
+    const actual = ['', ` (${flightTime(time)})`, ` (${Math.floor(this.tally[bonus.stat] ?? 0)})`];
+    const best = this.game.progress.starsFor(def.id), stars = '⭐'.repeat(earned) + '☆'.repeat(3 - earned);
+    return `${stars}<br>${goals.map((goal, i) => `${passed[i] ? '✔' : '✖'} ${goal}${actual[i]}`).join(' · ')}${
+      best > earned ? `<br>Best: ${'⭐'.repeat(best)}` : ''}`;
+  }
+
   /** Mission over: 'done', or why it failed. Rewards are paid the first time a mission is completed. */
   endMission(result) {
+    if (this.game.over) return;
     const p = this.game.progress, def = this.def, won = result === 'done';
-    const reward = won ? p.completeMission(def) : 0, next = MISSIONS[missionIndex(def.id) + 1];
+    const closed = won ? CHAPTERS.filter((c) => !p.chapterOpen(c.id)) : [];
+    const reward = won ? p.completeMission(def) : 0;
+    let stars = '';
+    if (won) {
+      const earned = starsEarned(def, { elapsed: this.missionElapsed, tally: this.tally });
+      p.recordStars(def.id, earned);
+      stars = `${this.starResult(earned)}<br>`;
+    }
+    const opened = closed.filter((c) => p.chapterOpen(c.id)).map((c) => `🔓 ${c.name} is open!`);
+    const next = won ? this.nextMission() : null;
     const list = MISSIONS.filter((m) => !m.planet.world === !def.planet.world); // (the made-up planets' or the real worlds')
     if (won && list.every((m) => p.missionDone(m.id))) this.app.achievements.unlock(def.planet.world ? 'spacemissions' : 'missions');
     this.game.finish({
       title: won ? '🎯 Mission complete!' : '❌ Mission failed',
       html: `${def.icon} <b>${def.name}</b><br>${won
-        ? `${reward ? `🪙 +${reward} coins reward` : 'Already earned: no reward this time'}<br>${next ? `Next up: ${next.icon} ${next.name}` : '🏆 That was the last one!'}`
+        ? `${stars}${reward ? `🪙 +${reward} coins reward` : 'Already earned: no reward this time'}<br>${opened.length ? `${opened.join('<br>')}<br>` : ''}${
+          next ? `Next up: ${next.icon} ${next.name}` : '🏆 Chapter complete!'}`
         : `${FAIL_REASON[result] || ''} ${this.progress().text}`}`,
-      next: won ? next : null,
+      next,
       again: won ? '↻ Play again' : '↻ Try again',
       bigAgain: !won || !next,
       board: true,
@@ -278,7 +322,8 @@ export class MissionRun extends DeliveryRun {
   }
 
   hud(h) {
-    h.dom.mission.textContent = `🎯 ${this.progress().text}`;
+    const left = (this.def.par ?? 120) - this.missionElapsed;
+    h.dom.mission.textContent = `🎯 ${this.progress().text} · ⭐ ${left < 0 ? '–' : Math.ceil(left)}`;
     super.hud(h);
   }
 }
