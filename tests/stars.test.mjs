@@ -6,6 +6,7 @@ import { CHAPTERS, chapterOf, missionsIn } from '../js/game/Chapters.js';
 import { starGoals, starsEarned } from '../js/game/Stars.js';
 import { Progress } from '../js/game/Progress.js';
 import { MissionRun } from '../js/game/runs/MissionRun.js';
+import { MissionBoard } from '../js/game/screens/MissionBoard.js';
 
 const def = (id) => MISSIONS.find((m) => m.id === id);
 const legacy = { coins: 900, best: 2400, levels: { engine: 2 }, owned: ['classic'], skin: 'classic', daily: null,
@@ -238,5 +239,80 @@ describe('mission star briefing, clock and results', () => {
   it('has no Next offer after a chapter when no later chapter is open', () => {
     const run = new MissionRun(game, { mission: def('ash') });
     assert.equal(run.nextMission(), null);
+  });
+});
+
+describe('chapter mission board', () => {
+  beforeEach(() => localStorage.clear());
+  const chapterHTML = (board, id) => board.dom.list.innerHTML.match(new RegExp(`<details[^>]*data-chapter="${id}"[^>]*>[\\s\\S]*?<\\/details>`))?.[0];
+
+  it('shows one expanded chapter, seventeen closed gates and 183 possible stars on an empty save', () => {
+    const board = new MissionBoard({}, new Progress(), () => {});
+    board.render();
+    const html = board.dom.list.innerHTML;
+    assert.match(board.el.innerHTML, /class="mission-header" id="mHead">[\s\S]*?id="mClose"[\s\S]*?<h2>🎯 Missions<\/h2>[\s\S]*?id="mStars"/);
+    assert.equal(board.dom.stars.textContent, '⭐ 0 / 183');
+    assert.equal((html.match(/<details class="chapter"/g) || []).length, 18);
+    assert.equal((html.match(/<details[^>]* open>/g) || []).length, 1);
+    assert.equal((html.match(/data-state="closed"/g) || []).length, 17);
+    assert.match(chapterHTML(board, 'school'), / open>/);
+    assert.match(chapterHTML(board, 'school'), /🎓 Flight school · ⭐ 0 \/ 30/);
+    assert.match(chapterHTML(board, 'school'), /data-play="first"/);
+    assert.doesNotMatch(chapterHTML(board, 'school'), /data-play="rush"/);
+    for (const c of CHAPTERS.slice(1)) {
+      assert.equal(board.chapterState(c.id), 'closed');
+      assert.ok(chapterHTML(board, c.id).includes(`🔒 ${c.name} · ${c.gate} more ⭐ to open`), c.id);
+    }
+    assert.equal((html.match(/<div class="mission /g) || []).length, 61);
+  });
+
+  it('shows old completions as one star each, with replay buttons and exact remaining gates', () => {
+    localStorage.setItem('planetpop.courier', JSON.stringify(legacy));
+    const board = new MissionBoard({}, new Progress(), () => {});
+    board.render();
+    assert.equal(board.dom.stars.textContent, '⭐ 4 / 183');
+    assert.match(chapterHTML(board, 'school'), /🎓 Flight school · ⭐ 2 \/ 30/);
+    assert.match(chapterHTML(board, 'earth'), /🌍 Earth · ⭐ 0 \/ 9/);
+    assert.match(chapterHTML(board, 'moon'), /⭐ 1 \/ 9/);
+    assert.match(chapterHTML(board, 'jupiter'), /⭐ 1 \/ 9/);
+    assert.equal(board.chapterState('jupiter'), 'open', 'legacy completions keep their chapter open');
+    assert.match(chapterHTML(board, 'mars'), /🔒 Mars · 6 more ⭐ to open/);
+    for (const id of legacy.missions) {
+      assert.ok(board.dom.list.innerHTML.includes(`data-play="${id}" class="">↻ Again</button>`), id);
+    }
+    assert.match(board.dom.list.innerHTML, /aria-label="1 of 3 stars">★☆☆/);
+    assert.match(board.dom.list.innerHTML, /<span class="icon">✅<\/span>/);
+    assert.match(board.dom.list.innerHTML, /class="reward">earned<\/small>/);
+  });
+
+  it('marks a nine-star chapter done and expands the first chapter with an unfinished unlocked mission', () => {
+    const p = new Progress(), board = new MissionBoard({}, p, () => {});
+    for (const m of missionsIn('school')) p.completeMission(m);
+    board.render();
+    assert.match(chapterHTML(board, 'earth'), / open>/);
+    assert.doesNotMatch(chapterHTML(board, 'school'), / open>/);
+    for (const m of missionsIn('earth')) { p.completeMission(m); p.recordStars(m.id, 3); }
+    board.render();
+    assert.equal(board.chapterState('earth'), 'done');
+    assert.match(chapterHTML(board, 'earth'), /🌍 Earth · ⭐ 9 \/ 9 ✔/);
+    assert.match(chapterHTML(board, 'moon'), / open>/);
+    assert.doesNotMatch(chapterHTML(board, 'earth'), / open>/);
+    assert.equal((board.dom.list.innerHTML.match(/<details[^>]* open>/g) || []).length, 1);
+  });
+
+  it('calls the existing play callback for an unlocked mission or replay, and rejects locked or missing missions', () => {
+    const p = new Progress(), played = [], board = new MissionBoard({}, p, (m) => played.push(m));
+    board.show();
+    assert.equal(board.play('rush'), false);
+    assert.equal(board.play('missing'), false);
+    assert.ok(board.open);
+    assert.deepEqual(played, []);
+    assert.equal(board.play('first'), true);
+    assert.ok(!board.open);
+    assert.equal(played[0], def('first'));
+    p.completeMission(def('first'));
+    board.show();
+    assert.equal(board.play('first'), true);
+    assert.equal(played[1], def('first'));
   });
 });

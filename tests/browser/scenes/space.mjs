@@ -188,11 +188,17 @@ export default async function space({ page, frames, until, scene, open }) {
     await frames(20);
   });
 
-  await scene('space-missions', 'The missions board: the real worlds’ missions, a list of their own', async () => {
+  await scene('space-missions', 'The mission board: Earth’s three missions, their stars and the worlds ahead', async () => {
     await page.evaluate(() => {
       app.game.stop();
+      app.game.progress.recordStars('first', 3);
       app.game.board.show();
-      app.game.board.el.querySelector('h3').scrollIntoView();
+      const board = app.game.board.el;
+      board.querySelectorAll('details').forEach((d) => { d.open = false; });
+      const earth = board.querySelector('[data-chapter="earth"]');
+      earth.open = true;
+      const { panel, header } = app.game.board.dom;
+      panel.scrollTop += earth.getBoundingClientRect().top - header.getBoundingClientRect().bottom;
     });
     await frames(4);
   });
@@ -351,5 +357,45 @@ export default async function space({ page, frames, until, scene, open }) {
     await frames(40);
   });
   await page.evaluate(() => app.map.close(true));
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+
+  let savedProgress;
+  await scene('mobile-missions', 'Missions on a phone: Pluto’s three flights and the next world’s star gate', async () => {
+    await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 1 });
+    savedProgress = await page.evaluate(async () => {
+      const { MISSIONS } = await import('./js/game/Missions.js'), g = app.game, p = g.progress;
+      const saved = { missions: [...p.missions], stars: { ...p.stars } };
+      g.stop();
+      g.hangar.hide();
+      app.hud.info.hide();
+      document.getElementById('trophyBox').classList.add('hidden');
+      p.missions = new Set(MISSIONS.slice(0, 55).map((m) => m.id));
+      p.stars = Object.fromEntries(MISSIONS.slice(0, 21).map((m) => [m.id, 3]));
+      g.board.show();
+      return saved;
+    });
+    await frames(3);
+    await page.evaluate(() => {
+      const chapter = document.querySelector('#missions details[open]'), panel = document.querySelector('#missions .panel');
+      if (chapter?.dataset.chapter !== 'pluto') throw new Error('Pluto should be the next chapter at 97 stars');
+      const rows = [...chapter.querySelectorAll('.mission')], gate = chapter.nextElementSibling.querySelector('summary');
+      const header = document.getElementById('mHead'), bounds = panel.getBoundingClientRect(), visible = (el) => {
+        const box = el.getBoundingClientRect();
+        return box.top >= bounds.top && box.bottom <= bounds.bottom;
+      };
+      if (![header, header.querySelector('h2'), document.getElementById('mClose'), document.getElementById('mStars')].every(visible)) {
+        throw new Error('The heading, total stars and Close button must stay visible');
+      }
+      const belowHeader = (el) => visible(el) && el.getBoundingClientRect().top >= header.getBoundingClientRect().bottom;
+      if (rows.length !== 3 || !rows.every(belowHeader) || !belowHeader(gate)) throw new Error('The three missions and next gate must fit below the header without scrolling');
+      if (!gate.textContent.includes('7 more ⭐ to open')) throw new Error('Charon should need seven more stars');
+    });
+  });
+  if (savedProgress) await page.evaluate((saved) => {
+    const p = app.game.progress;
+    p.missions = new Set(saved.missions);
+    p.stars = saved.stars;
+    app.game.board.hide();
+  }, savedProgress);
   await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
 }
