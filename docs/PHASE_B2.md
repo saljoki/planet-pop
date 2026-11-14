@@ -6,7 +6,7 @@ Handoff spec for a builder agent. Claude reviews the result; Ata decides when it
 - **Base:** `main` at `48ad274` (v0.19.0)
 - **Branch:** `phase-b2-career`
 - **Version:** 0.20.0, in the last package
-- **Put this file at:** `docs/PHASE_B2.md` (first commit)
+- **This file:** `docs/PHASE_B2.md`, already on the branch
 
 `docs/DESIGN.md` lists one phase B2. It is split in two, as B was. **B2 (this file)** is the pilot's career: coins
 retuned, rank, trophies that pay, Rex's ladder, contracts, the streak and the gift. **B3 (`docs/PHASE_B3.md`)** is
