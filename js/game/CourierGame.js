@@ -1,3 +1,5 @@
+import { SUPPLIES, slotsFor, suppliesAllowed } from './Supplies.js';
+import { pilotRank } from './Gates.js';
 import { HARM } from './vehicles/Vehicle.js';
 import { Progress } from './Progress.js';
 import { dailyParams } from './Daily.js';
@@ -86,6 +88,8 @@ export class CourierGame {
   /** The briefing first (unless switched off in Options), then the run. */
   launch(opts = {}) {
     if (this.active) return;
+    opts = { ...opts };
+    delete opts.supplies;
     if (opts.lesson || this.app.settings?.get('briefing') === false) this.start(opts);
     else this.briefing.show(opts);
   }
@@ -131,7 +135,8 @@ export class CourierGame {
 
   /** Same kind of run again: a courier run, free flight, today's daily, or the same mission. */
   again() {
-    const opts = this.run.opts;
+    const opts = { ...this.run.opts };
+    delete opts.supplies;
     this.stop();
     this.start(opts);
   }
@@ -144,8 +149,12 @@ export class CourierGame {
     if (p.cities.sites.length < 2) { app.hud.toast('📦 Sky Courier needs at least 2 cities. Try a new planet!'); return; }
     if (app.paused) app.togglePause();
     Object.assign(this, { active: true, over: false, planet: p, respawnT: 0 });
+    opts = { ...opts };
+    if (suppliesAllowed(opts)) opts.supplies = [...new Set(opts.supplies || [])].filter((id) => SUPPLIES.some((s) => s.id === id)).slice(0, slotsFor(pilotRank(this)));
+    else delete opts.supplies;
     const run = (this.run = new (runClass(opts))(this, opts)), { at, heading } = run.takeoff();
     this.player = run.vehicle(at, heading);
+    this.player.shield = run.supplies?.has('shield') ?? false;
     if (app.settings) this.player.controls = app.settings.values; // Invert Y and sensitivity, live
     this.player.setCargo(run.cargo);
     this.props = new CourierProps(p, run.rings);

@@ -173,6 +173,13 @@ export class Progress {
     return true;
   }
 
+  /** Pay atomically; a short wallet never takes part of a price. */
+  spend(coins) {
+    if (!Number.isInteger(coins) || coins < 0 || this.coins < coins) return false;
+    if (coins) { this.coins -= coins; this.save(); }
+    return true;
+  }
+
   addCoins(n) { this.coins += n; this.save(); }
 
   /** Existing pilots keep going where they left off; only an empty save needs the lesson. */

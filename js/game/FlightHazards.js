@@ -40,6 +40,7 @@ export class FlightHazards {
     const g = this.game, pl = g.player, rings = g.planet.rings;
     if (!rings?.ice.length || pl.invuln > 0 || !rings.iceAt(pl.pos)) return;
     pl.damage(HARM.crash * 0.6);
+    if (pl.shielded) { pl.invuln = 1; g.run.iced(); return; }
     pl.invuln = 1;
     pl.shake = 1;
     g.app.haptics?.buzz('crash');
@@ -87,7 +88,7 @@ export class FlightHazards {
     weather.strike(storm, aim);
     if (!hit) return;
     pl.damage(HARM.lightning);
-    g.run.zapped();
+    if (g.run.zapped()) { pl.invuln = 1; return; }
     pl.boost = 0;
     pl.shake = 1;
     pl.invuln = 1;

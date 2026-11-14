@@ -52,19 +52,21 @@ export class DeliveryRun extends Run {
 
   /** A fast start cannot bank an ever-growing clock. */
   get clockCap() {
-    const cap = this.stats.startTime + 9;
+    const cap = this.stats.startTime + 9 + this.headStart;
     // Five-level magnets can collect enough rings to sustain even a stock-speed craft forever.
     // Let a plain courier's remaining clock wind down naturally before eight minutes.
-    return this.constructor === DeliveryRun ? Math.min(cap, Math.max(0, 479 - this.flightElapsed)) : cap;
+    return this.constructor === DeliveryRun ? Math.min(cap, Math.max(0, 479 + this.headStart - this.flightElapsed)) : cap;
   }
 
   /** The optional time-gained suffix on the next parcel's toast. */
   deliveryTimeText(seconds) { return seconds === null ? '' : ` (+${Math.round(seconds)} s)`; }
 
   takeoff() {
+    this.supplies = new Set(this.constructor === DeliveryRun ? this.opts.supplies : []);
+    this.headStart = this.supplies.delete('clock') ? 10 : 0;
     this.flightElapsed = 0;
     const sites = this.planet.cities.sites;
-    Object.assign(this, { score: 0, combo: 1, time: this.stats.startTime, deliveries: 0, coins: 0, stolen: 0, rivalStreak: 0 });
+    Object.assign(this, { score: 0, combo: 1, time: this.stats.startTime + this.headStart, deliveries: 0, coins: 0, stolen: 0, rivalStreak: 0 });
     // counters missions are judged on
     this.tally = { deliveries: 0, standard: 0, urgent: 0, fragile: 0, heavy: 0, broken: 0, rings: 0, refuels: 0, rexStreak: 0, ufo: 0, ash: 0, night: 0, zaps: 0, landmark: 0, ice: 0, loops: 0, threads: 0,
       crashes: 0, knocks: 0, stolen: 0, combo: 0, visits: 0, sun: 0 };
@@ -129,12 +131,13 @@ export class DeliveryRun extends Run {
   }
 
   crashed() {
-    this.tally.crashes++;
-    this.knocked();
+    this.knocked(true);
   }
 
   /** Ground crashes and ring ice share the penalty, but only ground crashes count as crashes. */
-  knocked() {
+  knocked(crash = false) {
+    if (this.takeShield()) return false;
+    if (crash) this.tally.crashes++;
     this.tally.knocks++;
     this.time -= CRASH_PENALTY;
     this.combo = 1;
@@ -143,6 +146,7 @@ export class DeliveryRun extends Run {
       this.tally.broken++;
       this.app.sfx.pop(this.player.pos.clone(), 'SMASH!', '#9fd8ff', 'crash');
     } else super.crashed();
+    return true;
   }
 
   caughtUfo() {
@@ -163,11 +167,24 @@ export class DeliveryRun extends Run {
   /** Rings respawn along the current route so they're worth chasing. */
   placeRing(ring) { this.game.props.alongRoute(ring, this.player.up, this.dest.c); }
 
-  zapped() { this.time -= LIGHTNING_PENALTY; this.tally.knocks++; }
+  /** A blocked hit is consumed once, before any run penalties or counters. */
+  takeShield() {
+    if (!this.player.shielded) return false;
+    this.player.shielded = false;
+    this.supplies.delete('shield');
+    this.app.sfx.pop(this.player.pos.clone(), '🛡️ SHIELD!', '#5dffc9', 'ring');
+    return true;
+  }
+
+  zapped() {
+    if (this.takeShield()) return true;
+    this.time -= LIGHTNING_PENALTY;
+    this.tally.knocks++;
+    return false;
+  }
 
   iced() {
-    this.knocked();
-    this.tally.ice++;
+    if (this.knocked()) this.tally.ice++;
   }
 
   looped() { this.tally.loops++; }
@@ -179,6 +196,11 @@ export class DeliveryRun extends Run {
   inAsh(dt) { this.tally.ash += dt; }
 
   update(dt) {
+    if (this.supplies.has('tank') && this.player.boost < 0.02) {
+      this.supplies.delete('tank');
+      this.player.boost = 1;
+      this.app.sfx.pop(this.player.pos.clone(), '⚡ SPARE TANK!', '#ffd23f', 'ring');
+    }
     this.flightElapsed += dt;
     this.time = Math.min(this.clockCap, this.time - dt);
     this.elapsed += dt;

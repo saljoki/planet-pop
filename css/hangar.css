@@ -1,0 +1,22 @@
+/* The hangar and its one-flight supplies. Phone rules stay here to avoid the career branch. */
+#bSupplies { margin: 12px 0; }
+.supply-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+#bSupplies button { flex: 1 1 120px; padding: 7px 5px 4px; font-size: 17px; background: #fff; }
+#bSupplies button[aria-pressed="true"] { background: var(--blue); }
+.supply-note { margin: 6px 0 0; text-align: center; font: 13px/1.4 system-ui, sans-serif; letter-spacing: 0; }
+#gSupplies { position: fixed; left: calc(224px + var(--sl)); bottom: calc(44px + var(--sb)); font-size: 18px; }
+@media (max-width: 480px), (max-height: 500px) {
+  #briefing .panel { padding: 12px 16px; }
+  #briefing h2 { font-size: 28px; margin-bottom: 6px; }
+  #briefing .goal { font-size: 18px; }
+  #bSupplies { margin: 8px 0; }
+  #bSupplies button { flex-basis: 80px; font-size: 15px; }
+  #briefing .hrow { gap: 6px; margin-top: 10px; }
+  #briefing .hrow .big { min-width: 100px; font-size: 20px; }
+  #briefing .hrow button { font-size: 17px; }
+}
+
+@media (max-width: 480px) {
+  #gHealth, #gBoost { width: 145px; }
+  #gSupplies { left: calc(196px + var(--sl)); font-size: 16px; }
+}

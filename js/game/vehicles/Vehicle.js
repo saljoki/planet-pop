@@ -21,6 +21,8 @@ export class Vehicle {
     this.fwd = new THREE.Vector3(0, 0, 1);
     this.pos = new THREE.Vector3();
     this.group = new THREE.Group();
+    this.shield = false;
+    this.shielded = false;
     this.health = 1;      // 0 = wrecked
     this.wrecked = false;
     this.boost = 1;       // the boost tank, 0..1
@@ -57,6 +59,11 @@ export class Vehicle {
   /** Take a knock: `amount` of a full health bar, softened by armour. Returns true if that wrecked it. */
   damage(amount) {
     if (this.wrecked) return false;
+    if (this.shield) {
+      this.shield = false;
+      this.shielded = true;
+      return false;
+    }
     this.health = Math.max(0, this.health - amount * (this.stats.armour ?? 1));
     this.wrecked = this.health <= 0;
     this.shake = 1;

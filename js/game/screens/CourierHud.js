@@ -1,3 +1,4 @@
+import { SUPPLIES } from '../Supplies.js';
 import * as THREE from 'three';
 
 const _t = new THREE.Vector3(), _s = new THREE.Vector3();
@@ -22,6 +23,7 @@ export class CourierHud {
       <svg id="gArrow" viewBox="0 0 70 70"><polygon points="35,5 61,58 35,45 9,58" fill="#ff5fa2" stroke="#1b1530" stroke-width="5" stroke-linejoin="round"/></svg>
       <div id="gGoal" class="badge"></div>
       <div id="gHealth" class="badge" title="Health"><div></div></div>
+      <div id="gSupplies" aria-label="Unused supplies"></div>
       <div id="gBoost" class="badge" title="Boost"><div></div></div>
       <div id="gSpeed" class="badge hidden"></div>
       <div id="gHelp" class="badge">←/→ steer · ↑/↓ climb · Space boost · P pause · Esc quit</div>
@@ -32,7 +34,7 @@ export class CourierHud {
       daily: $('gDaily'), mission: $('gMission'), free: $('gFree'), rival: $('gRival'), you: $('gYou'),
       score: $('gScore'), time: $('gTime'), combo: $('gCombo'), coins: $('gCoins'), arrow: $('gArrow'), goal: $('gGoal'),
       boost: $('gBoost').firstElementChild, help: $('gHelp'), boostBtn: $('gBoostBtn'),
-      healthBox: $('gHealth'), speed: $('gSpeed'), horn: $('gHornBtn'),
+      supplies: $('gSupplies'), healthBox: $('gHealth'), speed: $('gSpeed'), horn: $('gHornBtn'),
     };
     this.dom.stats = [this.dom.score, this.dom.time, this.dom.combo, this.dom.coins];
     this.dom.health = this.dom.healthBox.firstElementChild;
@@ -63,6 +65,7 @@ export class CourierHud {
     d.healthBox.classList.toggle('mid', pl.health < 0.6 && pl.health >= 0.3);
     d.healthBox.classList.toggle('low', pl.health < 0.3);
     if (this.showSpeed) d.speed.textContent = `${Math.round(Math.abs(pl.speed) * KMH)} km/h`;
+    d.supplies.textContent = SUPPLIES.filter((s) => g.run.supplies?.has(s.id)).map((s) => s.icon).join(' ');
     this.hasGoal = false;
     g.run.hud(this);
   }
