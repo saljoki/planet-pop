@@ -77,6 +77,7 @@ export class DeliveryRun extends Run {
 
   /** Whether Rex turns up after the first delivery. */
   get hasRival() { return true; }
+  get rexRank() { return this.game.career.rank; }
 
   /** What to do after Rex steals a parcel, unless the route has ended. */
   get stolenHint() { return ' Grab the next one!'; }
@@ -213,6 +214,7 @@ export class DeliveryRun extends Run {
       app.haptics?.buzz('deliver');
       app.achievements.unlock('courier');
       if (this.combo >= 4) app.achievements.unlock('combo');
+      if (this.rival) this.game.career.rexScore(1, 0);
     }
     this.player.repair(REPAIR); // the customer's mechanic patches you up a little
     if (this.rival && ++this.rivalStreak >= RIVAL.streak) app.achievements.unlock('outrun');
@@ -233,6 +235,7 @@ export class DeliveryRun extends Run {
     if (heading.lengthSq() < 1e-6) heading.copy(pl.fwd);
     this.rival = new Rival(this.planet, {
       from: this.from, start, heading, tag: this.game.hud.dom.rival, toScreen: (p) => app.sfx.toScreen(p),
+      rank: this.rexRank, liveryRank: this.game.career.rank,
     });
     app.renderer.compileAsync?.(this.rival.plane.group, app.camera, app.scene)?.catch(() => {});
     app.hud.toast(`😈 ${RIVAL.name} is racing you for every parcel! Get there first or he steals the delivery.`);
@@ -241,6 +244,7 @@ export class DeliveryRun extends Run {
   /** Rex got to the city first: the parcel is gone, and so is the combo. */
   steal() {
     const app = this.app;
+    this.game.career.rexScore(0, 1);
     this.stolen++;
     this.tally.stolen++;
     this.rivalStreak = 0;

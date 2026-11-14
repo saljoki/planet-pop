@@ -12,6 +12,7 @@
 #pilot .panel { width: 520px; max-width: 100%; padding: 20px; }
 #pcRank { font-size: 30px; }
 #pcXp, #pcRex { font: 15px/1.35 system-ui, sans-serif; letter-spacing: 0; }
+#pcRex { white-space: pre-line; }
 #pcNext { list-style: none; padding: 0; margin: 16px 0; }
 #pcNext li { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--ink); font-size: 19px; }
 #pcNext strong { white-space: nowrap; }

@@ -53,6 +53,7 @@ export class MissionRun extends DeliveryRun {
   }
 
   get layout() { return { ...super.layout, badge: 'mission' }; }
+  get rexRank() { return 1; }
 
   /** Missions are timed by their goals, so every delivery keeps its full twenty seconds. */
   deliveryBonus() { return 20; }

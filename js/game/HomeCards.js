@@ -12,8 +12,11 @@ export const HOME_CARDS = [
 ];
 
 /** The one-line progress note on a card; cards without progress use their description. */
-export function cardStat(id, progress) {
-  if (id === 'courier') return progress.best ? `⭐ Best ${progress.best.toLocaleString('en-GB')}` : 'Not flown yet';
+export function cardStat(id, progress, career = null) {
+  if (id === 'courier') {
+    const best = progress.best ? `⭐ Best ${progress.best.toLocaleString('en-GB')}` : 'Not flown yet', score = career?.rex;
+    return `${best}${score && (score.you || score.rex) ? ` · You ${score.you.toLocaleString('en-GB')} · Rex ${score.rex.toLocaleString('en-GB')}` : ''}`;
+  }
   if (id === 'daily') {
     const best = progress.dailyBest(todayKey());
     return `${dailyPlace()} · ${best === null ? 'not flown today' : `⭐ ${best.toLocaleString('en-GB')} today`}`;

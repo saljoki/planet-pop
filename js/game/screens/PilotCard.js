@@ -1,5 +1,6 @@
 import { Overlay } from '../../ui/Overlay.js';
 import { RANKS, MAX_RANK, rankReward } from '../Ranks.js';
+import { REX_LIVERIES, liveryFor } from '../Rival.js';
 
 /** The pilot's lasting progress, with the next three rank rewards. */
 export class PilotCard extends Overlay {
@@ -24,6 +25,8 @@ export class PilotCard extends Overlay {
     d.next.innerHTML = Array.from({ length: Math.min(3, MAX_RANK - c.rank) }, (_, i) => c.rank + i + 1)
       .map((r) => `<li>🎖️ ${r} · ${RANKS[r - 1]}<strong>+${rankReward(r).toLocaleString('en-GB')} 🪙</strong></li>`).join('');
     d.name.textContent = `🧑‍✈️ ${this.app.settings.playerName || 'Add your name'}`;
+    const paint = liveryFor(c.rank), nextPaint = REX_LIVERIES.find((l) => l.rank > c.rank);
+    d.rex.textContent = `😈 You ${c.rex.you} · Rex ${c.rex.rex} · ${paint.name}\n${nextPaint ? `Next paint: ${nextPaint.name} at rank ${nextPaint.rank}` : 'All Rex paint unlocked'}`;
   }
 
   name() { this.game.options.show(() => this.render()); }

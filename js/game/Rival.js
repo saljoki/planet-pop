@@ -2,12 +2,22 @@ import * as THREE from 'three';
 import { R } from '../core/Geo.js';
 import { Plane } from './vehicles/Plane.js';
 
-export const RIVAL = { name: 'Rival Rex', skin: { body: '#8f5cff', trim: '#1b1530' }, streak: 5, rest: 3 };
+export const REX_LIVERIES = [
+  { rank: 1, name: 'Purple Menace', body: '#8f5cff', trim: '#1b1530' },
+  { rank: 5, name: 'Night Shift', body: '#2b2d6e', trim: '#ffd23f' },
+  { rank: 10, name: 'Red Alert', body: '#e63946', trim: '#1b1530' },
+  { rank: 15, name: 'Toxic', body: '#7ddc1f', trim: '#1b1530' },
+  { rank: 20, name: 'Chrome', body: '#cfd8e3', trim: '#3a4a5f' },
+  { rank: 25, name: 'Gold Rex', body: '#ffc93c', trim: '#7a4a00' },
+];
+export const liveryFor = (rank) => REX_LIVERIES.findLast((l) => l.rank <= rank) ?? REX_LIVERIES[0];
+export const REX = { name: 'Rival Rex', skin: REX_LIVERIES[0], streak: 5, rest: 3,
+  rankStep: 0.0025, boostRank: 10, boostRange: 0.35, boost: 1.15 };
+export { REX as RIVAL }; // The road and space courier keep the existing tuning and purple paint.
 const _v = new THREE.Vector3();
 const PICKUP = 0.1; // how close (radians) Rex must pass to the pickup city to collect the parcel
 
-/** Rex starts slower than a stock plane and ends a little faster as the run goes on, but he never boosts. */
-const statsFor = (level) => ({ speed: 0.8 + 0.03 * Math.min(level, 10), turn: 1, drain: 0, regen: 0 });
+const statsFor = (level, rank) => ({ speed: 0.8 + 0.03 * Math.min(level, 10) + REX.rankStep * (rank - 1), turn: 1, drain: 0, regen: 0 });
 
 /**
  * Rival Rex: an AI courier racing you for every parcel.
@@ -15,9 +25,11 @@ const statsFor = (level) => ({ speed: 0.8 + 0.03 * Math.min(level, 10), turn: 1,
  */
 export class Rival {
   /** from: the pickup city · start/heading: where he takes off · tag: his name label · toScreen: world → screen px. */
-  constructor(planet, { from, start = from.c, heading, tag, toScreen }) {
+  constructor(planet, { from, start = from.c, heading, tag, toScreen, rank = 1, liveryRank = rank }) {
     this.planet = planet;
-    this.plane = new Plane(planet, start, heading, statsFor(0), RIVAL.skin);
+    this.rank = rank;
+    this.plane = new Plane(planet, start, heading, statsFor(0, rank), liveryFor(liveryRank));
+    this.baseSpeed = this.plane.stats.speed;
     this.tag = tag;
     this.toScreen = toScreen;
     this.rest = 0;      // seconds spent circling after a steal, so he doesn't chain steals
@@ -26,7 +38,7 @@ export class Rival {
     tag.classList.remove('hidden');
   }
 
-  setLevel(level) { this.plane.stats = statsFor(level); }
+  setLevel(level) { this.plane.stats = statsFor(level, this.rank); this.baseSpeed = this.plane.stats.speed; }
 
   /** A new parcel is waiting at `from`. */
   newLeg(from) {
@@ -36,7 +48,7 @@ export class Rival {
 
   /** After stealing, Rex circles the city for a moment before chasing the next parcel. */
   gloat(city) {
-    this.rest = RIVAL.rest;
+    this.rest = REX.rest;
     this.restAt = city.c;
   }
 
@@ -44,6 +56,8 @@ export class Rival {
   update(dt, dest, cargo) {
     const pl = this.plane;
     this.rest = Math.max(0, this.rest - dt);
+    this.boosting = this.rank >= REX.boostRank && this.loaded && this.rest <= 0 && pl.up.angleTo(dest.c) < REX.boostRange;
+    pl.stats.speed = this.baseSpeed * (this.boosting ? REX.boost : 1);
     if (this.cargo !== cargo) {
       this.cargo = cargo;
       pl.setCargo(cargo);

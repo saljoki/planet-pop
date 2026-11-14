@@ -84,8 +84,14 @@ export default async function courier({ page, frames, until, scene }) {
     });
     await frames(2);
   });
-  await scene('rival', 'Rival Rex racing just ahead, with his name tag', async () => {
-    await page.evaluate(() => { // still paused: one delivery spawns Rex, then park him ahead and to the left
+  await scene('rival', 'Rank 12 Rex in Red Alert paint, racing just ahead with his name tag', async () => {
+    await page.evaluate(async () => {
+      const { xpForRank } = await import('./js/game/Ranks.js');
+      app.game.stop(); app.game.home.hide(); app.game.hangar.hide(); app.game.briefing.hide();
+      app.game.career.addXp(Math.max(0, xpForRank(12) - app.game.career.xp));
+      app.game.start();
+      app.paused = true; // Freeze the scene without a pause menu covering Rex.
+      app.game.pauseMenu.hide();
       const { game, planet } = app, pl = game.player;
       game.run.deliver();
       pl.up.copy(game.run.from.c); // out of the storm: just took off from the city we delivered to
@@ -274,7 +280,10 @@ export async function careerFits(page, selector) {
 export async function stageRankUp(page) {
   await page.evaluate(async () => {
     const { xpForRank } = await import('./js/game/Ranks.js'), g = app.game;
-    g.stop(); g.home.hide(); g.pilot.hide(); g.career.news(); g.start({ free: true });
+    g.stop(); g.home.hide(); g.pilot.hide();
+    const base = [6, 11, 16, 21, 26].find((r) => r >= g.career.rank) ?? g.career.rank;
+    g.career.addXp(Math.max(0, xpForRank(base) - g.career.xp));
+    g.career.news(); g.start({ free: true });
     g.career.addXp(xpForRank(Math.min(30, g.career.rank + 2)) - g.career.xp + 85);
     g.finish({ title: '🎖️ Two ranks up!', html: '✈️ A great flight.' }, 'trophy');
   });

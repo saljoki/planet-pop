@@ -1,5 +1,6 @@
 import { loadJson, saveJson, forget } from '../core/Store.js';
 import { RANKS, MAX_RANK, XP, TROPHY_COINS, xpForRank, rankFor, rankReward } from './Ranks.js';
+import { REX, REX_LIVERIES } from './Rival.js';
 
 const KEY = 'planetpop.career';
 const fresh = () => ({ xp: 0, paid: [], rex: { you: 0, rex: 0 },
@@ -46,6 +47,11 @@ export class Career {
     for (let r = before + 1; r <= after; r++) {
       this.progress.addCoins(rankReward(r), false);
       if (!this.migrating) this.lines.push(`🎖️ Rank ${r} · ${RANKS[r - 1]}! +${rankReward(r)} 🪙`);
+      if (!this.migrating) {
+        const paint = REX_LIVERIES.find((l) => l.rank === r);
+        if (paint) this.lines.push(`😈 Rex has new paint: ${paint.name}.`);
+        if (r === REX.boostRank) this.lines.push('😈 Rex has learned to boost.');
+      }
     }
     this.save();
     return after - before;
@@ -62,6 +68,9 @@ export class Career {
     this.addXp(XP.trophy);
     return true;
   }
+
+  get rex() { return this.data.rex; }
+  rexScore(you, rex) { this.data.rex.you += you; this.data.rex.rex += rex; this.save(); }
 
   runEnded(run) {
     if (!run || run.careerEnded) return;

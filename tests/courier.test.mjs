@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { makeWorld, run } from './helpers/world.mjs';
 import { todayKey, dailySeed, dailyParams } from '../js/game/Daily.js';
 import { HALF } from '../js/world/Airports.js';
+import { REX } from '../js/game/Rival.js';
 
 // The tests run in order and share one run: the first starts it, the next ones poke at it.
 const PLANETS = [
@@ -54,7 +55,7 @@ for (const params of PLANETS) {
       const game = app.game, rex = game.run.rival;
       assert.ok(rex, 'no rival after the first delivery');
       assert.ok(Number.isFinite(rex.pos.x));
-      assert.ok(rex.plane.stats.speed > 0.8 && rex.plane.stats.speed <= 1.1, 'the rival speeds up with each delivery, within limits');
+      assert.ok(rex.plane.stats.speed > 0.8 && rex.plane.stats.speed <= (1.1 + REX.rankStep * (rex.rank - 1)) * (rex.boosting ? REX.boost : 1), 'the rival speeds up within his level and rank limits');
       game.over = false;
       game.run.time = 100;
       const pl = game.player, dest = game.run.dest, combo = (game.run.combo = 3), stolen = game.run.stolen;
