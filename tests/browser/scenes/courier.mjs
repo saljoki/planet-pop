@@ -15,7 +15,7 @@ export default async function courier({ page, frames, until, scene }) {
     await page.evaluate(() => { app.game.hangar.hide(); app.game.openHome(); });
     await frames(2);
   });
-  await scene('briefing', 'The briefing before a courier run: the goal, tips and the controls for this device', async () => {
+  await scene('briefing', 'Short briefing: the goal and Start, with How to play closed', async () => {
     await page.evaluate(() => { app.game.hangar.hide(); app.game.openHome(); });
     await page.click('[data-card="courier"]'); // a real click from Home
     await until(() => app.game.briefing.open);
@@ -28,14 +28,15 @@ export default async function courier({ page, frames, until, scene }) {
     if (!(await page.evaluate(() => app.settings.get('invertY')))) throw new Error('Invert Y did not switch on');
     await frames(2);
   });
-  await scene('briefing-inverted', 'Back on the briefing: the controls now say up dives', async () => {
+  await scene('briefing-inverted', 'How to play opened: the original controls now say up dives', async () => {
     await page.click('#oDone');
     await until(() => !app.game.options.open && app.game.briefing.open);
     const text = await page.evaluate(() => document.getElementById('bControls').textContent);
     if (!/up to dive/.test(text)) throw new Error(`controls not updated for Invert Y: ${text}`);
-    await page.evaluate(() => app.settings.set('invertY', false));
+    await page.click('#bMore summary');
     await frames(1);
   });
+  await page.evaluate(() => app.settings.set('invertY', false));
   await scene('courier', 'Sky Courier in flight, with the player\'s name over the plane', async () => {
     await page.click('#bStart').catch(() => {}); // Start on the briefing (if that scene ran)
     await page.evaluate(() => { app.game.hangar.hide(); app.game.start(); });

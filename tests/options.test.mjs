@@ -79,6 +79,25 @@ describe('briefing, options and invert Y in Sky Courier', () => {
   });
   after(() => { game.stop(); planet.dispose(); });
 
+  it('a short briefing keeps its original tips, controls and skip choice inside How to play, closed by default', () => {
+    const b = game.briefing, mission = MISSIONS.find((m) => m.id === 'care');
+    const details = b.el.innerHTML.match(/<details\b([^>]*)id="bMore"([^>]*)>([\s\S]*?)<\/details>/);
+    assert.ok(details, 'How to play should be a details element');
+    assert.doesNotMatch(`${details[1]} ${details[2]}`, /\bopen\b/, 'How to play starts closed');
+    assert.match(details[3], /<summary>ℹ️ How to play<\/summary>/);
+    for (const id of ['bTips', 'bControls', 'bSkip']) assert.match(details[3], new RegExp(`id="${id}"`), `${id} belongs inside How to play`);
+    b.show({ mission });
+    assert.equal(b.dom.more.open, false);
+    assert.equal(b.dom.tips.innerHTML, briefingFor({ mission }).tips.map((t) => `<li>${t}</li>`).join(''));
+    assert.equal(b.dom.controls.innerHTML, controlsFor({ touch: game.touch, invertY: app.settings.get('invertY') }).map((t) => `<li>${t}</li>`).join(''));
+    b.dom.more.open = true;
+    b.show({ mission });
+    assert.equal(b.dom.more.open, false, 'each new briefing starts short');
+    b.key({ code: 'Enter', target: { closest: () => ({ tagName: 'SUMMARY' }) }, preventDefault() { assert.fail('the summary keeps its native keyboard action'); } });
+    assert.equal(game.active, false, 'Enter on How to play must not start the run');
+    b.hide();
+  });
+
   it('the briefing comes first; Start begins the run, Back returns to where it was chosen', () => {
     game.launch();
     assert.ok(game.briefing.open && !game.active);

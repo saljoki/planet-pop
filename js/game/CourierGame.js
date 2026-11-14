@@ -165,8 +165,9 @@ export class CourierGame {
     app.renderer.compileAsync?.(this.props.group, app.camera, app.scene)?.catch(() => {}); // new props: compile now, not mid-flight
     const flying = this.player.kind === 'plane', tilt = this.controls.tilt.supported ? ' ⏸ has tilt steering.' : '';
     if (!run.coached) {
-      if (this.touch) app.hud.toast(flying ? `👆 Drag on the left to steer and climb, hold BOOST to speed up.${tilt}` : `👆 Drag on the left: sideways to steer, up to go, down to brake.${tilt}`);
-      else if (flying && p.airports?.list.length) app.hud.toast('✈️ Tip: skim low along an airport runway to refuel your boost and patch up the plane.');
+      if (this.touch) {
+        if (!this.progress.lesson) app.hud.toast(flying ? `👆 Drag on the left to steer and climb, hold BOOST to speed up.${tilt}` : `👆 Drag on the left: sideways to steer, up to go, down to brake.${tilt}`);
+      } else if (flying && p.airports?.list.length) app.hud.toast('✈️ Tip: skim low along an airport runway to refuel your boost and patch up the plane.');
     }
     this.hud.update();
   }

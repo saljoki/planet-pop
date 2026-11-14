@@ -62,7 +62,7 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await frames(6);
   });
   await page.touchscreen.touchEnd().catch(() => {}); // (nothing to lift if that scene was filtered out)
-  await scene('mobile-briefing', 'The briefing on a phone, with touch controls', async () => {
+  await scene('mobile-briefing', 'Phone: short briefing with Start visible and How to play closed', async () => {
     await page.evaluate(async () => {
       const { MISSIONS } = await import('./js/game/Missions.js'); // (the page was reloaded at phone size)
       app.game.stop();
@@ -103,6 +103,22 @@ export default async function phone({ page, frames, until, scene, open, ufoHere,
     await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true });
     await frames(5);
   });
+  await scene('landscape-briefing', 'Phone on its side: the longest mission goal, with Start visible', async () => {
+    await page.evaluate(async () => {
+      const { MISSIONS } = await import('./js/game/Missions.js');
+      const longest = MISSIONS.reduce((a, b) => a.brief.length > b.brief.length ? a : b);
+      app.game.stop();
+      app.game.launch({ mission: longest });
+    });
+    await until(() => app.game.briefing.open);
+    const visible = await page.$eval('#bStart', (el) => {
+      const r = el.getBoundingClientRect();
+      return r.top >= 0 && r.bottom <= innerHeight && r.left >= 0 && r.right <= innerWidth;
+    });
+    if (!visible) throw new Error('Start is outside the landscape viewport');
+    await frames(2);
+  });
+  await page.evaluate(() => app.game.briefing.hide());
   await scene('landscape-lesson', 'Phone on its side: the coach clears the map, arrow, buttons and thumb', async () => {
     await page.evaluate(() => { app.game.stop(); app.game.start({ lesson: true }); app.game.run.enter(4); app.game.hud.update(); });
     await until(() => app.rig.mode === 'game');
