@@ -2,7 +2,7 @@ import { describe, it, before, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeWorld } from './helpers/world.mjs';
 import { CRAFTS, craftStats } from '../js/game/Crafts.js';
-import { Progress, BASE_STATS, UPGRADES } from '../js/game/Progress.js';
+import { Progress, BASE_STATS, UPGRADES, SKINS, TRAILS } from '../js/game/Progress.js';
 import { pilotRank } from '../js/game/Gates.js';
 import { mulberry32 } from '../js/core/Noise.js';
 import { CARGO } from '../js/game/Cargo.js';
@@ -111,4 +111,64 @@ describe('hangar craft', () => {
       assert.ok(game.over && elapsed < 480, `still flying at ${elapsed.toFixed(2)}s`);
     } finally { Math.random = random; }
   });
+
+  it('keeps the first six paint jobs exactly and totals the expanded cosmetics', () => {
+    assert.deepEqual(SKINS.slice(0, 6), [
+      { id: 'classic', name: 'Classic', body: '#ffd23f', trim: '#ff4d4d', cost: 0 },
+      { id: 'fire', name: 'Fireball', body: '#ff4d4d', trim: '#ffd23f', cost: 250 },
+      { id: 'sky', name: 'Sky Blue', body: '#9fd8ff', trim: '#3f6fff', cost: 250 },
+      { id: 'mint', name: 'Mint', body: '#a8f0cf', trim: '#2ee59d', cost: 400 },
+      { id: 'midnight', name: 'Midnight', body: '#4a4f9e', trim: '#ff5fa2', cost: 600 },
+      { id: 'gold', name: 'Golden Ace', body: '#ffcf33', trim: '#1b1530', trophy: 'ace', trophyName: 'Sky Ace' },
+    ]);
+    assert.equal(SKINS.length, 12);
+    assert.equal(SKINS.reduce((n, skin) => n + (skin.cost || 0), 0), 5100);
+    assert.equal(TRAILS.length, 6);
+    assert.equal(TRAILS.reduce((n, trail) => n + trail.cost, 0), 3900);
+  });
+
+  it('buys a trail once, switches freely, reloads it and resets to Classic', () => {
+    const p = game.progress;
+    assert.equal(p.trail, 'classic');
+    assert.deepEqual([...p.trails], ['classic']);
+    assert.equal(p.chooseTrail('snow'), false);
+    p.addCoins(1000);
+    assert.equal(p.chooseTrail('snow'), true);
+    assert.equal(p.coins, 500);
+    assert.equal(p.chooseTrail('classic'), true);
+    assert.equal(p.chooseTrail('snow'), true);
+    assert.equal(p.coins, 500);
+    const again = new Progress();
+    assert.equal(again.trail, 'snow');
+    assert.deepEqual([...again.trails], ['classic', 'snow']);
+    again.reset();
+    assert.equal(again.trail, 'classic');
+    assert.deepEqual([...again.trails], ['classic']);
+  });
+
+  it('counts the full inventory with the explicit rank, while B2 owns the old Home call', () => {
+    const p = game.progress;
+    p.coins = 50000;
+    assert.equal(p.affordable(new Set(), 1), 21);
+    assert.equal(p.affordable(new Set(), 4), 22);
+    assert.equal(p.affordable(new Set(), 30), 26);
+    p.chooseCraft('swift', 4);
+    p.chooseTrail('snow');
+    p.chooseSkin('sunset', new Set());
+    assert.equal(p.affordable(new Set(), 30), 23);
+    for (const u of UPGRADES) p.levels[u.id] = 5;
+    assert.equal(p.affordable(new Set(), 30), 17);
+  });
+
+  it('uses the chosen trail on a plane and keeps the daily on the Classic trail', () => {
+    game.progress.trail = 'candy';
+    game.start();
+    assert.equal(game.player.trail.life, 1.8);
+    assert.equal(game.player.trail.mesh.material.color.getHexString(), 'ff8fcf');
+    game.stop();
+    game.start({ daily: true });
+    assert.equal(game.player.trail.life, 1.6);
+    assert.equal(game.player.trail.mesh.material.color.getHexString(), 'fff4c2');
+  });
+
 });

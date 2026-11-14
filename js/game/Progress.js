@@ -24,6 +24,22 @@ export const SKINS = [
   { id: 'mint', name: 'Mint', body: '#a8f0cf', trim: '#2ee59d', cost: 400 },
   { id: 'midnight', name: 'Midnight', body: '#4a4f9e', trim: '#ff5fa2', cost: 600 },
   { id: 'gold', name: 'Golden Ace', body: '#ffcf33', trim: '#1b1530', trophy: 'ace', trophyName: 'Sky Ace' },
+  { id: 'sunset', name: 'Sunset', body: '#ff8c42', trim: '#7a1e48', cost: 500 },
+  { id: 'ocean', name: 'Ocean', body: '#1f6fb2', trim: '#9fe8ff', cost: 500 },
+  { id: 'bubblegum', name: 'Bubblegum', body: '#ff8fcf', trim: '#ffffff', cost: 600 },
+  { id: 'forest', name: 'Forest', body: '#2f7d4f', trim: '#ffd23f', cost: 600 },
+  { id: 'ink', name: 'Ink', body: '#1b1530', trim: '#ffd23f', cost: 700 },
+  { id: 'pearl', name: 'Pearl', body: '#f4f0e6', trim: '#8f5cff', cost: 700 },
+];
+
+/** Classic leaves the colour to the world's plane, glider, hopper or ship style. */
+export const TRAILS = [
+  { id: 'classic', name: 'Classic', color: null, life: 1.6, grow: 2, cost: 0 },
+  { id: 'snow', name: 'Snow', color: '#ffffff', life: 2.4, grow: 2, cost: 500 },
+  { id: 'candy', name: 'Candy', color: '#ff8fcf', life: 1.8, grow: 2, cost: 600 },
+  { id: 'ember', name: 'Ember', color: '#ff8c42', life: 1, grow: 3, cost: 800 },
+  { id: 'aurora', name: 'Aurora', color: '#5dffc9', life: 2.2, grow: 2, cost: 900 },
+  { id: 'stardust', name: 'Stardust', color: '#ffe066', life: 3, grow: 1.2, cost: 1100 },
 ];
 
 /** Plane stats for the given upgrade levels. */
@@ -53,6 +69,8 @@ export class Progress {
     this.skin = this.owned.has(s.skin) ? s.skin : 'classic';
     this.crafts = new Set(['classic', ...(s.crafts || []).filter((id) => CRAFTS.some((c) => c.id === id))]);
     this.craft = this.crafts.has(s.craft) ? s.craft : 'classic';
+    this.trails = new Set(['classic', ...(s.trails || []).filter((id) => TRAILS.some((t) => t.id === id))]);
+    this.trail = this.trails.has(s.trail) ? s.trail : 'classic';
     this.daily = s.daily || null; // { date, best } for the most recent daily challenge played
     this.missions = new Set(s.missions || []); // ids of completed missions
     this.bests = { ...(s.bests || {}) };       // the road trips' bests: taxi and van scores, the race's fastest time
@@ -64,6 +82,7 @@ export class Progress {
     const data = { coins: this.coins, best: this.best, levels: this.levels, owned: [...this.owned], skin: this.skin, daily: this.daily,
       missions: [...this.missions], bests: this.bests, lesson: this.lesson, stars: this.stars };
     if (this.craft !== 'classic' || this.crafts.size > 1) Object.assign(data, { craft: this.craft, crafts: [...this.crafts] });
+    if (this.trail !== 'classic' || this.trails.size > 1) Object.assign(data, { trail: this.trail, trails: [...this.trails] });
     saveJson(KEY, data);
   }
 
@@ -72,10 +91,13 @@ export class Progress {
   /** Price of the next level, or null when maxed. */
   nextCost(id) { return UPGRADES.find((u) => u.id === id)?.costs[this.level(id)] ?? null; }
 
-  /** Upgrades and paint jobs that can be bought now (each next level counts once). */
-  affordable(trophies = new Set()) {
+  /** Next purchases at this rank. Omitted rank keeps the pre-B2 Home call compatible. */
+  affordable(trophies = new Set(), rank) {
+    const skins = rank === undefined ? SKINS.slice(0, 6) : SKINS;
     return UPGRADES.filter((u) => this.nextCost(u.id) !== null && this.nextCost(u.id) <= this.coins).length
-      + SKINS.filter((s) => this.skinState(s, trophies) === 'buy' && s.cost <= this.coins).length;
+      + skins.filter((s) => this.skinState(s, trophies) === 'buy' && s.cost <= this.coins).length
+      + (rank === undefined ? 0 : CRAFTS.filter((c) => this.craftState(c, rank) === 'buy' && c.cost <= this.coins).length
+        + TRAILS.filter((t) => this.trailState(t) === 'buy' && t.cost <= this.coins).length);
   }
 
   buy(id) {
@@ -131,6 +153,26 @@ export class Progress {
     return true;
   }
 
+  get trailDef() { return TRAILS.find((t) => t.id === this.trail) || TRAILS[0]; }
+
+  trailState(trail) {
+    if (this.trail === trail.id) return 'equipped';
+    return this.trails.has(trail.id) ? 'owned' : 'buy';
+  }
+
+  chooseTrail(id) {
+    const trail = TRAILS.find((t) => t.id === id);
+    if (!trail) return false;
+    if (this.trailState(trail) === 'buy') {
+      if (this.coins < trail.cost) return false;
+      this.coins -= trail.cost;
+    }
+    this.trails.add(id);
+    this.trail = id;
+    this.save();
+    return true;
+  }
+
   addCoins(n) { this.coins += n; this.save(); }
 
   /** Existing pilots keep going where they left off; only an empty save needs the lesson. */
@@ -154,7 +196,7 @@ export class Progress {
   reset() {
     forget(KEY);
     forget(OLD_BEST_KEY);
-    Object.assign(this, { coins: 0, best: 0, levels: {}, owned: new Set(['classic']), skin: 'classic', daily: null, missions: new Set(), bests: {}, lesson: false, stars: {}, craft: 'classic', crafts: new Set(['classic']) });
+    Object.assign(this, { coins: 0, best: 0, levels: {}, owned: new Set(['classic']), skin: 'classic', daily: null, missions: new Set(), bests: {}, lesson: false, stars: {}, craft: 'classic', crafts: new Set(['classic']), trail: 'classic', trails: new Set(['classic']) });
     this.save();
   }
 

@@ -1,4 +1,4 @@
-import { BASE_STATS } from '../Progress.js';
+import { BASE_STATS, TRAILS } from '../Progress.js';
 import { CRAFTS } from '../Crafts.js';
 import { Plane } from '../vehicles/Plane.js';
 
@@ -48,7 +48,7 @@ export class Run {
   get craft() { return this.stats === BASE_STATS ? CRAFTS[0] : this.game.progress.craftDef; }
 
   /** What the player drives (a Vehicle), starting at `at` facing `heading`. The courier plane unless a run says otherwise. */
-  vehicle(at, heading) { return new Plane(this.planet, at, heading, this.stats, this.game.progress.skinDef, this.craft.shape); }
+  vehicle(at, heading) { return new Plane(this.planet, at, heading, this.stats, this.game.progress.skinDef, this.craft.shape, this.stats === BASE_STATS ? TRAILS[0] : this.game.progress.trailDef); }
 
   /** The plane and props now exist: place things, set up special conditions, say hello. */
   begin() {}

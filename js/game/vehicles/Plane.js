@@ -25,7 +25,7 @@ const BASE_SKIN = { body: '#ffd23f', trim: '#ff4d4d' };
  * there's none at all for wings (the Moon), and a little ship with fins over a giant's clouds. They all fly the same.
  */
 export class Plane extends Vehicle {
-  constructor(planet, startDir, heading, stats, skin = BASE_SKIN, shape = { span: 1, girth: 1 }) {
+  constructor(planet, startDir, heading, stats, skin = BASE_SKIN, shape = { span: 1, girth: 1 }, trail) {
     super(planet, stats);
     this.place(startDir, heading);
     this.alt = planet.groundR(this.up) + 1.6;
@@ -45,7 +45,7 @@ export class Plane extends Vehicle {
     if (this.style === 'hopper' || this.style === 'ship') this.buildHopper(trim, this.style === 'hopper');
     else this.buildWings(trim, (this.style === 'glider' ? 1.5 : 1) * shape.span);
     if (this.style === 'ship') this.buildFins(trim);
-    this.trail = new Trails(planet.root, { max: 200, color: this.style === 'plane' || this.style === 'glider' ? '#fff4c2' : '#ffd8a8', life: 1.6, grow: 2, drag: 0.4 });
+    this.trail = new Trails(planet.root, { max: 200, color: trail?.color ?? (this.style === 'plane' || this.style === 'glider' ? '#fff4c2' : '#ffd8a8'), life: trail?.life ?? 1.6, grow: trail?.grow ?? 2, drag: 0.4 });
     this.trailT = 0;
     this.sync();
   }
