@@ -66,7 +66,8 @@ system you can fly round.
   - **Runs:** `runs/*Run.js` are the game modes. `Run.js` documents the hooks and `modes.js` picks the run.
   - **Hazards and moves:** `FlightHazards` (storms, dust, heat, ring ice, wind) and `Feats` (long jumps, loops round
     a storm, threading Saturn's ring).
-  - **Data:** `Missions.js` (22 missions, in two lists) and `Daily.js` (the world of the day).
+  - **Data:** `Missions.js` (61 missions in 18 chapters), `Chapters.js` (chapter order and gates),
+    `Stars.js` (three-star goals) and `Daily.js` (the world of the day).
 - `js/ui/Achievements.js`: the 55 trophies, in `GROUPS` for the trophy list.
   - `TrophyWatch.js` holds the "follow a …" trophy rules.
 - `js/net/`: friends. `PROTOCOL = 2`, and worlds are checked against `WORLD_IDS`.
@@ -130,6 +131,7 @@ system you can fly round.
 
 ## Where things stand
 
+- **Game design and Phase B1:** see `docs/DESIGN.md` and `docs/PHASE_B1.md` for the clock, daily route and missions.
 - **The solar system plan is complete.** Ata's design doc, "Planet Pop: Solar System design" (a Claude Docs artifact
   at https://claude.ai/code/artifact/b60ea4c9-576b-422d-bcd5-7832d0323c2f), had four phases: Earth, Moon and Mars; the
   space courier; Venus, Mercury and Pluto; and the giants with their moons. All four shipped, plus a fifth phase:
