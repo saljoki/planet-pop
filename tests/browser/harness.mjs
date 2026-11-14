@@ -89,6 +89,7 @@ export async function start() {
   const open = async (query) => {
     await page.goto(`${base}index.html?${query}`, { waitUntil: 'domcontentloaded' });
     await until(() => window.app?.planet && !window.app.building, 240000);
+    await page.evaluate(() => app.start?.dismiss());
   };
 
   /** A second page in the same browser (a friend in a ?net=tabs room), loaded with this query; close it when done. */
@@ -97,6 +98,7 @@ export async function start() {
     other.on('pageerror', (e) => problems.push(`Uncaught (second page): ${e.message}`));
     await other.goto(`${base}index.html?${query}`, { waitUntil: 'domcontentloaded' });
     await other.waitForFunction(() => window.app?.planet && !window.app.building, { timeout: 240000, polling: 200 });
+    await other.evaluate(() => app.start?.dismiss());
     return other;
   };
 

@@ -79,12 +79,31 @@ describe('briefing, options and invert Y in Sky Courier', () => {
   });
   after(() => { game.stop(); planet.dispose(); });
 
+  it('a short briefing keeps its original tips, controls and skip choice inside How to play, closed by default', () => {
+    const b = game.briefing, mission = MISSIONS.find((m) => m.id === 'care');
+    const details = b.el.innerHTML.match(/<details\b([^>]*)id="bMore"([^>]*)>([\s\S]*?)<\/details>/);
+    assert.ok(details, 'How to play should be a details element');
+    assert.doesNotMatch(`${details[1]} ${details[2]}`, /\bopen\b/, 'How to play starts closed');
+    assert.match(details[3], /<summary>ℹ️ How to play<\/summary>/);
+    for (const id of ['bTips', 'bControls', 'bSkip']) assert.match(details[3], new RegExp(`id="${id}"`), `${id} belongs inside How to play`);
+    b.show({ mission });
+    assert.equal(b.dom.more.open, false);
+    assert.equal(b.dom.tips.innerHTML, briefingFor({ mission }).tips.map((t) => `<li>${t}</li>`).join(''));
+    assert.equal(b.dom.controls.innerHTML, controlsFor({ touch: game.touch, invertY: app.settings.get('invertY') }).map((t) => `<li>${t}</li>`).join(''));
+    b.dom.more.open = true;
+    b.show({ mission });
+    assert.equal(b.dom.more.open, false, 'each new briefing starts short');
+    b.key({ code: 'Enter', target: { closest: () => ({ tagName: 'SUMMARY' }) }, preventDefault() { assert.fail('the summary keeps its native keyboard action'); } });
+    assert.equal(game.active, false, 'Enter on How to play must not start the run');
+    b.hide();
+  });
+
   it('the briefing comes first; Start begins the run, Back returns to where it was chosen', () => {
     game.launch();
     assert.ok(game.briefing.open && !game.active);
     game.briefing.back();
-    assert.ok(!game.briefing.open && game.hangar.open, 'Back should reopen the hangar');
-    game.hangar.hide();
+    assert.ok(!game.briefing.open && game.home.open, 'Back should reopen Home');
+    game.home.hide();
     game.launch({ mission: MISSIONS[0] });
     game.briefing.back();
     assert.ok(game.board.open, 'Back from a mission briefing should reopen the mission board');
@@ -95,21 +114,36 @@ describe('briefing, options and invert Y in Sky Courier', () => {
     game.stop();
   });
 
-  it('controller: A in the hangar opens the briefing, A again takes off, B goes back', async () => {
+  it('controller: Start opens Home, A launches next-up, B from the hangar returns Home', async () => {
     const { Gamepad } = await import('../js/game/input/Gamepad.js');
     const buttons = Array.from({ length: 16 }, () => ({ pressed: false, value: 0 }));
     const pad = { connected: true, id: 'Test pad', axes: [0, 0, 0, 0], buttons }, router = new Gamepad(app);
     Object.defineProperty(navigator, 'getGamepads', { value: () => [pad], configurable: true });
     const press = (i) => { buttons[i].pressed = true; router.update(); buttons[i].pressed = false; router.update(); };
+    press(9);
+    assert.ok(game.home.open, 'Start opens Home');
+    press(1);
+    assert.ok(!game.home.open, 'B closes Home');
     game.openHangar();
     press(0);
-    assert.ok(game.briefing.open && !game.hangar.open && !game.active, 'A in the hangar should open the briefing');
+    assert.ok(game.hangar.open && !game.briefing.open, 'A in the hangar does nothing');
     press(1);
-    assert.ok(!game.briefing.open && game.hangar.open, 'B should go back to the hangar');
+    assert.ok(game.home.open && !game.hangar.open, 'B in the hangar returns Home');
+    const startMission = game.startMission;
+    let chosen;
+    game.startMission = (mission) => { chosen = mission; game.launch({ mission }); };
+    press(0);
+    assert.equal(chosen, MISSIONS[0], 'A launches next-up');
+    assert.ok(game.briefing.open && !game.home.open && !game.active);
+    press(1);
+    assert.ok(game.board.open && !game.briefing.open, 'B returns to the mission board');
+    game.board.hide();
+    game.openHome();
     press(0);
     press(0);
-    assert.ok(game.active, 'A on the briefing should take off');
+    assert.ok(game.active, 'A on the briefing takes off');
     game.stop();
+    game.startMission = startMission;
     delete navigator.getGamepads;
   });
 

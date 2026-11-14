@@ -1,0 +1,55 @@
+/* Home: one prominent next flight, then the six ways to play. The trophy list can open above it. */
+#home { z-index: 19; padding: calc(12px + var(--st)) calc(12px + var(--sr)) calc(12px + var(--sb)) calc(12px + var(--sl)); }
+#home .panel { width: 680px; max-width: 100%; max-height: 100%; padding: 20px 24px; }
+.home-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#home h2 { margin: 0; text-align: left; }
+#hoCoins { font-size: 24px; white-space: nowrap; }
+#hoName { display: block; margin: 6px 0 14px; background: #fff; font-size: 17px; }
+#hoNext { display: block; width: 100%; padding: 14px 16px 10px; margin-bottom: 16px; }
+#hoNext .next-title { display: block; font-size: 30px; }
+#hoNext small { display: block; margin-top: 4px; font: 14px/1.35 system-ui, sans-serif; letter-spacing: 0; text-shadow: none; }
+#hoCards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+#hoCards button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 114px; padding: 10px 8px; background: #fff; }
+#hoCards button[data-card="daily"] { background: #dceeff; }
+#hoCards button[data-card="missions"] { background: #d3f8e8; }
+#hoCards button[data-card="space"] { background: #e7ddff; }
+#hoCards button[data-card="roads"] { background: #ffe5cc; }
+#hoCards button[data-card="free"] { background: #def5ff; }
+#hoCards .card-icon { font-size: 28px; line-height: 1.15; }
+#hoCards .card-name { font-size: 21px; }
+#hoCards small { font: 12px/1.3 system-ui, sans-serif; letter-spacing: 0; }
+.home-foot { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.home-foot button { flex: 1 1 auto; min-height: 42px; }
+#hoOptions { flex: 0 0 46px; background: #fff; }
+#hoExplore { background: var(--blue); }
+
+/* The start screen takes input without dimming the planet behind the title. */
+#start { position: fixed; inset: 0; z-index: 18; display: flex; flex-direction: column; align-items: center; pointer-events: auto;
+  padding: calc(18px + var(--st)) calc(20px + var(--sr)) calc(18px + var(--sb)) calc(20px + var(--sl)); }
+#stTitle { margin: 7vh 0 0; color: var(--yellow); font-size: clamp(64px, 10vw, 110px); font-weight: normal; line-height: 1.1;
+  -webkit-text-stroke: 2px var(--ink); text-shadow: 5px 5px 0 var(--ink); transform: rotate(-3deg); }
+#stHello { margin-top: 12px; font-size: 26px; color: #fff; text-shadow: 2px 2px 0 var(--ink); }
+.start-actions { position: absolute; left: 50%; bottom: calc(8vh + var(--sb)); transform: translateX(-50%); width: 360px;
+  max-width: calc(100vw - 48px - var(--sl) - var(--sr)); display: flex; flex-direction: column; gap: 12px; }
+#stPlay { min-height: 82px; padding: 12px 16px 8px; font-size: 42px; border-width: 4px; box-shadow: 5px 5px 0 var(--ink); }
+#stPlay:disabled { opacity: 1; background: #fff; color: var(--ink); text-shadow: none; font-size: 28px; }
+#stExplore { min-height: 44px; background: #fff; font-size: 20px; }
+#stOptions { position: absolute; top: calc(18px + var(--st)); right: calc(20px + var(--sr)); min-width: 46px; min-height: 44px; background: #fff; }
+#stVersion { position: absolute; bottom: calc(16px + var(--sb)); left: calc(20px + var(--sl)); color: #fff; font-size: 15px; text-shadow: 1px 1px 0 var(--ink); }
+#homeBtn { background: var(--pink); color: #fff; text-shadow: 1px 1px 0 var(--ink); }
+
+/* The coach is the only instruction during the lesson. It never takes pointer input. */
+#gCoach { top: calc(12px + var(--st)); left: 50%; transform: translateX(-50%); max-width: calc(100vw - 32px - var(--sl) - var(--sr));
+  width: max-content; padding: 8px 18px 6px; text-align: center; font-size: 26px; pointer-events: none; }
+#gCoachText { display: block; }
+#gCoachDots { display: flex; justify-content: center; gap: 8px; margin-top: 5px; }
+#gCoachDots span { width: 9px; height: 9px; border: 2px solid var(--ink); border-radius: 50%; background: #fff; }
+#gCoachDots .done { background: #2ee59d; }
+#gCoachDots .current { background: var(--pink); }
+#gCoach.ticked::after { content: '✔'; position: absolute; right: -12px; top: -12px; background: #2ee59d; border: 3px solid var(--ink);
+  border-radius: 50%; padding: 2px 6px; animation: coach-tick 0.6s ease-out forwards; }
+#gCoach.nudged { animation: coach-nudge 0.6s ease-in-out 2; }
+#game.lesson #gGoal, #game.lesson #gHelp, #game.lesson #gStick .ghost { display: none; }
+#game.lesson #gArrow { top: calc(128px + var(--st)); }
+@keyframes coach-tick { from { opacity: 1; scale: 0.6; } 40% { scale: 1.2; } to { opacity: 0; scale: 1; } }
+@keyframes coach-nudge { 50% { box-shadow: 0 0 0 8px var(--yellow); } }

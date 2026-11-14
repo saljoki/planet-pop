@@ -6,9 +6,9 @@
 export default async function road({ page, frames, until, scene }) {
   await page.evaluate(() => { if (app.paused) app.togglePause(); app.game.stop(); app.rig.release(true); });
 
-  await scene('road-trips', 'Road trips, from the hangar: free drive, taxi, van courier, the race and free sail', async () => {
-    await page.evaluate(() => { app.game.openHangar(); });
-    await page.click('#hRoads');
+  await scene('road-trips', 'Road trips, from Home: free drive, taxi, van courier, the race and free sail', async () => {
+    await page.evaluate(() => { app.game.openHome(); });
+    await page.click('[data-card="roads"]');
     await until(() => app.game.roads.open);
     await frames(2);
   });

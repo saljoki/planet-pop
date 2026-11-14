@@ -16,6 +16,8 @@ file; there's no build step. After adding, renaming or removing any file under `
 - **`Hud`** (`js/ui/Hud.js`) is the planet view's screen furniture; the ☰ panel is `ControlPanel`.
   Small pieces of UI extend **`Widget`** (`js/ui/Widget.js`); full-screen menus extend **`Overlay`**,
   which handles Esc and the dimmed backdrop.
+- **`StartScreen`** (`js/ui/StartScreen.js`) shows while the first planet builds. It extends `Widget`, keeps the
+  planet visible and hands PLAY to `game.play()`: a new pilot flies the lesson; everyone else opens Home.
 - **`CourierGame`** (`js/game/CourierGame.js`) runs Sky Courier and the road trips. What the player drives is a
   `Vehicle` (`js/game/vehicles/`: the plane, a car, a boat). The rules of each kind of run live in
   `js/game/runs/`, the menus in `js/game/screens/`, the controls in `js/game/input/`.
@@ -66,7 +68,7 @@ file; there's no build step. After adding, renaming or removing any file under `
    its `drawMarks()`; something new on the ground (a kind of road, say) in the shader in `js/render/MapGlobe.js`.
 2. Add it to `runClass()` in `js/game/runs/modes.js`, keyed on an option (`{ road: 'taxi' }`, say).
 3. Give it a way in: a line in `ROAD_TRIPS` (`js/game/screens/RoadBoard.js`) for something on the ground, or a
-   hangar button (`js/game/screens/Hangar.js`); either calls `game.launch({ … })`.
+   Home card (below); either routes to `game.launch({ … })`. The hangar holds upgrades and paint jobs.
 4. Test it like `tests/road.test.mjs`: `game.start({ … })`, move `game.player` about, `game.update(dt)` (or
    `run(app, seconds, { game: true })`), then look at `game.run`.
 
@@ -75,6 +77,33 @@ Shared by every run: `CourierProps` (the beacon, rings, the pull-in pad with a w
 road, town street or not, water, buildings, trees, mountains, and `parking(town)` / `stops(town)` for where to start
 and pull in). Something new that cars should bump into goes in `Ground.carBlock()`, with a quick lookup like
 `Nature.treeAt()` (it's asked several times a frame).
+
+## Add a Home card
+
+1. Add `{ id, icon, name, desc }` to `HOME_CARDS` in `js/game/HomeCards.js`. Keep the player-facing card words in
+   that data module. Add its progress line to `cardStat(id, progress)` if it needs one; an empty string uses `desc`.
+2. Route the id in `HomeScreen.pick(id)` (`js/game/screens/HomeScreen.js`). It closes Home before opening a board
+   or launching a run. `nextUp(progress)` in the data module chooses the prominent suggested flight; it returns
+   `{ icon, title, text, card }` or `{ icon, title, text, mission }`.
+3. Keep the cards in the `#hoCards` grid, with small-screen rules in `css/phone.css`. Check the next-flight button
+   and all cards at 390 × 844 and 844 × 390, including keyboard focus and controller routes.
+4. Add the route, stat and next-flight checks to `tests/home.test.mjs` and a scene in the existing courier or
+   phone scene file. Home itself opens through `game.openHome()` and stays closed during an active run.
+
+## Add a lesson step
+
+1. Add a step to `LESSONS` in `js/game/Lessons.js`, before the final delivery, with its `id` and either a common
+   `text` or short `touch`, `keys` and `pad` prompts. Input steps also have `seconds`. Other lesson text lives in
+   `LESSON_TEXT`; `lessonPrompt()` handles the control choice and Invert Y wording.
+2. Add its setup to `LessonRun.enter(index)` and its completion condition to `update(dt)` or the appropriate hook
+   in `js/game/runs/LessonRun.js`. Measure only the current step's input. `advance()` flashes the tick, plays the
+   ring sound and leaves a 0.6-second pause. The coach draws its dots from `LESSONS` automatically.
+3. Keep `coached` true, the clock stopped and scoring out of the lesson. A wreck calls `respawnSoon()` and keeps the
+   step. Use the seeded `rand` for placement, and keep `LESSON_PLANET` equal to First Flight's planet. The completion
+   reward goes through `Progress.finishLesson()`; skipping goes through `skipLesson()` and pays nothing.
+4. Test correct and unrelated input, idle nudges, wreck recovery and a complete scripted flight in
+   `tests/lesson.test.mjs`. Start world tests with `game.start({ lesson: true })`, avoiding a rebuild through `flyOn()`.
+   Check the coach clear of the thumb area, BOOST, arrow and mini-map in portrait and landscape phone scenes.
 
 ## Add a vehicle
 
@@ -104,7 +133,9 @@ updates (a moment behind, glided between them), never updated as a vehicle, so i
 ## Saves
 
 Progress saves itself (`js/core/Store.js`). A save code (`js/core/SaveCode.js`) carries the keys in `SAVED_KEYS`;
-a new kind of progress kept under a new key should be added there, or it won't move with the player.
+a new kind of progress kept under a new key should be added there, or it won't move with the player. The optional
+`lesson` flag lives inside the existing `planetpop.courier` JSON, so it already travels in save codes. Device
+settings such as `planetpop.ambience` and `planetpop.music` stay out of `SAVED_KEYS`.
 
 ## Add a mission
 
@@ -124,8 +155,8 @@ a real world: those missions are a list of their own on the board, opening up in
 A planet-view setting (like Ink lines) goes in the ☰ panel instead: `js/ui/ControlPanel.js`. The player's name is
 `app.settings.playerName` (always tidied by `cleanName()`; set it with `setPlayerName()`): show it with `textContent`.
 
-The version is `VERSION` in `js/core/Version.js`; bump it with `package.json` (a test checks they match). The About
-card (`js/ui/AboutCard.js`) shows it, with the credits.
+The version is `VERSION` in `js/core/Version.js`; bump it with `package.json` and both version entries in
+`package-lock.json` (a test checks they match). The title screen and About card (`js/ui/AboutCard.js`) read it.
 
 ## Add a trophy
 
@@ -138,6 +169,24 @@ card (`js/ui/AboutCard.js`) shows it, with the credits.
 
 Sounds are synthesized, not files. Add a `case` to `Sfx.play()` in `js/ui/Sfx.js` (tones and noise bursts),
 then `app.sfx.play(name)`, or `app.sfx.pop(pos, 'TEXT!', colour, name)` for a comic bubble with the sound.
+
+## Add a tune
+
+1. Add an entry to `TUNES` in `js/ui/Tunes.js`. Its key and `id` match; a tune has
+   `{ id, bpm, bars: 8, steps: 16, voices }`. Each voice has `{ wave, gain, notes }`. A note uses
+   `{ step, freq, length }`, for example `{ step: 0, freq: 261.626, length: 2 }`: start on the first sixteenth-note
+   step and last two steps, including the release. Use `square`, `triangle` or `sine` for a pitched voice;
+   `wave: 'noise'` gives a filtered noise voice, with `freq` as its high-pass cutoff.
+2. Keep starts on the grid, frequencies from 55 to 2,000 Hz, voice gains at most 1, and
+   `step + length <= bars * steps`. Leave short releases inside note lengths to make the loop seam quiet.
+3. Select the tune's state in `Music.want()` (`js/ui/Music.js`). Existing states are `menu`, `flight`, `space`
+   and silence in the planet view. Music shares `app.sfx.ctx`, has a master gain capped at 0.10, crossfades over
+   0.8 seconds and schedules at most 0.25 seconds ahead from `App.frame()`. Keep its audio-clock heartbeat so a
+   stopped frame loop fades even long pads within half a second; do not add timers or audio files.
+4. Extend `tests/music.test.mjs` for the data and state route, scheduling, mute, pause and volume persistence.
+   Listen through loop seams, rapid state changes and effects over the music. Synth tests check the graph;
+   Ata still judges the tune by ear. Volume uses `loadNumber` / `saveNumber` from `Store.js` under
+   `planetpop.music`, a device setting excluded from `SAVED_KEYS`.
 
 ## Add a theme (a kind of world)
 
@@ -195,9 +244,9 @@ planets pick it up from there. Add its id to the list of worlds `tests/themes.te
 
 `css/` is split by area and loaded in this order (later files win ties): `base.css` (fonts, colours, buttons,
 overlays), `hud.css` (the planet view), `game.css` (Sky Courier's HUD and touch controls), `cards.css` (info
-card, Find, tour), `menus.css` (briefing, Options, hangar, missions), `photo.css`, `space.css` (the system map,
-trips, the landing card), and `phone.css` (all the
-small-screen and touch rules, last so they win).
+card, Find, tour), `menus.css` (briefing, Options, hangar, missions), `home.css` (Home, the start screen and coach),
+`photo.css`, `space.css` (the system map, trips, the landing card), and `phone.css` (all the small-screen and touch
+rules, last so they win).
 
 ## Tests and screenshots
 
@@ -206,3 +255,5 @@ small-screen and touch rules, last so they win).
   area, run in order) and saves pictures and a report to `screenshots/`. `SCENES=hangar,courier` runs only the
   scenes whose names contain those words; scenes carry on from earlier ones, so include the ones a scene builds on.
 - `npm run lint`: ESLint.
+- Run tests and screenshots separately. Read the resulting PNGs at desktop, portrait phone and landscape phone sizes.
+  See [PHASE_A.md](PHASE_A.md) for this phase's required scenes and checks.

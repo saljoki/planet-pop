@@ -24,49 +24,65 @@ export function controlsFor({ touch = false, pad = false, invertY = false, vehic
 }
 
 /**
- * The start screen before a Sky Courier run: the goal, a few tips, the controls for this device, and Start / Options /
- * Back. "Don't show this again" turns it off (it can be turned back on in Options). Enter starts, Esc goes back.
+ * A short briefing before a Sky Courier run: title, goal and Start / Options / Back. How to play opens the original
+ * tips, controls and "Don't show this again" choice. Enter starts, Esc goes back.
  */
 export class Briefing extends Overlay {
   constructor(app, game) {
     super({ id: 'briefing', html: `
       <h2><span id="bIcon"></span> <span id="bTitle"></span></h2>
       <p id="bGoal" class="goal"></p>
-      <ul id="bTips" class="tips"></ul>
-      <h3>Controls</h3>
-      <ul id="bControls" class="tips controls"></ul>
-      <label class="skip"><input id="bSkip" type="checkbox"> Don’t show this before every run</label>
+      <details id="bMore"><summary>ℹ️ How to play</summary>
+        <ul id="bTips" class="tips"></ul>
+        <h3>Controls</h3>
+        <ul id="bControls" class="tips controls"></ul>
+        <label class="skip"><input id="bSkip" type="checkbox"> Don’t show this before every run</label>
+      </details>
       <div class="hrow"><button id="bStart" class="big">▶ Start</button><button id="bOptions">⚙️ Options</button><button id="bBack">✕ Back</button></div>` });
     this.app = app;
     this.game = game;
     this.pending = null;
-    this.on('bStart', 'click', () => this.start());
-    this.on('bOptions', 'click', () => this.options());
-    this.on('bBack', 'click', () => this.back());
-    this.on('bSkip', 'change', (e) => app.settings.set('briefing', !e.target.checked));
-    addEventListener('keydown', (e) => {
-      if (this.open && !this.game.options.open && (e.code === 'Enter' || e.code === 'Space')) { e.preventDefault(); this.start(); }
-    });
-    app.settings.onChange((k) => { if (k === 'invertY' && this.open) this.render(); });
+    const $ = (id) => this.$(id);
+    this.dom = {
+      icon: $('bIcon'), title: $('bTitle'), goal: $('bGoal'), tips: $('bTips'), controls: $('bControls'),
+      skip: $('bSkip'), more: $('bMore'), start: $('bStart'), options: $('bOptions'), back: $('bBack'),
+    };
+    this.dom.start.addEventListener('click', () => this.start());
+    this.dom.options.addEventListener('click', () => this.options());
+    this.dom.back.addEventListener('click', () => this.back());
+    this.dom.skip.addEventListener('change', (e) => this.setSkip(e.target.checked));
+    addEventListener('keydown', (e) => this.key(e));
+    app.settings.onChange((k) => this.settingChanged(k));
   }
 
   /** Show the briefing for a run with these options; Start begins it. */
   show(opts) {
     this.pending = opts;
+    this.dom.more.open = false;
     this.render();
     super.show();
   }
 
   render() {
-    const b = briefingFor(this.pending || {}), $ = (id) => this.$(id), app = this.app;
-    $('bIcon').textContent = b.icon;
-    $('bTitle').textContent = b.title;
-    $('bGoal').textContent = b.goal;
+    const b = briefingFor(this.pending || {}), d = this.dom, app = this.app;
+    d.icon.textContent = b.icon;
+    d.title.textContent = b.title;
+    d.goal.textContent = b.goal;
     const li = (t) => `<li>${t}</li>`;
-    $('bTips').innerHTML = b.tips.map(li).join('');
+    d.tips.innerHTML = b.tips.map(li).join('');
     const vehicle = runClass(this.pending || {}).vehicleKind(this.pending || {});
-    $('bControls').innerHTML = controlsFor({ touch: this.game.touch, pad: !!app.gamepad?.state, invertY: app.settings.get('invertY'), vehicle }).map(li).join('');
-    $('bSkip').checked = !app.settings.get('briefing');
+    d.controls.innerHTML = controlsFor({ touch: this.game.touch, pad: !!app.gamepad?.state, invertY: app.settings.get('invertY'), vehicle }).map(li).join('');
+    d.skip.checked = !app.settings.get('briefing');
+  }
+
+  setSkip(checked) { this.app.settings.set('briefing', !checked); }
+  settingChanged(key) { if (key === 'invertY' && this.open) this.render(); }
+
+  key(e) {
+    if (!this.open || this.game.options.open || (e.code !== 'Enter' && e.code !== 'Space')) return;
+    if (e.target?.closest?.('button, input, select, textarea, summary')) return; // native keys operate the focused control
+    e.preventDefault();
+    this.start();
   }
 
   escape() { this.back(); }
@@ -81,7 +97,7 @@ export class Briefing extends Overlay {
 
   options() { this.game.options.show(() => this.open && this.render()); }
 
-  /** Back to where the run was chosen: the mission board, the road trips, the planet (Drive this) or the hangar. */
+  /** Back to where the run was chosen: the mission board, road trips, planet (Drive this) or Home. */
   back() {
     if (!this.open) return;
     const opts = this.pending || {};
@@ -90,6 +106,6 @@ export class Briefing extends Overlay {
     if (opts.mission) this.game.board.show();
     else if (opts.take) return;
     else if (opts.drive || opts.road) this.game.roads.show();
-    else this.game.openHangar();
+    else this.game.openHome();
   }
 }

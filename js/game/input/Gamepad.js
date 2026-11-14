@@ -28,6 +28,11 @@ export class Gamepad {
     const edge = (k) => s[k] && !this.prev[k], { app } = this, game = app.game, hangar = game.hangar;
     if (game.options?.open) {
       if (edge('b') || edge('start')) game.options.hide();
+    } else if (app.start?.open) {
+      if (!app.start.covered) {
+        if (edge('a') || edge('start')) app.start.play();
+        else if (edge('b')) app.start.explore();
+      }
     } else if (game.briefing?.open) {
       if (edge('a') || edge('start')) game.briefing.start();
       else if (edge('b')) game.briefing.back();
@@ -38,11 +43,15 @@ export class Gamepad {
         else if (edge('b')) game.stop();
       } else if (pad) game.controls.pad(s, this.prev);
     } else if (hangar.open) {
-      if (edge('a')) { hangar.hide(); game.launch(); }
-      else if (edge('b')) hangar.hide();
+      if (edge('b')) hangar.close();
+    } else if (game.home?.open && game.home.trophiesOpen) {
+      if (edge('b')) game.home.closeTrophies();
+    } else if (game.home?.open) {
+      if (edge('a')) game.home.next();
+      else if (edge('b')) game.home.hide();
     } else if (game.roads?.open) {
-      if (edge('b')) { game.roads.hide(); game.openHangar(); }
-    } else if (edge('start') && !app.building && !game.board.open) game.openHangar();
+      if (edge('b')) { game.roads.hide(); game.openHome(); }
+    } else if (edge('start') && !app.building && !game.board.open) game.openHome();
     this.prev = s;
   }
 }

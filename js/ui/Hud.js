@@ -20,7 +20,7 @@ export class Hud {
       <div id="title" class="badge">Planet Pop!</div>
       <div id="hint" class="badge">${hint}</div>
       <button id="worldTag" class="badge" title="Where this is: the solar system (M)"><span id="worldName"></span> <span class="mapGo">🪐</span></button>
-      <div id="topBtns"><button id="compassBtn" class="hidden" title="Back to north-up">🧭</button><button id="installBtn" class="hidden" title="Install Planet Pop as an app">📲</button><button id="friendsBtn" title="Play with friends">👥</button><button id="mapBtn" title="The solar system (M)">🪐</button><button id="findBtn" title="Find things and events (F)">📍</button><button id="photoBtn" title="Photo mode (C)">📷</button><button id="panelToggle">☰<span class="wide"> Controls</span></button></div>`;
+      <div id="topBtns"><button id="homeBtn" class="big">▶ Play</button><button id="compassBtn" class="hidden" title="Back to north-up">🧭</button><button id="installBtn" class="hidden" title="Install Planet Pop as an app">📲</button><button id="friendsBtn" title="Play with friends">👥</button><button id="mapBtn" title="The solar system (M)">🪐</button><button id="findBtn" title="Find things and events (F)">📍</button><button id="photoBtn" title="Photo mode (C)">📷</button><button id="panelToggle">☰<span class="wide"> Controls</span></button></div>`;
     this.panel = new ControlPanel(app);
     ui.insertAdjacentHTML('beforeend', `
       <div id="follow" class="badge hidden"><span id="followName"></span><button id="releaseBtn">✕ Release</button></div>
@@ -31,6 +31,8 @@ export class Hud {
       <div id="trophyBox" class="overlay hidden"><div class="panel"><h2>🏆 Trophies</h2><div id="trophyList"></div><button id="trophyClose">Close</button></div></div>`);
 
     const $ = (this.$ = (id) => document.getElementById(id));
+    this.dom = Object.fromEntries(['title', 'hint', 'worldTag', 'topBtns', 'homeBtn'].map((id) => [id, $(id)]));
+    this.dom.homeBtn.onclick = () => app.game.play();
     this.info = new InfoCard(app);
     this.about = new AboutCard(app);
     $('panelToggle').onclick = () => {
@@ -59,6 +61,7 @@ export class Hud {
 
     addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (app.start?.open || app.game.home?.open) return;
       if (e.code === 'KeyP') app.togglePause();
       else if (e.code === 'KeyN' && !app.game.active && !app.trip?.active) app.newPlanet();
       else if (e.code === 'KeyH' && !app.game.active) this.panel.toggle();
@@ -97,6 +100,23 @@ export class Hud {
     this.$('hint').classList.toggle('hidden', on);
     this.$('worldTag').classList.toggle('hidden', on);
     document.body.classList.toggle('in-game', on); // lets phones drop the title to make room for the game HUD
+    this.hideLabel();
+  }
+
+  /** The title screen leaves the planet visible and puts its own controls in charge. */
+  setStartMode(on) {
+    if (on === !!this.atStart) return;
+    this.atStart = on;
+    const ids = ['title', 'hint', 'worldTag', 'topBtns'];
+    if (on) {
+      this.startPanel = this.panel.open;
+      this.startHidden = Object.fromEntries(ids.map((id) => [id, this.dom[id].classList.contains('hidden')]));
+      this.info.hide();
+      this.app.find?.hide();
+    }
+    this.panel.toggle(!on && !!this.startPanel);
+    for (const id of ids) this.dom[id].classList.toggle('hidden', on || this.startHidden[id]);
+    document.body.classList.toggle('at-start', on);
     this.hideLabel();
   }
 

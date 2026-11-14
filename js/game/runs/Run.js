@@ -30,6 +30,9 @@ export class Run {
   get planet() { return this.game.planet; }
   get player() { return this.game.player; }
 
+  /** A coached run gives its own prompts, so the usual start-of-run reminders stay quiet. */
+  get coached() { return false; }
+
   /** How many blue rings to put out (the road runs have none: they'd be out of reach). */
   get rings() { return 7; }
 

@@ -1,13 +1,11 @@
 import { UPGRADES, SKINS } from '../Progress.js';
-import { todayKey, dailyPlace } from '../Daily.js';
 import { Overlay } from '../../ui/Overlay.js';
 
 /**
- * Between-run screen: spend coins on upgrades and paint jobs, then take off: a courier run, a mission, the daily or
- * free flight, hit the road (the road trips), or take parcels to other worlds (the space courier).
+ * Spend coins on upgrades and paint jobs. Closing the hangar returns to Home.
  */
 export class Hangar extends Overlay {
-  constructor(app, progress, { onFly, onFree, onDaily, onMissions, onRoads, onSpace, onOptions }) {
+  constructor(app, progress, { onOptions, onClose }) {
     super({ id: 'hangar', html: `
       <button id="hClose" class="close" title="Close">✕</button>
       <button id="hOptions" class="opts" title="Options">⚙️</button>
@@ -17,25 +15,15 @@ export class Hangar extends Overlay {
       <div id="hUpgrades"></div>
       <h3>Paint jobs</h3>
       <div id="hSkins" class="skins"></div>
-      <div class="hfoot">
-        <div class="hrow"><button id="hGo" class="big">📦 Courier run</button><button id="hMissions" class="big missions">🎯 Missions</button>
-          <button id="hDaily" class="big daily">📅 Daily</button><button id="hFree" class="big free">🕊️ Free flight</button>
-          <button id="hRoads" class="big roads">🚗 Road trips</button><button id="hSpace" class="big space">🚀 Space courier</button></div>
-        <p class="note" id="hDailyNote"></p>
-      </div>` });
+` });
     this.app = app;
     this.progress = progress;
     const $ = (id) => this.$(id);
-    this.dom = { coins: $('hCoins'), ups: $('hUpgrades'), skins: $('hSkins'), dailyNote: $('hDailyNote') };
-    const go = (fn) => () => { this.hide(); fn?.(); };
-    this.on('hGo', 'click', go(onFly));
-    this.on('hDaily', 'click', go(onDaily));
-    this.on('hFree', 'click', go(onFree));
-    this.on('hMissions', 'click', go(onMissions));
-    this.on('hRoads', 'click', go(onRoads));
-    this.on('hSpace', 'click', go(onSpace));
-    this.on('hOptions', 'click', go(onOptions));
-    this.on('hClose', 'click', () => this.hide());
+    this.dom = { coins: $('hCoins'), ups: $('hUpgrades'), skins: $('hSkins') };
+    this.onClose = onClose;
+    this.onOptions = onOptions;
+    this.on('hOptions', 'click', () => this.options());
+    this.on('hClose', 'click', () => this.close());
     const name = (this.nameInput = $('hName')), s = app.settings;
     name.addEventListener('change', () => { s.setPlayerName(name.value); name.value = s.playerName; this.greet(); });
     name.addEventListener('keydown', (e) => { if (e.key === 'Enter') name.blur(); });
@@ -58,6 +46,12 @@ export class Hangar extends Overlay {
     super.hide();
   }
 
+  close() { this.hide(); this.onClose?.(); }
+
+  escape() { this.close(); }
+
+  options() { this.hide(); this.onOptions?.(); }
+
   /** A hello when the player has just given their name. */
   greet() {
     const n = this.app.settings.playerName;
@@ -79,10 +73,8 @@ export class Hangar extends Overlay {
   }
 
   render() {
-    const p = this.progress, trophies = this.app.achievements.done, today = p.dailyBest(todayKey());
+    const p = this.progress, trophies = this.app.achievements.done;
     this.dom.coins.innerHTML = `🪙 <b>${p.coins}</b> coins · best run ⭐ ${p.best}`;
-    this.dom.dailyNote.textContent = `Daily: today's planet (${dailyPlace()}) and route, same for everyone, flown in the stock plane. ${
-      today === null ? 'Not flown yet today.' : `Your best today: ⭐ ${today}`} Free flight: no clock, no parcels, no coins.`;
     this.dom.ups.innerHTML = UPGRADES.map((u) => {
       const lvl = p.level(u.id), cost = p.nextCost(u.id);
       const pips = u.costs.map((_, i) => (i < lvl ? '●' : '○')).join('');
