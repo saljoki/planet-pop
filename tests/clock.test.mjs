@@ -131,6 +131,33 @@ describe('courier clocks and the daily route', () => {
     assert.equal(game.progress.dailyBest(run.date), run.score);
   });
 
+  for (const ending of ['delivery', 'broken delivery', 'steal']) {
+    it(`the last daily parcel loads no new destination or parcel after a ${ending}`, () => {
+      game.start({ daily: true });
+      const run = game.run;
+      for (let i = 0; i < DAILY_PARCELS - 1; i++) run.deliver();
+      const dest = run.dest, cargo = run.cargo, random = run.rand, toast = app.hud.toast, messages = [];
+      let rolls = 0;
+      run.rand = () => { rolls++; return random(); };
+      app.hud.toast = (message) => messages.push(message);
+      try {
+        if (ending === 'steal') run.steal();
+        else {
+          run.broken = ending === 'broken delivery';
+          run.deliver();
+        }
+        assert.ok(game.over);
+        assert.equal(run.parcels, DAILY_PARCELS);
+        assert.equal(game.results.dom.title.textContent, '🏁 Route complete!');
+        assert.ok(!messages.some((message) => /\bNew\s/.test(message)), `announced another parcel: ${messages.join(' | ')}`);
+        assert.ok(!messages.some((message) => message.includes('Grab the next one!')), 'asked for another parcel after the route ended');
+        assert.equal(rolls, 0, 'rolled another parcel after the last one');
+        assert.equal(run.dest, dest);
+        assert.equal(run.cargo, cargo);
+      } finally { app.hud.toast = toast; run.rand = random; }
+    });
+  }
+
   it('handing over broken parcels cannot extend the daily past its ten parcels', () => {
     game.start({ daily: true });
     const run = game.run;

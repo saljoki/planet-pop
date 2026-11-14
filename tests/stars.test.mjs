@@ -165,7 +165,10 @@ describe('mission star briefing, clock and results', () => {
     run.update(3);
     assert.equal(run.missionElapsed, 5);
     run.hud(game.hud);
-    assert.match(game.hud.dom.mission.textContent, new RegExp(`⭐ ${def('first').par - 5}$`));
+    assert.match(game.hud.dom.mission.textContent, new RegExp(`⭐ ${def('first').par - 5}s$`));
+    run.missionElapsed = def('first').par;
+    run.hud(game.hud);
+    assert.match(game.hud.dom.mission.textContent, /⭐ 0s$/);
     run.missionElapsed = def('first').par + 0.01;
     run.hud(game.hud);
     assert.match(game.hud.dom.mission.textContent, /⭐ –$/);

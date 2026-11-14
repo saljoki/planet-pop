@@ -48,10 +48,13 @@ export class DeliveryRun extends Run {
   get againLabel() { return '✈️ Fly again'; }
 
   /** Each parcel adds less time, down to six seconds. Missions can keep a flat bonus. */
-  deliveryBonus() { return this.opts.road === 'van' ? 20 : Math.max(6, 20 - this.deliveries); }
+  deliveryBonus() { return Math.max(6, 20 - this.deliveries); }
 
-  /** A fast start cannot bank an ever-growing clock; the road courier keeps its existing rules. */
-  get clockCap() { return this.opts.road === 'van' ? Infinity : this.stats.startTime + 9; }
+  /** A fast start cannot bank an ever-growing clock. */
+  get clockCap() { return this.stats.startTime + 9; }
+
+  /** The optional time-gained suffix on the next parcel's toast. */
+  deliveryTimeText(seconds) { return seconds === null ? '' : ` (+${Math.round(seconds)} s)`; }
 
   takeoff() {
     const sites = this.planet.cities.sites;
@@ -73,6 +76,9 @@ export class DeliveryRun extends Run {
 
   /** Whether Rex turns up after the first delivery. */
   get hasRival() { return true; }
+
+  /** What to do after Rex steals a parcel, unless the route has ended. */
+  get stolenHint() { return ' Grab the next one!'; }
 
   /** What the goal line says once the destination is close. */
   get arriveHint() { return `swoop down over ${this.dest.name}!`; }
@@ -113,7 +119,7 @@ export class DeliveryRun extends Run {
     g.player?.setCargo(this.cargo);
     this.rival?.newLeg(this.from);
     if (g.props) this.markDest();
-    if (!first) this.app.hud.toast(`${this.cargo.icon} New ${this.cargo.name.toLowerCase()} for ${this.dest.name}: ${this.cargo.tip}${seconds === null || this.opts.road === 'van' ? '' : ` (+${Math.round(seconds)} s)`}`);
+    if (!first) this.app.hud.toast(`${this.cargo.icon} New ${this.cargo.name.toLowerCase()} for ${this.dest.name}: ${this.cargo.tip}${this.deliveryTimeText(seconds)}`);
   }
 
   crashed() {
@@ -239,7 +245,7 @@ export class DeliveryRun extends Run {
     this.rivalStreak = 0;
     this.combo = 1;
     app.sfx.pop(this.rival.pos.clone(), 'STOLEN!', '#8f5cff', 'crash');
-    app.hud.toast(`😈 ${RIVAL.name} delivered to ${this.dest.name} first. Grab the next one!`);
+    app.hud.toast(`😈 ${RIVAL.name} delivered to ${this.dest.name} first.${this.stolenHint}`);
     this.rival.gloat(this.dest);
     this.from = this.dest;
     this.pickDest();

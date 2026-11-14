@@ -9,7 +9,8 @@ const VANMAN = 3;                 // deliveries in one run for the trophy
 
 /**
  * 🚐 Van courier: the courier run by road. Parcels go to a pink pad at the edge of one of the two nearest towns;
- * pull in slowly to hand them over. Same parcels, combos and clock as in the air, but no rings and no Rex.
+ * pull in slowly to hand them over. Same parcels and combos as in the air, with a flat twenty-second delivery
+ * bonus and no clock cap, no rings and no Rex.
  */
 export class VanRun extends DeliveryRun {
   static briefing() {
@@ -24,6 +25,12 @@ export class VanRun extends DeliveryRun {
   get rings() { return 0; }
 
   get hasRival() { return false; }
+
+  deliveryBonus() { return 20; }
+
+  get clockCap() { return Infinity; }
+
+  deliveryTimeText() { return ''; }
 
   get intro() { return '🚐 Van courier: drive each parcel to the pink pad at the next town!'; }
 

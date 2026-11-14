@@ -333,7 +333,7 @@ export class MissionRun extends DeliveryRun {
 
   hud(h) {
     const left = (this.def.par ?? 120) - this.missionElapsed;
-    h.dom.mission.textContent = `🎯 ${this.progress().text} · ⭐ ${left < 0 ? '–' : Math.ceil(left)}`;
+    h.dom.mission.textContent = `🎯 ${this.progress().text} · ⭐ ${left < 0 ? '–' : `${Math.ceil(left)}s`}`;
     super.hud(h);
   }
 }

@@ -35,18 +35,25 @@ export class DailyRun extends DeliveryRun {
 
   get shareable() { return true; }
 
+  get stolenHint() { return this.parcels < DAILY_PARCELS ? super.stolenHint : ''; }
+
+  /** The last parcel ends today's route, without loading or announcing another one. */
+  pickDest(first = false, seconds = null) {
+    if (this.parcels < DAILY_PARCELS) super.pickDest(first, seconds);
+  }
+
   /** A broken parcel handed over still takes one place on today's route. */
   deliver() {
     if (this.finished) return;
-    super.deliver();
     this.parcels++;
+    super.deliver();
     this.checkEnd();
   }
 
   steal() {
     if (this.finished) return;
-    super.steal();
     this.parcels++;
+    super.steal();
     this.checkEnd();
   }
 
