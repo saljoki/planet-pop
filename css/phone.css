@@ -104,7 +104,7 @@
   .home-foot button { min-height: 36px; font-size: 16px; }
   #pilot .panel { padding: 12px 18px; }
   #pcRank { font-size: 25px; margin: 0 0 8px; }
-  #pcXp, #pcRex { margin: 6px 0; font-size: 13px; }
+  #pcXp, #pcGates, #pcRex { margin: 6px 0; font-size: 13px; }
   #pcNext { margin: 8px 0; }
   #pcNext li { padding: 5px 0; font-size: 17px; }
 }

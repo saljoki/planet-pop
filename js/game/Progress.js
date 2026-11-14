@@ -91,13 +91,12 @@ export class Progress {
   /** Price of the next level, or null when maxed. */
   nextCost(id) { return UPGRADES.find((u) => u.id === id)?.costs[this.level(id)] ?? null; }
 
-  /** Next purchases at this rank. Omitted rank keeps the pre-B2 Home call compatible. */
-  affordable(trophies = new Set(), rank) {
-    const skins = rank === undefined ? SKINS.slice(0, 6) : SKINS;
+  /** How many things in the hangar the wallet can buy right now; craft count only once the pilot's rank opens them. */
+  affordable(trophies = new Set(), rank = 1) {
     return UPGRADES.filter((u) => this.nextCost(u.id) !== null && this.nextCost(u.id) <= this.coins).length
-      + skins.filter((s) => this.skinState(s, trophies) === 'buy' && s.cost <= this.coins).length
-      + (rank === undefined ? 0 : CRAFTS.filter((c) => this.craftState(c, rank) === 'buy' && c.cost <= this.coins).length
-        + TRAILS.filter((t) => this.trailState(t) === 'buy' && t.cost <= this.coins).length);
+      + SKINS.filter((s) => this.skinState(s, trophies) === 'buy' && s.cost <= this.coins).length
+      + CRAFTS.filter((c) => this.craftState(c, rank) === 'buy' && c.cost <= this.coins).length
+      + TRAILS.filter((t) => this.trailState(t) === 'buy' && t.cost <= this.coins).length;
   }
 
   buy(id) {

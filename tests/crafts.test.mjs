@@ -156,7 +156,7 @@ describe('hangar craft', () => {
     assert.deepEqual([...again.trails], ['classic']);
   });
 
-  it('counts the full inventory with the explicit rank, while B2 owns the old Home call', () => {
+  it('counts the full inventory at the given rank', () => {
     const p = game.progress;
     p.coins = 50000;
     assert.equal(p.affordable(new Set(), 1), 21);

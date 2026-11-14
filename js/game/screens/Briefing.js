@@ -150,9 +150,9 @@ export class Briefing extends Overlay {
     const opts = this.pending || {};
     this.hide();
     this.pending = null;
-    if (opts.mission) this.game.board.show();
+    if (opts.mission) this.game.board.show(() => this.game.openHome());
     else if (opts.take) return;
-    else if (opts.drive || opts.road) this.game.roads.show();
+    else if (opts.drive || opts.road) this.game.roads.show(() => this.game.openHome());
     else this.game.openHome();
   }
 }

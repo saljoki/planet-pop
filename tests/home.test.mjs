@@ -2,7 +2,7 @@ import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { makeApp } from './helpers/world.mjs';
 import { HOME_CARDS, cardStat, nextUp } from '../js/game/HomeCards.js';
-import { Progress, UPGRADES, SKINS } from '../js/game/Progress.js';
+import { Progress, UPGRADES, SKINS, TRAILS } from '../js/game/Progress.js';
 import { MISSIONS } from '../js/game/Missions.js';
 import { todayKey, dailyPlace } from '../js/game/Daily.js';
 
@@ -76,18 +76,21 @@ test('Home next takes the suggested mission or card, and active runs do not open
   game.active = false;
 });
 
-test('affordable counts each next upgrade and unowned paint job, respecting price and trophies', () => {
+test('affordable counts each next upgrade, unowned paint job and trail, respecting price, trophies and rank', () => {
   const p = new Progress();
   assert.equal(p.affordable(), 0);
   p.coins = 150;
   assert.equal(p.affordable(), 3, 'engine, wings and tank');
   p.coins = 5000;
-  assert.equal(p.affordable(), 10, 'six next upgrades and four paint jobs');
-  assert.equal(p.affordable(new Set(['ace'])), 10, 'earned paint is not something to buy');
+  assert.equal(p.affordable(), 21, 'six next upgrades, ten paint jobs and five trails; no craft at rank 1');
+  assert.equal(p.affordable(new Set(['ace'])), 21, 'earned paint is not something to buy');
+  assert.equal(p.affordable(new Set(), 7), 23, 'the Bulldog and the Hummingbird from rank 7');
   for (const u of UPGRADES) p.levels[u.id] = u.costs.length;
-  assert.equal(p.affordable(), 4, 'maxed upgrades cannot be bought');
+  assert.equal(p.affordable(), 15, 'maxed upgrades cannot be bought');
   p.owned = new Set(SKINS.filter((s) => !s.trophy).map((s) => s.id));
-  assert.equal(p.affordable(), 0, 'owned paint cannot be bought again');
+  assert.equal(p.affordable(), 5, 'owned paint cannot be bought again');
+  p.trails = new Set(TRAILS.map((t) => t.id));
+  assert.equal(p.affordable(), 0, 'owned trails cannot be bought again');
 });
 
 test('Home renders from cached elements and the hangar only has upgrades and paint', () => {

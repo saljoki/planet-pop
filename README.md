@@ -54,7 +54,7 @@ carries on without an automatic lesson.
 
 **Home** has a big next-flight button, then six cards: **Courier run**, **Daily challenge**, **Missions**,
 **Space courier**, **Road trips** and **Free flight**. It suggests First Flight, today's daily, the first unlocked
-unfinished mission, then a courier run. Use the footer for the **Hangar** (upgrades and paint jobs), trophies,
+unfinished mission, then a courier run. Use the footer for the **Hangar** (craft, upgrades, paint and trails), trophies,
 Options, or **🌍 Explore**. Closing the hangar returns Home. Results also have a **🏠 Home** button.
 
 **🌍 Explore the planet** opens the planet view. Its **▶ Play** button is always available; on a phone it sits
@@ -198,6 +198,7 @@ and A / B answer the end-of-run screen.
   Options are remembered. Close a Missions, Road trips or Space courier board opened from Home to return there.
 - **📦 Courier run:** the classic timed game below. Each delivery adds a second less time than the last, from 20
   seconds down to 6, and the clock is capped at its starting time plus 9 seconds, so every run builds to a finish.
+  No courier run lasts longer than eight minutes.
   **🕊️ Free flight:** no clock, no parcels, no Rex, no run coins:
   fly anywhere you like. Rings refill your boost and runways still refuel.
 - **Health ❤️:** hitting the ground costs a quarter of your health and makes the engine splutter; lightning hurts
@@ -217,8 +218,8 @@ and A / B answer the end-of-run screen.
   If he arrives first he steals the parcel (no pay, combo lost). Beat him five times in a row for a trophy.
 - **🪙 Coins:** scored parcels and taxi fares pay points ÷ 25, rounded; blue rings pay 2, UFOs 12, and road races
   pay 60 for winning or 12 for taking part. Mission rewards and space-parcel pay stay the same.
-- **🎖️ Pilot career:** Home shows your rank and XP bar. Tap it for the pilot card, the next three rewards and Rex's
-  paint ladder. Thirty ranks run from Cadet to Sky Marshal; each rank-up pays 50 × the new rank in coins.
+- **🎖️ Pilot career:** Home shows your rank and XP bar. Tap it for the pilot card: the next three rewards, the next craft and
+  supply slot your rank opens, and Rex's paint ladder. Thirty ranks run from Cadet to Sky Marshal; each rank-up pays 50 × the new rank in coins.
   Earn XP from flying/driving coins, first mission rewards, new stars (100), trophies (200), contracts (150),
   crates (300) and daily-flight streaks (100, or 300 on day seven). Reward coins themselves never earn XP.
 - **🏆 Trophies that pay:** each of the 55 trophies pays 100 coins and 200 XP once. Existing pilots receive
@@ -229,9 +230,15 @@ and A / B answer the end-of-run screen.
 - **🔥 Streak and 🎁 gift:** deliver at least one parcel in the daily to keep a streak: 20, 25, 30, 35, 40, 50,
   then 150 coins, repeating weekly. One missed day can be forgiven every seven days. Today also offers a daily
   gift of 20, 30, 40 or 60 coins; tap to open it, with no XP. All dates use UTC and rewards travel in save codes.
-- **🛠️ Hangar** (from Home): coins from deliveries and rings buy engine, wings, boost tank, ring magnet, head-start
-  and armour upgrades, plus paint jobs. The hangar is for improving and painting your vehicle. Progress is saved
-  in your browser (and the browser is asked to keep it); a save code in Options moves it to another one.
+- **🛠️ Hangar** (from Home): six craft with different strengths, five levels on all six upgrade tracks (engine,
+  wings, boost tank, ring magnet, head start and armour), twelve paint jobs and six trails. The Bulldog opens at
+  rank 4, the Hummingbird at 7, the Mule at 10, the Swift at 14 and the Comet at 18; each is bought once with
+  coins. The whole shop costs 75,770 coins, and every earlier price is unchanged. Home's hangar button counts what
+  you can buy right now. Progress is saved in your browser (and the browser is asked to keep it); a save code in
+  Options moves it to another one.
+- **🛡️ Supplies** (in the courier run's briefing): one shield (60 coins), one spare boost tank (40) and one head
+  start (50) a flight. Slots open at ranks 3, 8 and 13. The daily, missions, the lesson, free modes, road trips
+  and the space courier never use supplies, and **Fly again** starts without them.
 - **🎯 Missions** (on Home): ten Flight school missions, then three on each of the 17 real worlds: 61 in 18
   chapters. Finish, beat the par time and meet a bonus goal for three stars. Your best stars open the chapters;
   missions open in order inside each chapter, and completed missions stay replayable. Tours visit landmarks, and
@@ -300,6 +307,7 @@ planet-pop/
 │     │                       CourierProps (beacon, rings, pads, race arches), FlightHazards (storms, runways, ash, heat,
 │     │                       ring ice, wind), Feats (trophy moves: long jumps, loops round a storm, threading the ring),
 │     │                       Progress, Career + Ranks (XP, rank rewards and receipts), Economy (run coins), Contracts (daily jobs),
+│     │                       Crafts (the six craft), Supplies (one-flight extras), Gates (the pilot's rank for the hangar),
 │     │                       Settings, Daily, Missions, Chapters, Stars, HomeCards (cards and next flight), Lessons (coach text)
 │     ├─ vehicles/            Vehicle (health, boost, smoke), Plane, GroundVehicle, Car, Boat, Ground (what's under a
 │     │                       car or boat: roads, water, buildings, mountains, where to start and stop)
@@ -342,4 +350,4 @@ npm run screenshots       # renders scenes into ./screenshots and fails on page 
 
 Run tests and screenshots separately; overlapping them has crashed the browser. Open the PNGs after a screenshot
 run to check layout as well as page and shader errors. GitHub CI is currently switched off; run all checks locally.
-The current phase spec is [docs/PHASE_B2.md](docs/PHASE_B2.md).
+The latest merged specs are [docs/PHASE_B2.md](docs/PHASE_B2.md) (career) and [docs/PHASE_B3.md](docs/PHASE_B3.md) (hangar).

@@ -7,10 +7,9 @@ system you can fly round.
 
 - **Repo:** https://github.com/Saljoki/planet-pop
 - **Live:** https://saljoki.github.io/planet-pop/ (GitHub Pages, deploys on every push to `main`)
-- **Current version:** v0.20.0 on `phase-b2-career`, ready for review and not merged. Main remains v0.19.0
-  at the B2 base `48ad274`; A and B1 are merged. B3 is being built separately on `phase-b3-hangar`.
+- **Current version:** v0.21.0 on `main`. Phases A, B1, B2 and B3 are merged.
 - **Design and specs:** [DESIGN.md](DESIGN.md) is the game's design and decisions log. [PHASE_A.md](PHASE_A.md) and
-  [PHASE_B1.md](PHASE_B1.md) are merged; [PHASE_B2.md](PHASE_B2.md) defines this branch.
+  [PHASE_B1.md](PHASE_B1.md), [PHASE_B2.md](PHASE_B2.md) and [PHASE_B3.md](PHASE_B3.md) are the merged specs.
 - **Keep this file current.** At the end of each phase, update "Where things stand", the version, and any new gotchas.
 
 ## How Ata works
@@ -68,8 +67,9 @@ system you can fly round.
 - `js/game/`: the Sky Courier game and everything around it.
   - **`CourierGame`** runs the show. `play()` sends a new pilot to `startLesson()`, otherwise to `openHome()`.
   - **Menus:** `screens/HomeScreen.js` owns the six mode cards and next flight; `HomeCards.js` holds their words,
-    stats and suggestion order. `screens/Hangar.js` is upgrades and paint only. `screens/Briefing.js` keeps its
-    tips, controls and skip choice inside closed How to play details.
+    stats and suggestion order. `screens/Hangar.js` has the Craft / Upgrades / Paint / Trails accordion.
+    `screens/Briefing.js` keeps its tips, controls and skip choice inside closed How to play details, offers the
+    courier run's supplies and takes their payment at Start.
   - **Lesson:** `runs/LessonRun.js`, `Lessons.js` (steps and text) and `screens/Coach.js`; separate from First Flight,
     on the same default planet, with no countdown or Rex. The sun follows the plane at noon; a missed practice
     ring returns ahead at the plane's height. The previous day length is restored when the lesson ends.
@@ -78,6 +78,9 @@ system you can fly round.
   - **Career:** `Career.js` owns `planetpop.career`, XP, rank/trophy receipts, Rex score, UTC contracts, crate,
     daily streak and gift. `Ranks.js` owns names/thresholds/rewards, `Economy.js` run pay, `Contracts.js` jobs and
     real-run counters. `screens/PilotCard.js` and `TodayScreen.js` are reached from the rank/Today rows on Home.
+  - **Hangar:** `Crafts.js` owns the six craft and their stat multipliers, `Supplies.js` the one-flight supplies
+    (prices, slot ranks, eligible modes), and `Gates.js` the pilot's rank for every gate: always read it through
+    `pilotRank(game)`. Paint, trails and upgrade levels are data in `Progress.js`.
   - **Runs:** `runs/*Run.js` are the game modes. `Run.js` documents the hooks and `modes.js` picks the run.
   - **Hazards and moves:** `FlightHazards` (storms, dust, heat, ring ice, wind) and `Feats` (long jumps, loops round
     a storm, threading Saturn's ring).
@@ -91,7 +94,8 @@ system you can fly round.
   - `TrophyWatch.js` holds the "follow a …" trophy rules.
 - `js/net/`: friends. `PROTOCOL = 2`, and worlds are checked against `WORLD_IDS`.
 - **Saves:** `js/core/Store.js` and `SaveCode.js`. `SAVED_KEYS` lists the progress keys, including
-  `planetpop.visited`, `planetpop.courier` (with its optional `lesson` flag) and `planetpop.career`.
+  `planetpop.visited`, `planetpop.courier` (with its optional `lesson`, `stars`, `craft`, `crafts`, `trail` and
+  `trails` fields) and `planetpop.career`.
   New progress keys go there; device settings such as `planetpop.ambience` and `planetpop.music` stay out. Existing key formats never change.
 
 ## Kinds of world (all in `Worlds.js` and `WorldThemes.js`)
@@ -172,20 +176,34 @@ system you can fly round.
   star gates. The game's design and decisions are in [DESIGN.md](DESIGN.md); the spec is [PHASE_B1.md](PHASE_B1.md).
 - **Music still needs Ata's ear.** Audio scheduling, states and persistence are tested; the tunes themselves are
   his to judge. It has its own volume slider in Options.
-- **Phase B2 is implemented on `phase-b2-career` (v0.20.0), not merged.** Coins use points ÷ 25, rank reaches
-  Sky Marshal at 89,900 XP, trophies back-pay once, and Rex has a speed/paint ladder and running score. Contracts,
-  crate, streak and gift use UTC dates and travel in save codes. Home, Pilot and Today fit 390 × 844, 360 × 780
-  and 844 × 390. The PR contains four-pilot income, all sixteen Rex cases, first-session and old-save evidence.
+- **Phase B2 is merged (v0.20.0).** Coins use points ÷ 25, rank reaches Sky Marshal at 89,900 XP, trophies
+  back-pay once, and Rex has a speed and paint ladder and a running score. Contracts, crate, streak and gift use
+  UTC dates and travel in save codes. Career lines on the results card sit in `#gNews`; the card's text scrolls
+  and its buttons never leave the screen. Spec: [PHASE_B2.md](PHASE_B2.md).
+- **Phase B3 is merged (v0.21.0).** Six craft, five levels on each upgrade track, twelve paint jobs, six trails
+  and one-flight courier supplies; the whole shop is 75,770 coins. The Bulldog opens at rank 4, the Hummingbird
+  at 7, the Mule at 10, the Swift at 14 and the Comet at 18; supply slots open at ranks 3, 8 and 13. Home's hangar
+  button counts the whole shop at the pilot's rank, and the pilot card names the next craft and slot to open.
+  Styles are in `css/hangar.css`, after `home.css`; scenes are in `tests/browser/scenes/hangar.mjs`, after the
+  courier area. Spec: [PHASE_B3.md](PHASE_B3.md).
 - **B2 gotchas:** all reward coins must use `addCoins(n, false)`; contract income reads the run, not the wallet.
   Record mission stars before `completeMission` so the implicit legacy first star cannot suppress new-star XP.
   Options keeps trophies, so reset retains their payment receipts. New career fields default when absent.
-  The continuous first-session check reaches rank 6 (4,176 XP) rather than the target 4–5 because live
-  camera/world trophies also pay XP; the reference-helper batch reaches rank 5. Reward constants stay as specified.
-  Rex's measured `rankStep` is 0.0025 (initial 0.004 failed the ace limit); daily/mission speed remains rank 1.
-  Boards close through callbacks; selecting a flight only hides. `Briefing.back` is B3-owned and needs its Home
-  callback added by Claude during integration. B3's reserved files and branch were not touched.
-- **Next:** B3 craft, upgrade levels, paint, trails and supplies is in parallel; B4 adds the passport. The daily's
-  rings and UFO must be seeded from the route before a leaderboard (D). Claude reviews; Ata decides merges.
+  A save code with courier progress and no career clears the browser's career, so it is rebuilt from the save.
+  Rex's `rankStep` is 0.0025 (0.004 failed the ace limit); daily and mission speed stays at rank 1.
+  Boards close through callbacks; selecting a flight only hides. `Briefing.back` reopens a board with the same
+  way Home.
+- **B3 gotchas:** the optional `craft`, `crafts`, `trail` and `trails` fields in `planetpop.courier` are omitted
+  while only the defaults are owned; a missing field means Classic. Supplies are never saved; "Fly again" and a
+  launch without a briefing strip them. The daily's `BASE_STATS` identity also selects the Classic shape and trail.
+  A plain courier run's clock ceiling winds down to zero at 7:59 (a bought head start adds ten seconds), because
+  level-five magnets could otherwise keep a run going for ever; the daily, missions and the van keep their own clocks.
+- **Tests that need a rank** call `setRank(game, rank)` from `tests/helpers/rank.mjs` and grant coins with
+  `addCoins(n, false)`. Never replace `game.career` with a stub: every run start and finish calls it, and earned
+  coins pay XP and rank rewards that change a test's sums.
+- **Next:** B4 adds the passport. The daily's rings and UFO must be seeded from the route before a leaderboard (D).
+  At 667 × 375 a first mission's rank-up lines start below the fold of the results card; phase C's phone pass
+  should shrink the buttons at that height. Claude reviews; Ata decides merges.
 - **The solar system plan is complete.** Ata's design doc, "Planet Pop: Solar System design" (a Claude Docs artifact
   at https://claude.ai/code/artifact/b60ea4c9-576b-422d-bcd5-7832d0323c2f), had four phases: Earth, Moon and Mars; the
   space courier; Venus, Mercury and Pluto; and the giants with their moons. All four shipped, plus a fifth phase:

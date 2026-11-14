@@ -112,6 +112,34 @@ how it handles (`limits()`), what stops it (`blocked(d)`) and how high it sits (
 `this.group`, and move it in `update(dt)` from `this.input`. Set `chase` for how the camera follows it. Health,
 damage, wrecks, boost and smoke come with `Vehicle`; `Car` and `Boat` are the examples.
 
+## Add a craft
+
+Add a permanent id to `CRAFTS` in `js/game/Crafts.js`: icon, name, good/gives text, rank, cost, `mods` and `shape`.
+`craftStats` multiplies speed, turn, drain and armour (at least 0.1), and carries `hauler`; `Plane` applies wing
+span and body girth, with only girth on hoppers and ships. Ownership and selection go through
+`Progress.chooseCraft(id, pilotRank(game))`; the hangar, Home's count and the pilot card's "Next to open" line all
+read `CRAFTS`. Keep Classic stock and existing ids and prices intact. Check heavy cargo, all world styles, the
+daily's stock shape and stats, the four scripted pilots (the first craft a rank opens must not wreck the average
+pilot) and the eight-minute limit with every upgrade at five.
+
+## Add a trail
+
+Add a permanent id to exported `TRAILS` in `js/game/Progress.js` with name, colour, life, grow and cost. Classic's
+null colour keeps the world's own exhaust colour. Use `Progress.chooseTrail(id)`; `Run.vehicle()` passes the
+selected definition to the seventh `Plane` argument, while stock-stat runs use Classic. Do not change Rex's
+defaults. Check ownership and reload, and capture the puffs in flight.
+
+## Add a supply
+
+Add id, icon, name, description and cost to `SUPPLIES` in `js/game/Supplies.js`; put the flight effect and its
+one use in `DeliveryRun`. Slot ranks live in `SLOT_RANKS` (the pilot card reads them too), and
+`suppliesAllowed(opts)` admits only `DeliveryRun` itself. The briefing toggles choices and pays once with
+`Progress.spend` at Start; selections reset on opening and are never saved. `CourierGame.start()` filters the
+options, raises the vehicle's shield and strips forbidden supplies; a launch without a briefing and "Fly again"
+strip them too. `Vehicle.damage()` reports an absorbed knock through `shielded`, which the run consumes before
+penalties; hazard hooks must respect that result. Keep unused icons beside the health bar, and verify every
+forbidden mode plus the three phone briefing sizes.
+
 ## Playing with friends (js/net/)
 
 `Friends` (`app.friends`) runs the room: who's in it, which planet each is on, and sending our news. Everything goes
@@ -134,7 +162,8 @@ updates (a moment behind, glided between them), never updated as a vehicle, so i
 
 Progress saves itself (`js/core/Store.js`). A save code (`js/core/SaveCode.js`) carries the keys in `SAVED_KEYS`;
 a new kind of progress kept under a new key should be added there, or it won't move with the player. The optional
-`lesson` flag lives inside the existing `planetpop.courier` JSON, so it already travels in save codes. Device
+`lesson` flag lives inside the existing `planetpop.courier` JSON, so it already travels in save codes; so do the
+optional `stars`, `craft`, `crafts`, `trail` and `trails` fields, which are left out while they hold only defaults. Device
 settings such as `planetpop.ambience` and `planetpop.music` stay out of `SAVED_KEYS`.
 
 ## Add a mission
@@ -194,8 +223,8 @@ Options keeps trophies on reset, so Career keeps their paid receipts while reset
 
 The Pilot and Today overlays cache controls in `this.dom`, join Music's menu route, block idle TourMode, and
 close to Home on Escape/controller B. Boards remember an optional close callback: Home and the results Missions
-button pass `openHome`; selecting a flight calls `hide` without the callback. `Briefing.back` belongs to B3's
-integration and is deliberately unchanged on this branch.
+button pass `openHome`; selecting a flight calls `hide` without the callback. `Briefing.back` reopens the mission
+board or road trips with the same `openHome` callback.
 
 ## Add an option
 
@@ -296,6 +325,7 @@ planets pick it up from there. Add its id to the list of worlds `tests/themes.te
 `css/` is split by area and loaded in this order (later files win ties): `base.css` (fonts, colours, buttons,
 overlays), `hud.css` (the planet view), `game.css` (Sky Courier's HUD and touch controls), `cards.css` (info
 card, Find, tour), `menus.css` (briefing, Options, hangar, missions), `home.css` (Home, the start screen and coach),
+`hangar.css` (the hangar's shop sections, the briefing's supplies and their phone rules),
 `photo.css`, `space.css` (the system map, trips, the landing card), and `phone.css` (all the small-screen and touch
 rules, last so they win).
 
@@ -309,4 +339,7 @@ rules, last so they win).
 - `SCENES_EXACT=home,today` selects whole labels; the existing `SCENES` filter still matches substrings. Include
   each area’s prerequisite scenes when selecting a subset.
 - Run tests and screenshots separately. Read the resulting PNGs at desktop, portrait phone and landscape phone sizes.
-  See [PHASE_B2.md](PHASE_B2.md) section 9 for this phase's required scenes and checks.
+  See [PHASE_B2.md](PHASE_B2.md) section 9 for the career's required scenes and checks.
+- Hangar and supply scenes live in `tests/browser/scenes/hangar.mjs`, after the courier area; keep new ones there.
+- A test or scene that needs a pilot rank sets the real career's XP (`setRank(game, rank)` in
+  `tests/helpers/rank.mjs`) and grants coins with `addCoins(n, false)`, so no rank reward changes its sums.

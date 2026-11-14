@@ -1,5 +1,6 @@
 import { Overlay } from '../../ui/Overlay.js';
 import { HOME_CARDS, cardStat, nextUp } from '../HomeCards.js';
+import { pilotRank } from '../Gates.js';
 
 /** What to play next, with one way into every mode and a separate hangar for upgrades and paint. */
 export class HomeScreen extends Overlay {
@@ -48,7 +49,7 @@ export class HomeScreen extends Overlay {
     d.next.innerHTML = `<span class="next-title">${offer.icon} ${offer.title}</span><small>${offer.text}</small>`;
     d.cards.innerHTML = HOME_CARDS.map((c) => `<button data-card="${c.id}"><span class="card-icon" aria-hidden="true">${c.icon}</span>
       <span class="card-name">${c.name}</span><small>${cardStat(c.id, p, career) || c.desc}</small></button>`).join('');
-    const count = p.affordable(trophies.done);
+    const count = p.affordable(trophies.done, pilotRank(this.game));
     d.hangar.textContent = `🛠️ Hangar${count > 0 ? ` · ${count} to buy` : ''}`;
     d.trophies.textContent = `🏆 ${trophies.done.size} / ${trophies.list().length}`;
   }

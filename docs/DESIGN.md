@@ -65,6 +65,11 @@ The rule from B1:
 A beginner's run changes by a few seconds. A strong run now builds to a finish at about four minutes, which is where
 "one more go" comes from.
 
+As built in B3: no courier run lasts longer than eight minutes. The clock's ceiling winds down to zero at 7:59 (a
+bought head start adds ten seconds). A plane with every upgrade at five collected enough rings with its magnet to
+fly for ever; the limit stops that without touching an ordinary run. The daily, missions and the van keep their
+own clocks.
+
 ### 5.2 The daily (B1)
 
 Today's route is **exactly ten parcels** in the stock plane. The run ends when ten have been delivered or stolen, or
@@ -109,22 +114,30 @@ makes it a short ritual with scores that can be compared, which the leaderboard 
 
 Six craft, each a trade-off, each flying as a plane, glider, hopper or ship to suit the world:
 
-| Craft | Good at | Gives up | Opens at |
-|---|---|---|---|
-| Classic | Everything, a little | Nothing | The start |
-| Swift | Speed | Armour | Rank 4 |
-| Hummingbird | Turning | Boost tank | Rank 7 |
-| Mule | Heavy parcels don't slow it | Top speed | Rank 10 |
-| Bulldog | Armour | Turning | Rank 14 |
-| Comet | Boost lasts twice as long | Cruising speed | Rank 18 |
+| Craft | Good at | Gives up | Opens at | Coins |
+|---|---|---|---|---|
+| Classic | Everything, a little | Nothing | The start | Free |
+| Bulldog | Armour | Turning | Rank 4 | 3,000 |
+| Hummingbird | Turning | Boost tank | Rank 7 | 5,000 |
+| Mule | Heavy parcels don't slow it | Top speed | Rank 10 | 7,000 |
+| Swift | Speed | Armour | Rank 14 | 9,000 |
+| Comet | Boost lasts twice as long | Cruising speed | Rank 18 | 12,000 |
 
-The six upgrade tracks grow to five levels each. Paint jobs grow to twelve, and trails arrive.
+The Bulldog comes first because it forgives. The Swift was first in the spec; in review it wrecked every run of the
+average pilot, who has no armour upgrades at rank 4, so the two swapped places and prices.
+
+The six upgrade tracks have five levels each (30,770 coins). There are twelve paint jobs (5,100 coins for the ones
+coins buy) and six trails (3,900). Home's hangar button counts what the wallet can buy at the pilot's rank, and the
+pilot card names the next craft and supply slot a rank opens.
 
 ### 5.7 Supplies (B3)
 
 One-flight extras bought with coins before take-off: a shield that absorbs the first knock, a spare boost tank, a
 head start on the clock. One of each per flight. Never in the daily or in events. They are the sink that never runs
 out, and in phase E a free one is what a rewarded ad gives.
+
+As built: the shield costs 60 coins, the spare tank 40 and the head start (ten seconds) 50. Slots open at ranks 3,
+8 and 13. Only the plain courier run takes them, and "Fly again" starts without them.
 
 ### 5.8 Contracts (B2)
 
@@ -174,7 +187,7 @@ second is the clock rule in 5.1.
 | **Today:** coins a run | 167 | 634 | 3,900 in 15 min | 5,600 in 15 min |
 | **New clock:** run length | 2:30 | 2:58 | 4:00 | 4:47 |
 | **New clock:** coins a run | 306 | 449 | 1,086 | 1,680 |
-| **As built in B1:** run length | 1:48 | 2:31 | 3:45 | 4:49 |
+| **As built in B1:** run length | 1:55 | 2:41 | 4:00 | 5:08 |
 | **As built in B1:** coins a run | 153 | 313 | 1,003 | 1,817 |
 
 The pilots: the ace flies straight at the town, boosts and never crashes. The good pilot looks away 15% of the time
@@ -183,8 +196,12 @@ beginner doesn't boost, looks away half the time and crashes every 14 s. The fir
 of three runs; the as-built rows are the mean of ten, flown on the merged code. The beginner's 2:30 was noise from
 three runs: a beginner's run is about as long as it was before.
 
-The unchanged pre-B3 shop costs 10,470 coins. At B2’s measured 49.74 coins/min it would take about 3.5 hours
-of run income alone; rank, trophy, mission and daily rewards shorten that. B3 adds the new sinks.
+The as-built run lengths were corrected at the B2 and B3 merge. The review harness stepped 16 frames for every 15
+it counted, so its first figures (1:48, 2:31, 3:45, 4:49) read 6% short. The two older pairs of rows came from the
+same harness and read short by the same amount; coins are unaffected.
+
+Before B3 the shop cost 10,470 coins: about 3.5 hours of run income alone at B2's measured 49.74 coins a minute.
+B3's shop is in "As built in B3" below.
 
 ### As built in B2 (v0.20.0)
 
@@ -208,6 +225,31 @@ boost at 1.15 gives 12.86% for ace and 16.85% for good (limit 35%). Rank-1 resul
 Existing-save fixture: seven effective stars give 700 XP, rank 2 and 100 rank coins. Three existing trophies
 raise that to 1,300 XP, rank 3 and 550 total back-pay coins; an existing 900-coin wallet becomes 1,450. A real save
 code generated at main `48ad274` loads the same way. The only new saved key is `planetpop.career`.
+
+### As built in B3 (v0.21.0)
+
+| Sink | Coins |
+|---|---:|
+| Upgrades, six tracks of five levels | 30,770 |
+| Five craft | 36,000 |
+| Twelve paint jobs (the ones coins buy) | 5,100 |
+| Six trails | 3,900 |
+| **The whole shop** | **75,770** |
+
+Every price from before B3 is unchanged, and old saves load as Classic with nothing added to them.
+
+- **Time to own it.** At the average pilot's 50 coins a minute the shop is 25 hours of flying alone. Rank rewards
+  (23,200 coins over ranks 2 to 30), trophies (5,500), mission rewards (14,200) and the daily jobs, crate, streak
+  and gift shorten that. The 20-hour target is checked against real play before launch.
+- **Craft, four pilots, eight runs each, no upgrades.** No pilot wrecked in the Bulldog. The Swift wrecked every
+  run of the average pilot and the beginner, which is why it waits for rank 14. The good pilot scored 127% of the
+  Classic in the Mule (Codex's ten runs: 116%).
+- **The longest run.** An ace with every upgrade at five ends at eight minutes in the Classic and in the Swift.
+- **The first session with both phases.** A new pilot's first twenty minutes (lesson, First Flight, Rush Hour,
+  then courier runs by the average pilot) end at rank 5 with about 2,600 coins: one supply slot is open and the
+  Bulldog is open and nearly affordable. Codex's stronger reference pilot reaches rank 6 in eight minutes.
+- **Rex at rank 30,** twenty runs each in the stock plane: he takes 15.4% of the ace's parcels and 18.2% of the
+  good pilot's. The ace sits on the 15% limit in the stock plane; a real rank-30 pilot flies an upgraded one.
 
 ### Targets (B2)
 
@@ -269,6 +311,10 @@ five returns the next day, the loop gets fixed before any store work starts.
 | Coin income | Points ÷ 25 from B2 |
 | Time to own everything | About 20 hours |
 | Hangar | Keeps its name; a shop appears only when there is something to sell for money |
+| Craft order | Bulldog at rank 4, Hummingbird 7, Mule 10, Swift 14, Comet 18 |
+| Supplies | Shield 60, spare tank 40, head start 50; slots at ranks 3, 8 and 13; plain courier runs only |
+| Longest courier run | Eight minutes |
+| Rex and rank | 0.0025 of speed a rank in courier runs; boosts from rank 10; rank 1 in the daily and missions |
 | Music | Synthesised, like every other sound |
 
 ## 10. Phases
@@ -277,9 +323,9 @@ five returns the next day, the loop gets fixed before any store work starts.
 |---|---|---|---|
 | A | The first five minutes | Codex | Merged, v0.18.0 |
 | B1 | The clock, the daily, the missions | A second Codex session | Merged, v0.19.0 |
-| B2 | Coin retune, rank, trophies that pay, Rex's ladder, contracts, streak and gift | Codex | Implemented on phase-b2-career, v0.20.0; awaiting review |
-| B3 | Craft, upgrade levels, paint, trails, supplies | A second Codex session | Now, in parallel |
-| B4 | Passport | To assign | After B3 |
+| B2 | Coin retune, rank, trophies that pay, Rex's ladder, contracts, streak and gift | Codex | Merged, v0.20.0 |
+| B3 | Craft, upgrade levels, paint, trails, supplies | A second Codex session | Merged, v0.21.0 |
+| B4 | Passport | To assign | Next |
 | C | Mobile wrapper | To assign | After B2 |
 | D | Accounts, cloud save, boards, events | To assign | After C |
 | E | Ads, Premium, packs | To assign | After D |
