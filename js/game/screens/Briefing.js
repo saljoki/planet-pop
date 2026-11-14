@@ -115,7 +115,8 @@ export class Briefing extends Overlay {
       const disabled = !chosen && (this.selected.size >= slots || this.supplyCost + s.cost > this.game.progress.coins);
       return `<button data-supply="${s.id}" title="${s.desc}" aria-pressed="${chosen}" ${disabled ? 'disabled' : ''}>${s.icon} ${s.name} · 🪙 ${s.cost}</button>`;
     }).join('') : '';
-    d.supplyNote.textContent = this.supplyError || `${this.selected.size} of ${slots} slots · 🪙 ${this.supplyCost}`;
+    const short = allowed && this.selected.size < slots && !SUPPLIES.some((s) => !this.selected.has(s.id) && this.supplyCost + s.cost <= this.game.progress.coins);
+    d.supplyNote.textContent = this.supplyError || (short ? 'Not enough coins' : `${this.selected.size} of ${slots} slots · 🪙 ${this.supplyCost}`);
   }
 
   setSkip(checked) { this.app.settings.set('briefing', !checked); }

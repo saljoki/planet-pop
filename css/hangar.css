@@ -20,3 +20,29 @@
   #gHealth, #gBoost { width: 145px; }
   #gSupplies { left: calc(196px + var(--sl)); font-size: 16px; }
 }
+#hangar .panel { width: 620px; padding-bottom: 18px; }
+#hangar details { margin: 8px 0; border: 2px solid var(--ink); border-radius: 12px; }
+#hangar summary { position: sticky; top: 0; z-index: 1; padding: 10px; cursor: pointer; background: #fff4d4; border-radius: 10px; font-size: 22px; }
+#hangar details[open] > summary { border-bottom: 2px solid var(--ink); border-radius: 10px 10px 0 0; }
+#hangar .crafts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 10px; }
+#hangar .craft-card { display: flex; flex-direction: column; padding: 10px; border: 2px solid var(--ink); border-radius: 10px; background: #fff; }
+#hangar .craft-card.flying { background: #e2f5ff; }
+#hangar .craft-card h3 { margin: 0 0 6px; font-size: 24px; }
+#hangar .craft-card p { margin: 2px 0; font: 13px/1.4 system-ui, sans-serif; letter-spacing: 0; }
+#hangar .craft-card button { margin-top: auto; padding-top: 6px; font-size: 19px; }
+#hangar .upg { margin: 0 10px; }
+#hangar .upg:first-child { border-top: 0; }
+#hangar .skins { padding: 10px; }
+#hangar .trail-swatch { border-color: var(--ink); border-radius: 50%; width: 30px; }
+@media (max-width: 480px) {
+  #hangar .panel { padding: 16px 12px; }
+  #hangar summary { top: 0; font-size: 20px; }
+  #hangar .crafts { grid-template-columns: minmax(0, 1fr); }
+  #hangar .craft-card button { min-height: 40px; }
+  #hangar .upg { gap: 6px; font-size: 17px; }
+  #hangar .upg .info { min-width: 0; }
+  #hangar .upg .pips { display: block; }
+  #hangar .upg button { min-width: 72px; padding-right: 5px; padding-left: 5px; font-size: 17px; }
+  #hangar .upg .icon { width: 24px; font-size: 22px; }
+  #hangar .skins { gap: 6px; }
+}

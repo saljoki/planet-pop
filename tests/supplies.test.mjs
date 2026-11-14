@@ -59,6 +59,8 @@ describe('one-flight supplies', () => {
     game.briefing.show({});
     assert.equal(game.briefing.selected.size, 0);
     game.progress.coins = 0;
+    game.briefing.renderSupplies();
+    assert.equal(game.briefing.dom.supplyNote.textContent, 'Not enough coins');
     assert.equal(game.briefing.toggleSupply('shield'), false);
     assert.equal(game.briefing.dom.supplyNote.textContent, 'Not enough coins');
     assert.equal(game.progress.spend(1), false);
